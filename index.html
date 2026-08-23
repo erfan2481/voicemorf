@@ -47,7 +47,10 @@
   }
   .wrap{max-width:520px; margin:0 auto; padding:16px 16px 10px;}
 
-  header{display:flex; align-items:center; justify-content:space-between; padding:8px 4px 18px;}
+  header{
+    display:flex; align-items:center; justify-content:space-between; padding:8px 4px 18px;
+    margin-bottom:4px; border-bottom:1px solid var(--card-border);
+  }
   .brand{display:flex; align-items:center; gap:10px;}
   .brand .logo{
     width:42px;height:42px;border-radius:14px;
@@ -93,6 +96,12 @@
   }
   .rec-timer{font-size:13px; color:var(--text-dim); margin-top:12px; font-variant-numeric:tabular-nums;}
   .rec-hint{font-size:12.5px; color:var(--text-dim); margin-top:6px;}
+  .upload-row{display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; font-size:11.5px; color:var(--text-dim);}
+  .upload-btn{
+    padding:8px 14px; border-radius:20px; border:1.5px solid var(--card-border); background:var(--bg2);
+    color:var(--text); font-weight:700; font-size:11.5px; cursor:pointer; font-family:inherit;
+  }
+  .upload-btn:active{transform:scale(.96);}
   .status-msg{font-size:12.5px; color:var(--accent2); margin-top:8px; min-height:16px;}
   .trim-hint{font-size:11px; color:var(--text-dim); margin-top:2px;}
 
@@ -100,6 +109,15 @@
   .sec-title h2{font-size:14.5px;margin:0;font-weight:800;}
   .sec-title span{font-size:11.5px;color:var(--text-dim);}
 
+  .fx-groups{display:flex; flex-direction:column; gap:16px;}
+  .fx-cat-title{
+    font-size:11.5px; font-weight:800; color:var(--accent); margin:0 2px 8px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .fx-cat-title::before{
+    content:''; width:5px; height:5px; border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2)); flex-shrink:0;
+  }
   .fx-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
   .fx-card{
     background:var(--bg2); border:1.5px solid var(--card-border); border-radius:16px;
@@ -107,13 +125,15 @@
     transition:transform .12s ease, border-color .2s ease, box-shadow .2s ease;
   }
   .fx-card:active{transform:scale(.94)}
-  .fx-card .ic{font-size:24px; display:block; margin-bottom:6px;}
+  .fx-card .ic{font-size:24px; display:block; margin-bottom:6px; color:var(--accent);}
+  .fx-card .ic svg{width:24px; height:24px; display:block; margin:0 auto 6px;}
   .fx-card .nm{font-size:11.5px; font-weight:700; line-height:1.3;}
   .fx-card.active{
     border-color:var(--accent);
     background:linear-gradient(160deg, rgba(124,58,237,.14), rgba(236,72,153,.10));
     box-shadow:0 6px 16px rgba(124,58,237,.22);
   }
+  .fx-card.active .ic{color:var(--accent2);}
 
   .adv-panel{display:none; margin-top:14px; padding-top:14px; border-top:1px dashed var(--card-border);}
   .adv-panel.show{display:block;}
@@ -145,17 +165,30 @@
   .player-title{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
   .player-title .badge{
     font-size:20px; width:40px;height:40px;border-radius:12px; display:flex;align-items:center;justify-content:center;
-    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff;
   }
+  .player-title .badge svg{width:22px;height:22px;display:block;}
   .player-title b{font-size:14px;}
   .player-title span{font-size:11.5px; color:var(--text-dim); display:block;}
 
-  .avatar-wrap{display:flex; align-items:center; justify-content:center; margin:10px 0 14px;}
+  .avatar-picker{display:flex; gap:8px; overflow-x:auto; padding:2px 2px 10px; margin-top:2px;}
+  .avatar-opt{
+    flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px;
+    background:none; border:none; cursor:pointer; padding:6px 8px; border-radius:14px;
+    font-family:inherit; color:var(--text-dim); font-size:10.5px; font-weight:700;
+  }
+  .avatar-opt.active{background:rgba(124,58,237,.12);}
+  .avatar-opt.active span{color:var(--accent);}
+  .avatar-opt .mini-wrap{width:44px;height:44px;position:relative;display:flex;align-items:center;justify-content:center;}
+
+  .avatar-wrap{display:flex; align-items:center; justify-content:center; margin:6px 0 14px;}
   .avatar-face{
     width:78px;height:78px;border-radius:50%;
     background:linear-gradient(150deg,var(--accent),var(--accent2));
     position:relative; box-shadow:0 8px 20px rgba(124,58,237,.35);
+    transition:background .3s ease, border-radius .3s ease;
   }
+  .avatar-face.mini{box-shadow:none; transform:scale(.55);}
   .avatar-face .eye{position:absolute; top:28px; width:9px;height:9px;border-radius:50%;background:#fff;}
   .avatar-face .eye.l{left:20px;} .avatar-face .eye.r{right:20px;}
   .avatar-face .mouth{
@@ -163,6 +196,150 @@
     width:26px; height:8px; background:#fff; border-radius:0 0 14px 14px; transform-origin:top center;
     transition:transform .05s linear;
   }
+
+  /* --- Avatar variants (pure CSS, no emoji) --- */
+  .avatar-face.avatar-classic{ background:linear-gradient(150deg,var(--accent),var(--accent2)); border-radius:50%; }
+
+  .avatar-face.avatar-robot{ background:linear-gradient(150deg,#7c8aa0,#374151); border-radius:20px; }
+  .avatar-face.avatar-robot::before{
+    content:''; position:absolute; top:-13px; left:50%; transform:translateX(-50%);
+    width:3px; height:13px; background:#94a3b8;
+  }
+  .avatar-face.avatar-robot::after{
+    content:''; position:absolute; top:-19px; left:50%; transform:translateX(-50%);
+    width:8px; height:8px; border-radius:50%; background:#22d3ee; box-shadow:0 0 8px #22d3ee;
+  }
+  .avatar-face.avatar-robot .eye{ background:#22d3ee; box-shadow:0 0 5px #22d3ee; border-radius:3px; width:11px; height:6px; }
+  .avatar-face.avatar-robot .mouth{ background:#22d3ee; border-radius:3px; box-shadow:0 0 5px #22d3ee; }
+
+  .avatar-face.avatar-monster{
+    background:linear-gradient(150deg,#22c55e,#15803d); border-radius:58% 42% 55% 45%/45% 55% 42% 58%;
+  }
+  .avatar-face.avatar-monster::before, .avatar-face.avatar-monster::after{
+    content:''; position:absolute; top:-11px; width:0; height:0;
+    border-left:7px solid transparent; border-right:7px solid transparent; border-bottom:15px solid #15803d;
+  }
+  .avatar-face.avatar-monster::before{ left:9px; transform:rotate(-14deg); }
+  .avatar-face.avatar-monster::after{ right:9px; transform:rotate(14deg); }
+  .avatar-face.avatar-monster .eye{ background:#fff; width:11px; height:11px; }
+
+  .avatar-face.avatar-alien{
+    background:linear-gradient(150deg,#5eead4,#0f766e); border-radius:50% 50% 46% 46%/62% 62% 38% 38%;
+  }
+  .avatar-face.avatar-alien::before, .avatar-face.avatar-alien::after{
+    content:''; position:absolute; top:-13px; width:5px; height:5px; border-radius:50%; background:#0f766e;
+  }
+  .avatar-face.avatar-alien::before{ left:20px; }
+  .avatar-face.avatar-alien::after{ right:20px; }
+  .avatar-face.avatar-alien .eye{ width:13px; height:18px; border-radius:50%; background:#0b1120; top:24px; }
+  .avatar-face.avatar-alien .eye.l{ left:15px; } .avatar-face.avatar-alien .eye.r{ right:15px; }
+
+  .avatar-face.avatar-cat{ background:linear-gradient(150deg,#fb923c,#c2410c); border-radius:50%; }
+  .avatar-face.avatar-cat::before, .avatar-face.avatar-cat::after{
+    content:''; position:absolute; top:-9px; width:0; height:0;
+    border-left:10px solid transparent; border-right:10px solid transparent; border-bottom:17px solid #c2410c;
+  }
+  .avatar-face.avatar-cat::before{ left:1px; transform:rotate(-16deg); }
+  .avatar-face.avatar-cat::after{ right:1px; transform:rotate(16deg); }
+
+  .avatar-face.avatar-pirate{ background:linear-gradient(150deg,#d9a566,#8a5a2b); border-radius:50%; }
+  .avatar-face.avatar-pirate::before{
+    content:''; position:absolute; top:26px; left:16px; width:15px; height:11px; background:#111; border-radius:3px; z-index:2;
+  }
+  .avatar-face.avatar-pirate::after{
+    content:''; position:absolute; top:-9px; left:-4px; right:-4px; height:22px;
+    background:#dc2626; border-radius:50% 50% 0 0/100% 100% 0 0;
+  }
+  .avatar-face.avatar-pirate .eye.l{ opacity:0; }
+
+  .avatar-face.avatar-superhero{ background:linear-gradient(150deg,#3b82f6,#1e3a8a); border-radius:50%; }
+  .avatar-face.avatar-superhero::before{
+    content:''; position:absolute; top:24px; left:9px; right:9px; height:13px; background:#111; border-radius:8px;
+  }
+  .avatar-face.avatar-superhero .eye{ background:#facc15; box-shadow:0 0 4px #facc15; z-index:2; }
+
+  .avatar-face.avatar-wizard{ background:linear-gradient(150deg,#8b5cf6,#4c1d95); border-radius:50%; }
+  .avatar-face.avatar-wizard::before{
+    content:''; position:absolute; top:-29px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:19px solid transparent; border-right:19px solid transparent; border-bottom:32px solid #4c1d95;
+  }
+  .avatar-face.avatar-wizard::after{
+    content:''; position:absolute; bottom:-9px; left:50%; transform:translateX(-50%);
+    width:32px; height:18px; background:#e5e7eb; border-radius:0 0 15px 15px;
+  }
+
+  .avatar-face.avatar-ninja{ background:linear-gradient(150deg,#475569,#0f172a); border-radius:50%; }
+  .avatar-face.avatar-ninja::before{
+    content:''; position:absolute; top:20px; left:-6px; right:-6px; height:8px; background:#dc2626;
+  }
+  .avatar-face.avatar-ninja::after{
+    content:''; position:absolute; bottom:0; left:0; right:0; height:32px;
+    background:rgba(15,23,42,.6); border-radius:0 0 39px 39px;
+  }
+
+  .avatar-face.avatar-vampire{ background:linear-gradient(150deg,#9d3355,#2a0a14); border-radius:50%; }
+  .avatar-face.avatar-vampire::before{
+    content:''; position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:14px solid transparent; border-right:14px solid transparent; border-top:13px solid #1a0810;
+  }
+  .avatar-face.avatar-vampire::after{
+    content:''; position:absolute; bottom:-7px; left:-8px; right:-8px; height:16px;
+    background:#161018; clip-path:polygon(0 0,50% 100%,100% 0);
+  }
+  .avatar-face.avatar-vampire .eye{ background:#f43f5e; box-shadow:0 0 6px #f43f5e; }
+  .avatar-face.avatar-vampire .mouth::before, .avatar-face.avatar-vampire .mouth::after{
+    content:''; position:absolute; top:-3px; width:3px; height:7px; background:#fff; border-radius:0 0 2px 2px;
+  }
+  .avatar-face.avatar-vampire .mouth::before{ left:6px; } .avatar-face.avatar-vampire .mouth::after{ right:6px; }
+
+  .avatar-face.avatar-skeleton{ background:linear-gradient(150deg,#e7ebf0,#9aa4b2); border-radius:48% 48% 50% 50%/55% 55% 45% 45%; }
+  .avatar-face.avatar-skeleton::before{
+    content:''; position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    width:2px; height:16px; background:#6b7280;
+  }
+  .avatar-face.avatar-skeleton .eye{ background:#111827; width:14px; height:16px; border-radius:50% 50% 50% 50%/60% 60% 40% 40%; top:24px; }
+  .avatar-face.avatar-skeleton .mouth{ background:transparent; border-top:2px solid #6b7280; height:1px; }
+
+  .avatar-face.avatar-clown{ background:linear-gradient(150deg,#f472b6,#7e22ce); border-radius:50%; }
+  .avatar-face.avatar-clown::before{
+    content:''; position:absolute; top:-10px; left:-14px; width:20px; height:20px; border-radius:50%;
+    background:#22c55e;
+  }
+  .avatar-face.avatar-clown::after{
+    content:''; position:absolute; top:-10px; right:-14px; width:20px; height:20px; border-radius:50%;
+    background:#facc15;
+  }
+  .avatar-face.avatar-clown .mouth::before{
+    content:''; position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+    width:11px; height:11px; border-radius:50%; background:#dc2626;
+  }
+
+  .avatar-face.avatar-king{ background:linear-gradient(150deg,#fde68a,#b45309); border-radius:50%; }
+  .avatar-face.avatar-king::before{
+    content:''; position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:50px; height:16px;
+    background:#facc15; clip-path:polygon(0 100%,0 45%,16% 0,32% 45%,50% 5%,68% 45%,84% 0,100% 45%,100% 100%);
+    box-shadow:0 -1px 4px rgba(180,83,9,.5);
+  }
+  .avatar-face.avatar-king .eye{ background:#1b1530; }
+
+  .avatar-face.avatar-panda{ background:#f8fafc; border-radius:50%; }
+  .avatar-face.avatar-panda::before, .avatar-face.avatar-panda::after{
+    content:''; position:absolute; top:-9px; width:20px; height:20px; border-radius:50%; background:#111827;
+  }
+  .avatar-face.avatar-panda::before{ left:-6px; } .avatar-face.avatar-panda::after{ right:-6px; }
+  .avatar-face.avatar-panda .eye{ background:#111827; width:15px; height:15px; top:24px; }
+  .avatar-face.avatar-panda .eye.l{ left:13px; } .avatar-face.avatar-panda .eye.r{ right:13px; }
+
+  .avatar-face.avatar-dragon{
+    background:linear-gradient(150deg,#10b981,#065f46); border-radius:46% 54% 50% 50%/56% 56% 44% 44%;
+  }
+  .avatar-face.avatar-dragon::before, .avatar-face.avatar-dragon::after{
+    content:''; position:absolute; top:-15px; width:0; height:0;
+    border-left:6px solid transparent; border-right:6px solid transparent; border-bottom:20px solid #d97706;
+  }
+  .avatar-face.avatar-dragon::before{ left:13px; transform:rotate(-10deg); }
+  .avatar-face.avatar-dragon::after{ right:13px; transform:rotate(10deg); }
+  .avatar-face.avatar-dragon .eye{ background:#fde047; box-shadow:0 0 5px #fde047; width:10px; height:6px; border-radius:3px; }
 
   audio{width:100%; border-radius:12px;}
   .toggle-row{display:flex; align-items:center; justify-content:space-between; margin-top:12px; font-size:12.5px; color:var(--text-dim);}
@@ -226,6 +403,11 @@
     <button class="rec-btn" id="recBtn">🎤</button>
     <div class="rec-timer" id="recTimer">۰۰:۰۰</div>
     <div class="rec-hint" id="recHint">برای شروع ضبط صدا، دکمه رو بزن</div>
+    <div class="upload-row">
+      <span>یا</span>
+      <button class="upload-btn" id="uploadBtn">📁 آپلود فایل صوتی از گوشی</button>
+      <input type="file" id="fileInput" accept="audio/*" class="hidden">
+    </div>
     <div class="status-msg" id="statusMsg"></div>
   </div>
 
@@ -234,7 +416,7 @@
       <h2>✨ افکت‌ها رو انتخاب کن</h2>
       <span id="fxCount"></span>
     </div>
-    <div class="fx-grid" id="fxGrid"></div>
+    <div class="fx-groups" id="fxGrid"></div>
 
     <div class="adv-panel" id="advPanel">
       <div class="adv-row">
@@ -280,8 +462,9 @@
       </div>
     </div>
 
+    <div class="avatar-picker" id="avatarPicker"></div>
     <div class="avatar-wrap">
-      <div class="avatar-face" id="avatarFace">
+      <div class="avatar-face avatar-classic" id="avatarFace">
         <div class="eye l"></div><div class="eye r"></div>
         <div class="mouth" id="avatarMouth"></div>
       </div>
@@ -303,10 +486,25 @@
       <button class="action-btn" id="resetBtn">🔁 ضبط جدید</button>
     </div>
 
+    <button class="magic-btn" id="videoBtn" style="background:linear-gradient(135deg,var(--accent2),var(--accent));">🎬 ساخت ویدیوی آواتار برای استوری</button>
+    <div class="processing-overlay" id="videoOverlay"><div class="spinner"></div><span>در حال ساخت ویدیو…</span></div>
+
     <div class="history-row" id="historyRow"></div>
   </div>
 
-  <footer>ساخته‌شده با Web Audio API — تمام پردازش‌ها روی گوشی خودت انجام میشه، هیچ صدایی جایی آپلود نمی‌شه 🔒</footer>
+  <div class="card hidden" id="videoResultCard">
+    <div class="player-title">
+      <div class="badge">🎬</div>
+      <div><b>ویدیوی آواتار</b><span>آماده پخش، دانلود و اشتراک‌گذاری</span></div>
+    </div>
+    <video id="videoPlayer" controls playsinline style="width:100%;border-radius:14px;background:#000;display:block;"></video>
+    <div class="action-row">
+      <button class="action-btn primary" id="videoDownloadBtn">⬇️ دانلود ویدیو</button>
+      <button class="action-btn" id="videoShareBtn">📤 اشتراک‌گذاری</button>
+    </div>
+  </div>
+
+
 </div>
 
 <script>
@@ -438,11 +636,53 @@
     input.connect(conv); conv.connect(wet); wet.connect(out);
     return out;
   }
+  function makeCrackleBuffer(ctx, duration, intensity){
+    var buf = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate*duration)), ctx.sampleRate);
+    var data = buf.getChannelData(0);
+    var density = Math.max(0.0006, 0.0022*(intensity||1));
+    for (var i=0;i<data.length;i++){ data[i] = Math.random() < density ? (Math.random()*2-1) : 0; }
+    return buf;
+  }
+  /* Resamples a buffer while ramping the playback rate from rateStart to rateEnd
+     across its duration — lets an effect speed up or slow down over time. */
+  function speedRampBuffer(buf, rateStart, rateEnd){
+    var ctx = getCtx();
+    var chans = buf.numberOfChannels;
+    var inLen = buf.length;
+    var avgRate = Math.max(0.05,(rateStart+rateEnd)/2);
+    var outLen = Math.max(1, Math.floor(inLen/avgRate));
+    var nb = ctx.createBuffer(chans, outLen, buf.sampleRate);
+    for (var ch=0; ch<chans; ch++){
+      var src = buf.getChannelData(ch);
+      var dst = nb.getChannelData(ch);
+      var pos = 0;
+      for (var i=0;i<outLen;i++){
+        var t = i/outLen;
+        var rate = rateStart + (rateEnd-rateStart)*t;
+        var i0 = Math.floor(pos);
+        var frac = pos - i0;
+        var s0 = src[i0]||0, s1 = src[i0+1]||0;
+        dst[i] = s0 + (s1-s0)*frac;
+        pos += rate;
+        if (pos >= inLen-1) pos = inLen-2;
+      }
+    }
+    return nb;
+  }
 
   /* ---------------- Custom (advanced) effect live params ---------------- */
   var customParams = { rate:1, echo:0.3, dist:10, filt:4000 };
 
-  /* ---------------- Effects Catalogue (22 total) ---------------- */
+  /* ---------------- Custom-drawn icons (used where no emoji fits well) ---------------- */
+  var SVG_TWIN    = '<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="12" r="7" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="12" r="7" stroke="currentColor" stroke-width="1.6"/></svg>';
+  var SVG_TAPE    = '<svg viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="12" r="2.5" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="12" r="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M9.5 17h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  var SVG_PAN     = '<svg viewBox="0 0 24 24" fill="none"><path d="M4 12c3-6 13-6 16 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4 12c3 6 13 6 16 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="4" cy="12" r="1.6" fill="currentColor"/><circle cx="20" cy="12" r="1.6" fill="currentColor"/></svg>';
+  var SVG_HEART   = '<svg viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.6-9.5-9C.8 7.4 3 4 6.3 4c2 0 3.4 1.2 4.2 2.4C11.3 5.2 12.7 4 14.7 4 18 4 20.2 7.4 20.5 11c-2.5 4.4-8.5 9-8.5 9z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M4 12h3l2-3 2 5 2-4 1.5 2H20" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var SVG_SPEED   = '<svg viewBox="0 0 24 24" fill="none"><path d="M3 8h9M3 12h13M3 16h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M16.5 6l5 6-5 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var SVG_BATTERY = '<svg viewBox="0 0 24 24" fill="none"><rect x="2" y="8" width="17" height="8" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="19.5" y="10.3" width="2" height="3.4" fill="currentColor"/><rect x="4" y="10" width="3" height="4" fill="currentColor"/></svg>';
+  var SVG_CHOIR   = '<svg viewBox="0 0 24 24" fill="none"><circle cx="7" cy="8" r="2.8" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="8" r="2.8" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="9" r="3.4" stroke="currentColor" stroke-width="1.5"/><path d="M2 20c0-3.5 2.4-5.3 5-5.3s5 1.8 5 5.3M12 20c0-4 3-5.8 5-5.8s5 1.8 5 5.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+
+  /* ---------------- Effects Catalogue (36 total) ---------------- */
   var EFFECTS = [
     { id:'none', name:'بدون افکت', icon:'🎙️', rate:1, detune:0, tail:0.3,
       build:function(ctx,input,I){ return input; } },
@@ -456,7 +696,7 @@
         var lp = biquad(ctx,'lowpass', 900,1); input.connect(lp);
         var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(10*I); lp.connect(ws);
         return ws; } },
-    { id:'chipmunk', name:'جوجه‌تیغی', icon:'🐿️', rate:1.65, detune:220, tail:0.3,
+    { id:'chipmunk', name:'سنجاب', icon:'🐿️', rate:1.65, detune:220, tail:0.3,
       build:function(ctx,input,I){ var hp = biquad(ctx,'highpass',450,0.7); input.connect(hp); return hp; } },
     { id:'cave', name:'اکوی غار', icon:'🕳️', rate:1, detune:0, tail:3.2,
       build:function(ctx,input,I){
@@ -554,6 +794,160 @@
         var r = ringMod(ctx, input, 6*I);
         var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(18*I); r.connect(ws);
         return reverbFx(ctx, ws, 2.6, 2.4, 0.45); } },
+    { id:'twin', name:'دوقلوی صدا', icon:SVG_TWIN, rate:1, detune:0, tail:0.5,
+      build:function(ctx,input,I){
+        var delay = ctx.createDelay(0.06); delay.delayTime.value = 0.018;
+        var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = 0.9;
+        var lfoGain = ctx.createGain(); lfoGain.gain.value = 0.006*I;
+        lfo.connect(lfoGain); lfoGain.connect(delay.delayTime); lfo.start();
+        var wet = ctx.createGain(); wet.gain.value = 0.85;
+        var dry = ctx.createGain(); dry.gain.value = 1;
+        var out = ctx.createGain();
+        input.connect(dry); dry.connect(out);
+        input.connect(delay); delay.connect(wet); wet.connect(out);
+        return out; } },
+    { id:'oldtape', name:'نوار قدیمی', icon:SVG_TAPE, rate:0.97, detune:0, tail:0.4,
+      build:function(ctx,input,I){
+        var flutter = ctx.createDelay(0.03); flutter.delayTime.value = 0.01;
+        var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = 5.5;
+        var lfoGain = ctx.createGain(); lfoGain.gain.value = 0.004*I;
+        lfo.connect(lfoGain); lfoGain.connect(flutter.delayTime); lfo.start();
+        input.connect(flutter);
+        var lp = biquad(ctx,'lowpass',3400,0.7); flutter.connect(lp);
+        var out = ctx.createGain(); lp.connect(out);
+        var hiss = ctx.createBufferSource(); hiss.buffer = makeNoiseBuffer(ctx,30); hiss.loop = true;
+        var hissFilter = biquad(ctx,'highpass',4200,0.7);
+        var hissGain = ctx.createGain(); hissGain.gain.value = 0.035*I;
+        hiss.connect(hissFilter); hissFilter.connect(hissGain); hissGain.connect(out); hiss.start();
+        var crackle = ctx.createBufferSource(); crackle.buffer = makeCrackleBuffer(ctx,30,I); crackle.loop = true;
+        var crackleGain = ctx.createGain(); crackleGain.gain.value = 0.45;
+        crackle.connect(crackleGain); crackleGain.connect(out); crackle.start();
+        return out; } },
+    { id:'autopan', name:'چرخش استریو', icon:SVG_PAN, rate:1, detune:0, tail:0.3,
+      build:function(ctx,input,I){
+        var panner = ctx.createStereoPanner();
+        var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = 2.2*I;
+        var lfoGain = ctx.createGain(); lfoGain.gain.value = Math.min(1, 0.9*I);
+        lfo.connect(lfoGain); lfoGain.connect(panner.pan); lfo.start();
+        input.connect(panner);
+        return panner; } },
+    { id:'heartbeat', name:'تپش قلب', icon:SVG_HEART, rate:0.96, detune:-30, tail:0.4,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',1600,0.8); input.connect(lp);
+        var t1 = tremolo(ctx, lp, 1.3, Math.min(0.85,0.55*I));
+        var t2 = tremolo(ctx, t1, 2.6, Math.min(0.5,0.3*I));
+        return t2; } },
+    { id:'speedup', name:'شتاب دیوانه‌وار', icon:SVG_SPEED, rate:1, detune:0, tail:0.3, speedRamp:true, rampFrom:1, rampTo:2.2,
+      build:function(ctx,input,I){
+        var hs = biquad(ctx,'highshelf',2500,0); hs.gain.value = 3*I; input.connect(hs);
+        return hs; } },
+    { id:'slowdown', name:'باتری کم', icon:SVG_BATTERY, rate:1, detune:0, tail:0.6, speedRamp:true, rampFrom:1, rampTo:0.4,
+      build:function(ctx,input,I,dur){
+        var lp = biquad(ctx,'lowpass',9000,0.8); input.connect(lp);
+        var d = dur || 2;
+        lp.frequency.setValueAtTime(9000, ctx.currentTime);
+        lp.frequency.linearRampToValueAtTime(450, ctx.currentTime + d);
+        return lp; } },
+    { id:'choir', name:'همخوانی جمعی', icon:SVG_CHOIR, rate:1, detune:0, tail:0.4,
+      build:function(ctx,input,I){
+        var out = ctx.createGain();
+        input.connect(out);
+        [0.011,0.017,0.023,0.031].forEach(function(t,i){
+          var d = ctx.createDelay(0.05); d.delayTime.value = t;
+          var bp = biquad(ctx,'bandpass', 900+i*300, 1.2);
+          var g = ctx.createGain(); g.gain.value = 0.32*I;
+          input.connect(d); d.connect(bp); bp.connect(g); g.connect(out);
+        });
+        return out; } },
+    { id:'cartoon', name:'کارتونی بامزه', icon:'🤪', rate:1.3, detune:180, tail:0.3,
+      build:function(ctx,input,I){
+        var t = tremolo(ctx, input, 7*I, 0.3);
+        var hs = biquad(ctx,'highshelf',3000,0); hs.gain.value = 4; t.connect(hs);
+        return hs; } },
+    { id:'pirate', name:'دزد دریایی', icon:'🏴‍☠️', rate:0.88, detune:-60, tail:0.5,
+      build:function(ctx,input,I){
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(14*I); input.connect(ws);
+        var bp = biquad(ctx,'bandpass',1100,1.3); ws.connect(bp);
+        return bp; } },
+    { id:'superhero', name:'ابرقهرمان', icon:'🦸', rate:0.8, detune:-140, tail:1.0,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',2600,0.8); input.connect(lp);
+        var hs = biquad(ctx,'highshelf',3500,0); hs.gain.value = 2; lp.connect(hs);
+        return reverbFx(ctx, hs, 1.0, 1.3, 0.25*I); } },
+    { id:'wizard', name:'جادوگر', icon:'🧙', rate:1.05, detune:60, tail:2.4,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',500,0.7); input.connect(hp);
+        var d = delayFx(ctx, hp, 0.16, 0.35, 0.3);
+        return reverbFx(ctx, d, 2.0, 2.0, Math.min(0.7,0.4*I)); } },
+    { id:'ninja', name:'نینجا', icon:'🥷', rate:1.02, detune:10, tail:0.3,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',700,0.8); input.connect(hp);
+        var g = ctx.createGain(); g.gain.value = 0.9; hp.connect(g);
+        return g; } },
+    { id:'megabass', name:'باس سنگین', icon:'🔊', rate:0.9, detune:-80, tail:0.4,
+      build:function(ctx,input,I){
+        var ls = ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=220; ls.gain.value = 14*I;
+        input.connect(ls);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(6*I); ls.connect(ws);
+        return ws; } },
+    { id:'metallic', name:'رزونانس فلزی', icon:'🔔', rate:1, detune:0, tail:0.6,
+      build:function(ctx,input,I){
+        var out = ctx.createGain();
+        var dry = ctx.createGain(); dry.gain.value = 0.6; input.connect(dry); dry.connect(out);
+        [0.0031,0.0047,0.0064].forEach(function(t){
+          var d = ctx.createDelay(0.02); d.delayTime.value = t;
+          var fb = ctx.createGain(); fb.gain.value = Math.min(0.75, 0.55*I);
+          var g = ctx.createGain(); g.gain.value = 0.5;
+          input.connect(d); d.connect(fb); fb.connect(d); d.connect(g); g.connect(out);
+        });
+        return out; } },
+    { id:'muffled', name:'صدای خفه (زیر بالش)', icon:'🛏️', rate:0.98, detune:-10, tail:0.3,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass', Math.max(280, 750-250*I), 0.9); input.connect(lp);
+        var g = ctx.createGain(); g.gain.value = 0.85; lp.connect(g);
+        return g; } },
+    { id:'wind', name:'وزوز باد', icon:'🌬️', rate:0.97, detune:-20, tail:1.0,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',1200,0.9); input.connect(bp);
+        var out = ctx.createGain(); bp.connect(out);
+        var noiseSrc = ctx.createBufferSource();
+        noiseSrc.buffer = makeNoiseBuffer(ctx, 30); noiseSrc.loop = true;
+        var noiseFilter = biquad(ctx,'lowpass',900,0.7);
+        var noiseGain = ctx.createGain(); noiseGain.gain.value = 0.14*I;
+        var t = tremolo(ctx, noiseFilter, 0.6, 0.7);
+        noiseSrc.connect(noiseFilter); t.connect(noiseGain); noiseGain.connect(out);
+        noiseSrc.start();
+        return out; } },
+    { id:'opera', name:'اپرای رسمی', icon:'🎭', rate:1.12, detune:40, tail:2.2,
+      build:function(ctx,input,I){
+        wobbleDetune(ctx, input, 5.5, 22*I);
+        var hs = biquad(ctx,'highshelf',3200,0); hs.gain.value = 2; input.connect(hs);
+        return reverbFx(ctx, hs, 2.2, 2.2, Math.min(0.6,0.35*I)); } },
+    { id:'doppler', name:'عبور با سرعت', icon:'🚗', rate:1, detune:0, tail:0.5,
+      build:function(ctx,input,I,dur){
+        var d = dur || 2;
+        var lp = biquad(ctx,'lowpass',900,0.8); input.connect(lp);
+        lp.frequency.setValueAtTime(500, ctx.currentTime);
+        lp.frequency.linearRampToValueAtTime(6500, ctx.currentTime + d*0.45);
+        lp.frequency.linearRampToValueAtTime(400, ctx.currentTime + d);
+        var panner = ctx.createStereoPanner();
+        panner.pan.setValueAtTime(-1, ctx.currentTime);
+        panner.pan.linearRampToValueAtTime(1, ctx.currentTime + d);
+        lp.connect(panner);
+        var g = ctx.createGain(); g.gain.value = 1.1*I; panner.connect(g);
+        return g; } },
+    { id:'starship', name:'سفینه فضایی', icon:'🛸', rate:1.03, detune:30, tail:1.6,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',1700,1.4); input.connect(bp);
+        var r = ringMod(ctx, bp, 4*I);
+        var out = ctx.createGain(); r.connect(out);
+        return reverbFx(ctx, out, 1.6, 1.8, Math.min(0.55,0.3*I)); } },
+    { id:'circus', name:'سیرک شادی', icon:'🎪', rate:1.15, detune:100, tail:0.4,
+      build:function(ctx,input,I){
+        wobbleDetune(ctx, input, 6.5, 30*I);
+        var t = tremolo(ctx, input, 8*I, 0.25);
+        var hs = biquad(ctx,'highshelf',2800,0); hs.gain.value = 3; t.connect(hs);
+        return hs; } },
     { id:'custom', name:'سفارشی من', icon:'🛠️', rate:1, detune:0, tail:2.2,
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass', customParams.filt, 0.8); input.connect(lp);
@@ -564,6 +958,23 @@
   var EFFECTS_MAP = {};
   EFFECTS.forEach(function(e){ EFFECTS_MAP[e.id]=e; });
   var customEffect = EFFECTS_MAP['custom'];
+
+  /* ---------------- Effect categories (for a tidier, grouped grid) ---------------- */
+  var CATEGORY_ORDER = ['بامزه و شاد','ترسناک','فانتزی و کاراکتر','محیط و فضا','دیجیتال و ربات','رترو','سفارشی'];
+  var CATEGORY_MAP = {
+    chipmunk:'بامزه و شاد', nightcore:'بامزه و شاد', drunk:'بامزه و شاد', speedup:'بامزه و شاد',
+    slowdown:'بامزه و شاد', cartoon:'بامزه و شاد', heartbeat:'بامزه و شاد', muffled:'بامزه و شاد', circus:'بامزه و شاد',
+    monster:'ترسناک', demon:'ترسناک', horror:'ترسناک', giant:'ترسناک', whisper:'ترسناک',
+    alien:'فانتزی و کاراکتر', angel:'فانتزی و کاراکتر', choir:'فانتزی و کاراکتر', pirate:'فانتزی و کاراکتر',
+    superhero:'فانتزی و کاراکتر', wizard:'فانتزی و کاراکتر', ninja:'فانتزی و کاراکتر', opera:'فانتزی و کاراکتر',
+    cave:'محیط و فضا', underwater:'محیط و فضا', dreamy:'محیط و فضا', heli:'محیط و فضا', vaporwave:'محیط و فضا',
+    wind:'محیط و فضا', doppler:'محیط و فضا', starship:'محیط و فضا',
+    robot:'دیجیتال و ربات', glitch:'دیجیتال و ربات', eightbit:'دیجیتال و ربات', twin:'دیجیتال و ربات',
+    autopan:'دیجیتال و ربات', metallic:'دیجیتال و ربات',
+    radio:'رترو', phone:'رترو', backwards:'رترو', megaphone:'رترو', oldtape:'رترو', megabass:'رترو',
+    custom:'سفارشی'
+  };
+  function categoryOf(id){ return CATEGORY_MAP[id] || 'بامزه و شاد'; }
 
   /* ---------------- State ---------------- */
   var mediaStream = null;
@@ -617,6 +1028,248 @@
   var btnOriginal = document.getElementById('btnOriginal');
   var historyRow = document.getElementById('historyRow');
   var avatarMouth = document.getElementById('avatarMouth');
+  var avatarFace = document.getElementById('avatarFace');
+  var avatarPicker = document.getElementById('avatarPicker');
+
+  /* ---------------- Avatar picker (custom-drawn characters, no emoji) ---------------- */
+  var AVATARS = [
+    { id:'classic', label:'کلاسیک' },
+    { id:'robot',   label:'ربات' },
+    { id:'monster', label:'هیولا' },
+    { id:'alien',   label:'فضایی' },
+    { id:'cat',     label:'گربه' },
+    { id:'pirate',    label:'دزد دریایی' },
+    { id:'superhero', label:'ابرقهرمان' },
+    { id:'wizard',    label:'جادوگر' },
+    { id:'ninja',     label:'نینجا' },
+    { id:'vampire',   label:'خون‌آشام' },
+    { id:'skeleton',  label:'اسکلت' },
+    { id:'clown',     label:'دلقک' },
+    { id:'king',      label:'پادشاه' },
+    { id:'panda',     label:'پاندا' },
+    { id:'dragon',    label:'اژدها' }
+  ];
+  var selectedAvatar = 'classic';
+  AVATARS.forEach(function(a){
+    var btn = document.createElement('button');
+    btn.className = 'avatar-opt' + (a.id===selectedAvatar ? ' active' : '');
+    btn.dataset.avatar = a.id;
+    btn.innerHTML = '<div class="mini-wrap"><div class="avatar-face mini avatar-'+a.id+'"></div></div><span>'+a.label+'</span>';
+    btn.addEventListener('click', function(){
+      vibrate(8);
+      selectedAvatar = a.id;
+      Array.prototype.forEach.call(avatarPicker.children, function(c){
+        c.classList.toggle('active', c.dataset.avatar === a.id);
+      });
+      applyAvatar();
+    });
+    avatarPicker.appendChild(btn);
+  });
+  function applyAvatar(){
+    avatarFace.className = 'avatar-face avatar-'+selectedAvatar;
+  }
+  applyAvatar();
+
+  /* ---------------- Avatar Video Export (canvas + audio -> shareable video) ---------------- */
+  var AVATAR_COLORS = {
+    classic:['#7C3AED','#EC4899'], robot:['#7c8aa0','#374151'], monster:['#22c55e','#15803d'],
+    alien:['#5eead4','#0f766e'], cat:['#fb923c','#c2410c'], pirate:['#d9a566','#8a5a2b'],
+    superhero:['#3b82f6','#1e3a8a'], wizard:['#8b5cf6','#4c1d95'], ninja:['#475569','#0f172a'],
+    vampire:['#9d3355','#2a0a14'], skeleton:['#e7ebf0','#9aa4b2'], clown:['#f472b6','#7e22ce'],
+    king:['#fde68a','#b45309'], panda:['#f8fafc','#cbd5e1'], dragon:['#10b981','#065f46']
+  };
+  function drawAccessory(g,id,cx,cy,r,colors){
+    g.fillStyle = colors[1];
+    if(id==='robot'){
+      g.strokeStyle = '#94a3b8'; g.lineWidth = Math.max(2,r*0.06);
+      g.beginPath(); g.moveTo(cx,cy-r); g.lineTo(cx,cy-r*1.32); g.stroke();
+      g.fillStyle = '#22d3ee'; g.beginPath(); g.arc(cx,cy-r*1.38,r*0.09,0,Math.PI*2); g.fill();
+    } else if(id==='monster'){
+      g.beginPath(); g.moveTo(cx-r*0.5,cy-r*0.85); g.lineTo(cx-r*0.3,cy-r*1.25); g.lineTo(cx-r*0.15,cy-r*0.85); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(cx+r*0.5,cy-r*0.85); g.lineTo(cx+r*0.3,cy-r*1.25); g.lineTo(cx+r*0.15,cy-r*0.85); g.closePath(); g.fill();
+    } else if(id==='alien'){
+      g.beginPath(); g.arc(cx-r*0.45,cy-r*1.05,r*0.06,0,Math.PI*2); g.fill();
+      g.beginPath(); g.arc(cx+r*0.45,cy-r*1.05,r*0.06,0,Math.PI*2); g.fill();
+    } else if(id==='cat'){
+      g.beginPath(); g.moveTo(cx-r*0.75,cy-r*0.6); g.lineTo(cx-r*0.45,cy-r*1.3); g.lineTo(cx-r*0.15,cy-r*0.65); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(cx+r*0.75,cy-r*0.6); g.lineTo(cx+r*0.45,cy-r*1.3); g.lineTo(cx+r*0.15,cy-r*0.65); g.closePath(); g.fill();
+    } else if(id==='pirate'){
+      g.fillStyle='#dc2626'; g.fillRect(cx-r,cy-r*1.12,r*2,r*0.32);
+      g.fillStyle='#111'; g.beginPath(); g.ellipse(cx-r*0.32,cy-r*0.15,r*0.16,r*0.11,0,0,Math.PI*2); g.fill();
+    } else if(id==='superhero'){
+      g.fillStyle='#111'; g.fillRect(cx-r*0.5,cy-r*0.3,r*1.0,r*0.24);
+    } else if(id==='wizard'){
+      g.beginPath(); g.moveTo(cx-r*0.7,cy-r*0.85); g.lineTo(cx,cy-r*1.85); g.lineTo(cx+r*0.7,cy-r*0.85); g.closePath(); g.fill();
+      g.fillStyle='#e5e7eb'; g.beginPath(); g.ellipse(cx,cy+r*0.65,r*0.4,r*0.26,0,0,Math.PI*2); g.fill();
+    } else if(id==='ninja'){
+      g.fillStyle='#dc2626'; g.fillRect(cx-r,cy-r*0.35,r*2,r*0.16);
+      g.fillStyle='rgba(15,23,42,0.65)'; g.fillRect(cx-r,cy+r*0.05,r*2,r*0.55);
+    } else if(id==='vampire'){
+      g.fillStyle='#1a0810';
+      g.beginPath(); g.moveTo(cx-r*0.3,cy-r*0.95); g.lineTo(cx,cy-r*0.62); g.lineTo(cx+r*0.3,cy-r*0.95); g.closePath(); g.fill();
+      g.fillStyle='#fff';
+      g.beginPath(); g.moveTo(cx-r*0.14,cy+r*0.3); g.lineTo(cx-r*0.08,cy+r*0.44); g.lineTo(cx-r*0.02,cy+r*0.3); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(cx+r*0.14,cy+r*0.3); g.lineTo(cx+r*0.08,cy+r*0.44); g.lineTo(cx+r*0.02,cy+r*0.3); g.closePath(); g.fill();
+    } else if(id==='skeleton'){
+      g.fillStyle='#111827';
+      g.beginPath(); g.ellipse(cx-r*0.32,cy-r*0.08,r*0.16,r*0.2,0,0,Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx+r*0.32,cy-r*0.08,r*0.16,r*0.2,0,0,Math.PI*2); g.fill();
+      g.beginPath(); g.moveTo(cx-r*0.05,cy+r*0.05); g.lineTo(cx+r*0.05,cy+r*0.05); g.lineTo(cx,cy+r*0.2); g.closePath(); g.fill();
+    } else if(id==='clown'){
+      g.fillStyle='#22c55e'; g.beginPath(); g.arc(cx-r*0.9,cy-r*0.5,r*0.24,0,Math.PI*2); g.fill();
+      g.fillStyle='#facc15'; g.beginPath(); g.arc(cx+r*0.9,cy-r*0.5,r*0.24,0,Math.PI*2); g.fill();
+      g.fillStyle='#dc2626'; g.beginPath(); g.arc(cx,cy+r*0.06,r*0.14,0,Math.PI*2); g.fill();
+    } else if(id==='king'){
+      g.fillStyle='#facc15';
+      g.beginPath();
+      g.moveTo(cx-r*0.62,cy-r*0.95); g.lineTo(cx-r*0.62,cy-r*1.28); g.lineTo(cx-r*0.31,cy-r*1.0);
+      g.lineTo(cx,cy-r*1.4); g.lineTo(cx+r*0.31,cy-r*1.0); g.lineTo(cx+r*0.62,cy-r*1.28);
+      g.lineTo(cx+r*0.62,cy-r*0.95); g.closePath(); g.fill();
+    } else if(id==='panda'){
+      g.fillStyle='#111827';
+      g.beginPath(); g.arc(cx-r*0.9,cy-r*0.65,r*0.28,0,Math.PI*2); g.fill();
+      g.beginPath(); g.arc(cx+r*0.9,cy-r*0.65,r*0.28,0,Math.PI*2); g.fill();
+    } else if(id==='dragon'){
+      g.fillStyle='#d97706';
+      g.beginPath(); g.moveTo(cx-r*0.5,cy-r*0.85); g.lineTo(cx-r*0.35,cy-r*1.32); g.lineTo(cx-r*0.18,cy-r*0.85); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(cx+r*0.5,cy-r*0.85); g.lineTo(cx+r*0.35,cy-r*1.32); g.lineTo(cx+r*0.18,cy-r*0.85); g.closePath(); g.fill();
+    }
+  }
+  function drawAvatarCanvas(g, w, h, id, mouthScale){
+    g.clearRect(0,0,w,h);
+    var bgGrad = g.createRadialGradient(w/2,h/2,10,w/2,h/2,w*0.75);
+    bgGrad.addColorStop(0,'#241c40'); bgGrad.addColorStop(1,'#0f0b1e');
+    g.fillStyle = bgGrad; g.fillRect(0,0,w,h);
+
+    var cx = w/2, cy = h/2 + h*0.03, r = Math.min(w,h)*0.28;
+    var colors = AVATAR_COLORS[id] || AVATAR_COLORS.classic;
+    var grad = g.createLinearGradient(cx-r,cy-r,cx+r,cy+r);
+    grad.addColorStop(0,colors[0]); grad.addColorStop(1,colors[1]);
+    g.fillStyle = grad;
+    g.beginPath(); g.arc(cx,cy,r,0,Math.PI*2); g.fill();
+
+    var eyeY = cy - r*0.15;
+    g.fillStyle = '#fff';
+    g.beginPath(); g.arc(cx-r*0.32, eyeY, r*0.12, 0, Math.PI*2); g.fill();
+    g.beginPath(); g.arc(cx+r*0.32, eyeY, r*0.12, 0, Math.PI*2); g.fill();
+
+    var mw = r*0.55, mh = Math.max(3, r*0.16*mouthScale);
+    g.beginPath(); g.ellipse(cx, cy+r*0.32, mw/2, mh/2, 0, 0, Math.PI*2); g.fill();
+
+    drawAccessory(g,id,cx,cy,r,colors);
+  }
+
+  var videoBtn = document.getElementById('videoBtn');
+  var videoOverlay = document.getElementById('videoOverlay');
+  var videoResultCard = document.getElementById('videoResultCard');
+  var videoPlayer = document.getElementById('videoPlayer');
+  var videoDownloadBtn = document.getElementById('videoDownloadBtn');
+  var videoShareBtn = document.getElementById('videoShareBtn');
+
+  function pickVideoMime(){
+    var options = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+    for(var i=0;i<options.length;i++){
+      if(window.MediaRecorder && MediaRecorder.isTypeSupported(options[i])) return options[i];
+    }
+    return '';
+  }
+
+  videoBtn.addEventListener('click', function(){
+    vibrate(15);
+    if(!window.__lastBlob) return;
+    var canvasEl = document.createElement('canvas');
+    if(!(canvasEl.captureStream && window.MediaRecorder)){
+      statusMsg.textContent = 'ساخت ویدیو روی این مرورگر پشتیبانی نمی‌شه 😔';
+      return;
+    }
+    makeAvatarVideo();
+  });
+
+  function makeAvatarVideo(){
+    videoOverlay.classList.add('show');
+    videoBtn.disabled = true;
+
+    var canvas = document.createElement('canvas');
+    canvas.width = 480; canvas.height = 480;
+    var g2 = canvas.getContext('2d');
+    drawAvatarCanvas(g2, canvas.width, canvas.height, selectedAvatar, 1);
+
+    window.__lastBlob.arrayBuffer().then(function(ab){
+      var vCtx = new (window.AudioContext||window.webkitAudioContext)();
+      return vCtx.decodeAudioData(ab).then(function(buf){ return {vCtx:vCtx, buf:buf}; });
+    }).then(function(res){
+      var vCtx = res.vCtx, buf = res.buf;
+      var src = vCtx.createBufferSource(); src.buffer = buf;
+      var analyser = vCtx.createAnalyser(); analyser.fftSize = 512;
+      var dest = vCtx.createMediaStreamDestination();
+      src.connect(analyser); analyser.connect(dest); src.connect(vCtx.destination);
+
+      var canvasStream = canvas.captureStream(30);
+      var combined = new MediaStream();
+      canvasStream.getVideoTracks().forEach(function(t){ combined.addTrack(t); });
+      dest.stream.getAudioTracks().forEach(function(t){ combined.addTrack(t); });
+
+      var mime = pickVideoMime();
+      var recorder = new MediaRecorder(combined, mime ? {mimeType:mime} : undefined);
+      var chunks = [];
+      recorder.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+      recorder.onstop = function(){
+        var blob = new Blob(chunks, {type: mime || 'video/webm'});
+        var url = URL.createObjectURL(blob);
+        videoPlayer.src = url;
+        videoResultCard.classList.remove('hidden');
+        videoOverlay.classList.remove('show');
+        videoBtn.disabled = false;
+        window.__lastVideoBlob = blob;
+        window.__lastVideoName = 'voicemorph-avatar.webm';
+        videoResultCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+        try{ vCtx.close(); }catch(e){}
+      };
+
+      var data = new Uint8Array(analyser.fftSize);
+      var rafId;
+      function draw(){
+        rafId = requestAnimationFrame(draw);
+        analyser.getByteTimeDomainData(data);
+        var sum=0; for(var i=0;i<data.length;i++){ var v=(data[i]-128)/128; sum+=v*v; }
+        var rms = Math.sqrt(sum/data.length);
+        var scale = 1 + Math.min(2.2, rms*9);
+        drawAvatarCanvas(g2, canvas.width, canvas.height, selectedAvatar, scale);
+      }
+      recorder.start();
+      src.start(0);
+      draw();
+      src.onended = function(){
+        cancelAnimationFrame(rafId);
+        setTimeout(function(){ if(recorder.state !== 'inactive') recorder.stop(); }, 200);
+      };
+    }).catch(function(){
+      videoOverlay.classList.remove('show');
+      videoBtn.disabled = false;
+      statusMsg.textContent = 'ساخت ویدیو با مشکل مواجه شد.';
+    });
+  }
+
+  videoDownloadBtn.addEventListener('click', function(){
+    if(!window.__lastVideoBlob) return;
+    vibrate(12);
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(window.__lastVideoBlob);
+    a.download = window.__lastVideoName || 'voicemorph-avatar.webm';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  });
+  videoShareBtn.addEventListener('click', function(){
+    vibrate(12);
+    if(!window.__lastVideoBlob) return;
+    if(navigator.share && navigator.canShare){
+      var file = new File([window.__lastVideoBlob], window.__lastVideoName||'voicemorph-avatar.webm', {type:'video/webm'});
+      if(navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:'وویس‌مورف', text:'ویدیوی آواتار صدای من! 🎬'}).catch(function(){});
+        return;
+      }
+    }
+    videoDownloadBtn.click();
+  });
 
   function resizeCanvas(){
     waveCanvas.width = waveCanvas.clientWidth * devicePixelRatio;
@@ -625,24 +1278,45 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  /* ---------------- Build effect grid ---------------- */
+  /* ---------------- Build effect grid, grouped into tidy categories ---------------- */
+  var allFxCards = [];
+  var byCategory = {};
   EFFECTS.forEach(function(fx){
     if(fx.id === 'none') return;
-    var card = document.createElement('div');
-    card.className = 'fx-card';
-    card.dataset.id = fx.id;
-    card.innerHTML = '<span class="ic">'+fx.icon+'</span><span class="nm">'+fx.name+'</span>';
-    card.addEventListener('click', function(){ selectEffect(fx.id); });
-    fxGrid.appendChild(card);
+    var cat = categoryOf(fx.id);
+    (byCategory[cat] || (byCategory[cat] = [])).push(fx);
 
     var opt = document.createElement('option');
     opt.value = fx.id; opt.textContent = fx.name;
     secondarySelect.appendChild(opt);
   });
+  CATEGORY_ORDER.forEach(function(cat){
+    var list = byCategory[cat];
+    if(!list || !list.length) return;
+    var section = document.createElement('div');
+    section.className = 'fx-cat';
+    var title = document.createElement('div');
+    title.className = 'fx-cat-title';
+    title.textContent = cat;
+    section.appendChild(title);
+    var grid = document.createElement('div');
+    grid.className = 'fx-grid';
+    list.forEach(function(fx){
+      var card = document.createElement('div');
+      card.className = 'fx-card';
+      card.dataset.id = fx.id;
+      card.innerHTML = '<span class="ic">'+fx.icon+'</span><span class="nm">'+fx.name+'</span>';
+      card.addEventListener('click', function(){ selectEffect(fx.id); });
+      grid.appendChild(card);
+      allFxCards.push(card);
+    });
+    section.appendChild(grid);
+    fxGrid.appendChild(section);
+  });
   document.getElementById('fxCount').textContent = (EFFECTS.length-1) + ' افکت';
 
   function highlightFxCard(id){
-    Array.prototype.forEach.call(fxGrid.children, function(c){
+    allFxCards.forEach(function(c){
       c.classList.toggle('active', c.dataset.id === id);
     });
     advPanel.classList.toggle('show', id === 'custom');
@@ -739,18 +1413,55 @@
     blob.arrayBuffer().then(function(ab){
       return getCtx().decodeAudioData(ab);
     }).then(function(buf){
-      originalBuffer = buf;
-      trimStart = 0; trimEnd = 1;
-      recTimer.textContent = '۰۰:۰۰';
-      trimHint.classList.remove('hidden');
-      drawStaticWave();
-      fxCard.classList.remove('hidden');
-      fxCard.scrollIntoView({behavior:'smooth', block:'nearest'});
-      selectEffect('none');
+      useDecodedBuffer(buf);
     }).catch(function(err){
       statusMsg.textContent = 'مشکلی در پردازش صدای ضبط‌شده پیش اومد، دوباره امتحان کن.';
     });
   }
+
+  var MAX_UPLOAD_SECONDS = 90;
+  function useDecodedBuffer(buf){
+    if(buf.duration > MAX_UPLOAD_SECONDS){
+      var ctx = getCtx();
+      var len = Math.floor(MAX_UPLOAD_SECONDS*buf.sampleRate);
+      var nb = ctx.createBuffer(buf.numberOfChannels, len, buf.sampleRate);
+      for(var ch=0; ch<buf.numberOfChannels; ch++){
+        nb.getChannelData(ch).set(buf.getChannelData(ch).subarray(0,len));
+      }
+      buf = nb;
+      statusMsg.textContent = 'فقط ۹۰ ثانیه اول فایل برای پردازش سریع‌تر انتخاب شد ⏱️';
+    } else {
+      statusMsg.textContent = '';
+    }
+    originalBuffer = buf;
+    trimStart = 0; trimEnd = 1;
+    recTimer.textContent = '۰۰:۰۰';
+    trimHint.classList.remove('hidden');
+    drawStaticWave();
+    fxCard.classList.remove('hidden');
+    fxCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+    selectEffect('none');
+  }
+
+  /* ---------------- Upload audio file from the phone ---------------- */
+  var uploadBtn = document.getElementById('uploadBtn');
+  var fileInput = document.getElementById('fileInput');
+  uploadBtn.addEventListener('click', function(){ vibrate(10); fileInput.click(); });
+  fileInput.addEventListener('change', function(e){
+    var f = e.target.files && e.target.files[0];
+    if(!f) return;
+    if(isRecording) stopRecording();
+    trimHint.classList.add('hidden');
+    statusMsg.textContent = 'در حال بارگذاری فایل…';
+    f.arrayBuffer().then(function(ab){
+      return getCtx().decodeAudioData(ab);
+    }).then(function(buf){
+      useDecodedBuffer(buf);
+    }).catch(function(err){
+      statusMsg.textContent = 'این فایل صوتی پشتیبانی نمی‌شه، یه فرمت دیگه امتحان کن (mp3, wav, m4a...) 🙏';
+    });
+    fileInput.value = '';
+  });
 
   function drawLiveWave(){
     var w = waveCanvas.width, h = waveCanvas.height;
@@ -889,6 +1600,7 @@
 
     var srcBuffer = getTrimmedBuffer();
     if(primary.reverse) srcBuffer = reverseBuffer(srcBuffer);
+    if(primary.speedRamp) srcBuffer = speedRampBuffer(srcBuffer, primary.rampFrom||1, primary.rampTo||1);
     trimmedSourceBuffer = srcBuffer;
 
     var rate = primary.rate || 1;
@@ -902,8 +1614,8 @@
     src.playbackRate.value = rate;
     if(src.detune) src.detune.value = detune;
 
-    var node = primary.build(offlineCtx, src, I);
-    if(secondary){ node = secondary.build(offlineCtx, node, I); }
+    var node = primary.build(offlineCtx, src, I, estDuration);
+    if(secondary){ node = secondary.build(offlineCtx, node, I, estDuration); }
     var masterGain = offlineCtx.createGain();
     masterGain.gain.value = 1.0;
     node.connect(masterGain);
@@ -923,7 +1635,7 @@
       setPlayerMode('processed');
       var nm = primary.name + (secondary ? ' + '+secondary.name : '');
       playerFxName.textContent = nm;
-      playerIcon.textContent = primary.icon;
+      playerIcon.innerHTML = primary.icon;
       playerCard.classList.remove('hidden');
       processingOverlay.classList.remove('show');
       window.__lastBlob = blob;
@@ -1029,7 +1741,7 @@
         window.__lastName = h.filename;
         setPlayerMode('processed');
         playerFxName.textContent = h.name;
-        playerIcon.textContent = h.icon;
+        playerIcon.innerHTML = h.icon;
       });
       historyRow.appendChild(chip);
     });
@@ -1068,6 +1780,7 @@
     intensitySlider.value = 100; intVal.textContent = '۱۰۰٪';
     fxCard.classList.add('hidden');
     playerCard.classList.add('hidden');
+    videoResultCard.classList.add('hidden');
     trimHint.classList.add('hidden');
     waveCtx.clearRect(0,0,waveCanvas.width, waveCanvas.height);
     statusMsg.textContent = '';
