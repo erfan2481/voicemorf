@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#7C3AED">
+<title>وویس‌مورف | تغییر صدای حرفه‌ای</title>
+<style>
+  :root{
+    --bg:#f3f1fb;
+    --bg2:#ffffff;
+    --card:#ffffff;
+    --card-border:#e9e5f8;
+    --text:#1b1530;
+    --text-dim:#6b6482;
+    --accent:#7C3AED;
+    --accent2:#EC4899;
+    --accent3:#06B6D4;
+    --shadow: 0 10px 30px rgba(124,58,237,.12);
+    --danger:#ef4444;
+    --success:#10b981;
+    --radius:22px;
+  }
+  [data-theme="dark"]{
+    --bg:#0f0b1e;
+    --bg2:#161129;
+    --card:#1b1533;
+    --card-border:#2c2450;
+    --text:#f2eefc;
+    --text-dim:#a79bce;
+    --shadow: 0 10px 30px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Vazirmatn','Segoe UI',Tahoma,sans-serif;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(124,58,237,.20), transparent 45%),
+      radial-gradient(circle at 90% 10%, rgba(236,72,153,.18), transparent 40%),
+      radial-gradient(circle at 50% 100%, rgba(6,182,212,.15), transparent 45%),
+      var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    transition:background .4s ease, color .4s ease;
+    padding-bottom:40px;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:520px; margin:0 auto; padding:16px 16px 10px;}
+
+  header{display:flex; align-items:center; justify-content:space-between; padding:8px 4px 18px;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand .logo{
+    width:42px;height:42px;border-radius:14px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+    box-shadow:0 6px 16px rgba(124,58,237,.4);
+    animation:floaty 3.5s ease-in-out infinite;
+  }
+  @keyframes floaty{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-4deg)}}
+  .brand h1{font-size:17px;margin:0;font-weight:800;letter-spacing:-.3px}
+  .brand p{margin:0;font-size:11px;color:var(--text-dim)}
+  .theme-toggle{
+    width:52px;height:30px;border-radius:20px;border:1px solid var(--card-border);
+    background:var(--card); position:relative; cursor:pointer; flex-shrink:0;
+  }
+  .theme-toggle .dot{
+    position:absolute; top:2px; right:2px; width:24px;height:24px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    transition:transform .3s ease; display:flex;align-items:center;justify-content:center;font-size:12px;
+  }
+  [data-theme="dark"] .theme-toggle .dot{transform:translateX(-22px)}
+
+  .card{
+    background:var(--card); border:1px solid var(--card-border); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:18px; margin-bottom:16px;
+  }
+
+  .recorder{text-align:center; padding:26px 18px 20px;}
+  #waveCanvas{width:100%; height:70px; border-radius:14px; margin-bottom:14px; background:var(--bg2); display:block; touch-action:none;}
+  .rec-btn{
+    width:92px;height:92px;border-radius:50%;border:none;cursor:pointer;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 10px 26px rgba(124,58,237,.45);
+    display:flex;align-items:center;justify-content:center;font-size:34px;color:#fff;
+    position:relative; transition:transform .15s ease;
+  }
+  .rec-btn:active{transform:scale(.93)}
+  .rec-btn.recording{animation:pulseRec 1.2s ease-in-out infinite;}
+  @keyframes pulseRec{
+    0%{box-shadow:0 0 0 0 rgba(236,72,153,.55)}
+    70%{box-shadow:0 0 0 22px rgba(236,72,153,0)}
+    100%{box-shadow:0 0 0 0 rgba(236,72,153,0)}
+  }
+  .rec-timer{font-size:13px; color:var(--text-dim); margin-top:12px; font-variant-numeric:tabular-nums;}
+  .rec-hint{font-size:12.5px; color:var(--text-dim); margin-top:6px;}
+  .status-msg{font-size:12.5px; color:var(--accent2); margin-top:8px; min-height:16px;}
+  .trim-hint{font-size:11px; color:var(--text-dim); margin-top:2px;}
+
+  .sec-title{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 10px;}
+  .sec-title h2{font-size:14.5px;margin:0;font-weight:800;}
+  .sec-title span{font-size:11.5px;color:var(--text-dim);}
+
+  .fx-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  .fx-card{
+    background:var(--bg2); border:1.5px solid var(--card-border); border-radius:16px;
+    padding:12px 6px; text-align:center; cursor:pointer; user-select:none;
+    transition:transform .12s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .fx-card:active{transform:scale(.94)}
+  .fx-card .ic{font-size:24px; display:block; margin-bottom:6px;}
+  .fx-card .nm{font-size:11.5px; font-weight:700; line-height:1.3;}
+  .fx-card.active{
+    border-color:var(--accent);
+    background:linear-gradient(160deg, rgba(124,58,237,.14), rgba(236,72,153,.10));
+    box-shadow:0 6px 16px rgba(124,58,237,.22);
+  }
+
+  .adv-panel{display:none; margin-top:14px; padding-top:14px; border-top:1px dashed var(--card-border);}
+  .adv-panel.show{display:block;}
+  .adv-row{margin-bottom:12px;}
+
+  .ctrl-row{margin-top:16px;}
+  .ctrl-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:6px;}
+  input[type=range]{
+    width:100%; -webkit-appearance:none; height:6px; border-radius:6px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2)); outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:20px;height:20px;border-radius:50%;
+    background:#fff; border:3px solid var(--accent); cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.25);
+  }
+  select{
+    width:100%; padding:10px 12px; border-radius:12px; border:1.5px solid var(--card-border);
+    background:var(--bg2); color:var(--text); font-family:inherit; font-size:13px;
+  }
+
+  .magic-btn{
+    width:100%; margin-top:16px; padding:13px; border:none; border-radius:16px; cursor:pointer;
+    background:linear-gradient(135deg,var(--accent3),var(--accent)); color:#fff; font-weight:800; font-size:13.5px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    box-shadow:0 8px 18px rgba(6,182,212,.28);
+  }
+  .magic-btn:active{transform:scale(.98)}
+
+  .player-title{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .player-title .badge{
+    font-size:20px; width:40px;height:40px;border-radius:12px; display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+  }
+  .player-title b{font-size:14px;}
+  .player-title span{font-size:11.5px; color:var(--text-dim); display:block;}
+
+  .avatar-wrap{display:flex; align-items:center; justify-content:center; margin:10px 0 14px;}
+  .avatar-face{
+    width:78px;height:78px;border-radius:50%;
+    background:linear-gradient(150deg,var(--accent),var(--accent2));
+    position:relative; box-shadow:0 8px 20px rgba(124,58,237,.35);
+  }
+  .avatar-face .eye{position:absolute; top:28px; width:9px;height:9px;border-radius:50%;background:#fff;}
+  .avatar-face .eye.l{left:20px;} .avatar-face .eye.r{right:20px;}
+  .avatar-face .mouth{
+    position:absolute; bottom:18px; left:50%; transform:translateX(-50%) scaleY(1);
+    width:26px; height:8px; background:#fff; border-radius:0 0 14px 14px; transform-origin:top center;
+    transition:transform .05s linear;
+  }
+
+  audio{width:100%; border-radius:12px;}
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; margin-top:12px; font-size:12.5px; color:var(--text-dim);}
+  .mini-switch{display:flex; gap:8px;}
+  .mini-btn{
+    padding:7px 12px; border-radius:20px; border:1.5px solid var(--card-border); background:var(--bg2);
+    color:var(--text); font-size:11.5px; font-weight:700; cursor:pointer;
+  }
+  .mini-btn.on{background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none;}
+
+  .action-row{display:flex; gap:10px; margin-top:14px;}
+  .action-btn{
+    flex:1; padding:12px; border-radius:14px; border:1.5px solid var(--card-border); background:var(--bg2);
+    color:var(--text); font-weight:700; font-size:12.5px; cursor:pointer; display:flex; align-items:center;
+    justify-content:center; gap:6px;
+  }
+  .action-btn.primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none;
+  }
+  .action-btn:active{transform:scale(.96)}
+
+  .history-row{display:flex; gap:8px; margin-top:14px; overflow-x:auto; padding-bottom:4px;}
+  .history-chip{
+    flex-shrink:0; padding:8px 12px; border-radius:14px; background:var(--bg2); border:1.5px solid var(--card-border);
+    font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px;
+  }
+  .history-chip:active{transform:scale(.95)}
+
+  .processing-overlay{
+    display:none; align-items:center; justify-content:center; gap:8px; font-size:12.5px; color:var(--accent);
+    padding:8px; font-weight:700;
+  }
+  .processing-overlay.show{display:flex;}
+  .spinner{width:15px;height:15px;border:2.5px solid var(--card-border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  footer{text-align:center; font-size:11px; color:var(--text-dim); margin-top:10px; padding:0 30px;}
+
+  .hidden{display:none !important;}
+</style>
+</head>
+<body data-theme="light">
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="logo">🎙️</div>
+      <div>
+        <h1>وویس‌مورف</h1>
+        <p>صدای خودت رو به هر چیزی تبدیل کن</p>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" aria-label="تغییر تم">
+      <div class="dot">🌙</div>
+    </button>
+  </header>
+
+  <div class="card recorder">
+    <canvas id="waveCanvas"></canvas>
+    <div class="trim-hint hidden" id="trimHint">دستگیره‌های کناری رو بکش تا فقط بخشی از صدا رو نگه داری ✂️</div>
+    <button class="rec-btn" id="recBtn">🎤</button>
+    <div class="rec-timer" id="recTimer">۰۰:۰۰</div>
+    <div class="rec-hint" id="recHint">برای شروع ضبط صدا، دکمه رو بزن</div>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+
+  <div class="card hidden" id="fxCard">
+    <div class="sec-title">
+      <h2>✨ افکت‌ها رو انتخاب کن</h2>
+      <span id="fxCount"></span>
+    </div>
+    <div class="fx-grid" id="fxGrid"></div>
+
+    <div class="adv-panel" id="advPanel">
+      <div class="adv-row">
+        <div class="ctrl-label"><span>🎵 پیچ صدا</span><span id="advPitchVal">۱x</span></div>
+        <input type="range" id="advPitch" min="50" max="200" value="100">
+      </div>
+      <div class="adv-row">
+        <div class="ctrl-label"><span>🔁 مقدار پژواک</span><span id="advEchoVal">۳۰٪</span></div>
+        <input type="range" id="advEcho" min="0" max="85" value="30">
+      </div>
+      <div class="adv-row">
+        <div class="ctrl-label"><span>🔥 دیستورشن</span><span id="advDistVal">۱۰</span></div>
+        <input type="range" id="advDist" min="0" max="60" value="10">
+      </div>
+      <div class="adv-row">
+        <div class="ctrl-label"><span>🎚️ فرکانس فیلتر</span><span id="advFiltVal">۴۰۰۰Hz</span></div>
+        <input type="range" id="advFilt" min="300" max="8000" value="4000">
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <div class="ctrl-label"><span>🎚️ شدت افکت</span><span id="intVal">۱۰۰٪</span></div>
+      <input type="range" id="intensity" min="50" max="150" value="100">
+    </div>
+
+    <div class="ctrl-row">
+      <div class="ctrl-label"><span>🧬 لایه دوم (ترکیب افکت‌ها)</span></div>
+      <select id="secondaryFx">
+        <option value="">بدون لایه دوم</option>
+      </select>
+    </div>
+
+    <button class="magic-btn" id="magicBtn">🪄 شانس جادویی — یه ترکیب تصادفی و دیوونه‌وار!</button>
+    <div class="processing-overlay" id="processingOverlay"><div class="spinner"></div><span>در حال ساخت صدای جدید…</span></div>
+  </div>
+
+  <div class="card hidden" id="playerCard">
+    <div class="player-title">
+      <div class="badge" id="playerIcon">🎧</div>
+      <div>
+        <b id="playerFxName">بدون افکت</b>
+        <span>آماده پخش و دانلود</span>
+      </div>
+    </div>
+
+    <div class="avatar-wrap">
+      <div class="avatar-face" id="avatarFace">
+        <div class="eye l"></div><div class="eye r"></div>
+        <div class="mouth" id="avatarMouth"></div>
+      </div>
+    </div>
+
+    <audio id="player" controls></audio>
+
+    <div class="toggle-row">
+      <span>مقایسه با صدای اصلی</span>
+      <div class="mini-switch">
+        <button class="mini-btn on" id="btnProcessed">تغییر یافته</button>
+        <button class="mini-btn" id="btnOriginal">نسخه اصلی</button>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="action-btn primary" id="downloadBtn">⬇️ دانلود</button>
+      <button class="action-btn" id="shareBtn">📤 اشتراک‌گذاری</button>
+      <button class="action-btn" id="resetBtn">🔁 ضبط جدید</button>
+    </div>
+
+    <div class="history-row" id="historyRow"></div>
+  </div>
+
+  <footer>ساخته‌شده با Web Audio API — تمام پردازش‌ها روی گوشی خودت انجام میشه، هیچ صدایی جایی آپلود نمی‌شه 🔒</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Theme ---------------- */
+  var themeToggle = document.getElementById('themeToggle');
+  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  function setTheme(t){
+    document.body.setAttribute('data-theme', t);
+    themeToggle.querySelector('.dot').textContent = t === 'dark' ? '☀️' : '🌙';
+  }
+  setTheme(prefersDark ? 'dark' : 'light');
+  themeToggle.addEventListener('click', function(){
+    var cur = document.body.getAttribute('data-theme');
+    setTheme(cur === 'dark' ? 'light' : 'dark');
+    vibrate(8);
+  });
+
+  function vibrate(ms){ if(navigator.vibrate){ try{ navigator.vibrate(ms); }catch(e){} } }
+
+  /* ---------------- Shared Audio Context ---------------- */
+  var appCtx = null;
+  function getCtx(){
+    if(!appCtx){ appCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+    if(appCtx.state === 'suspended'){ appCtx.resume(); }
+    return appCtx;
+  }
+
+  /* ---------------- Effect Building Blocks ---------------- */
+  function makeDistortionCurve(amount){
+    var k = typeof amount === 'number' ? amount : 20;
+    var n = 44100;
+    var curve = new Float32Array(n);
+    var deg = Math.PI/180;
+    for (var i=0;i<n;i++){
+      var x = i*2/n -1;
+      curve[i] = (3+k)*x*20*deg/(Math.PI+k*Math.abs(x));
+    }
+    return curve;
+  }
+  function makeBitcrushCurve(steps){
+    var n = 1024;
+    var curve = new Float32Array(n);
+    for (var i=0;i<n;i++){
+      var x = i*2/n -1;
+      curve[i] = Math.round(x*steps)/steps;
+    }
+    return curve;
+  }
+  function makeNoiseBuffer(ctx, duration){
+    var buf = ctx.createBuffer(1, Math.max(1,Math.floor(ctx.sampleRate*duration)), ctx.sampleRate);
+    var data = buf.getChannelData(0);
+    for (var i=0;i<data.length;i++){ data[i] = (Math.random()*2-1)*0.35; }
+    return buf;
+  }
+  function makeReverbBuffer(ctx, duration, decay){
+    var rate = ctx.sampleRate;
+    var len = Math.max(1, Math.floor(rate*duration));
+    var buf = ctx.createBuffer(2, len, rate);
+    for (var ch=0; ch<2; ch++){
+      var data = buf.getChannelData(ch);
+      for (var i=0;i<len;i++){
+        data[i] = (Math.random()*2-1)*Math.pow(1-i/len, decay);
+      }
+    }
+    return buf;
+  }
+  function biquad(ctx, type, freq, Q){
+    var f = ctx.createBiquadFilter();
+    f.type = type; f.frequency.value = freq; if(Q!==undefined) f.Q.value = Q;
+    return f;
+  }
+  function ringMod(ctx, input, freq){
+    var carrier = ctx.createGain();
+    carrier.gain.value = 0;
+    var osc = ctx.createOscillator();
+    osc.type='sine'; osc.frequency.value = freq;
+    var modScale = ctx.createGain();
+    modScale.gain.value = 1;
+    osc.connect(modScale);
+    modScale.connect(carrier.gain);
+    input.connect(carrier);
+    osc.start();
+    return carrier;
+  }
+  function tremolo(ctx, input, freq, depth){
+    var g = ctx.createGain();
+    g.gain.value = 1-depth;
+    var osc = ctx.createOscillator();
+    osc.type='sine'; osc.frequency.value = freq;
+    var scale = ctx.createGain();
+    scale.gain.value = depth;
+    osc.connect(scale);
+    scale.connect(g.gain);
+    input.connect(g);
+    osc.start();
+    return g;
+  }
+  function wobbleDetune(ctx, sourceNode, freq, amount){
+    var osc = ctx.createOscillator();
+    osc.type='sine'; osc.frequency.value = freq;
+    var scale = ctx.createGain();
+    scale.gain.value = amount;
+    osc.connect(scale);
+    scale.connect(sourceNode.detune);
+    osc.start();
+  }
+  function delayFx(ctx, input, time, feedback, mixWet){
+    var delay = ctx.createDelay(5.0);
+    delay.delayTime.value = time;
+    var fb = ctx.createGain(); fb.gain.value = feedback;
+    var wet = ctx.createGain(); wet.gain.value = mixWet;
+    var dry = ctx.createGain(); dry.gain.value = 1;
+    var out = ctx.createGain();
+    input.connect(dry); dry.connect(out);
+    input.connect(delay); delay.connect(fb); fb.connect(delay);
+    delay.connect(wet); wet.connect(out);
+    return out;
+  }
+  function reverbFx(ctx, input, duration, decay, mixWet){
+    var conv = ctx.createConvolver();
+    conv.buffer = makeReverbBuffer(ctx, duration, decay);
+    var wet = ctx.createGain(); wet.gain.value = mixWet;
+    var dry = ctx.createGain(); dry.gain.value = 1;
+    var out = ctx.createGain();
+    input.connect(dry); dry.connect(out);
+    input.connect(conv); conv.connect(wet); wet.connect(out);
+    return out;
+  }
+
+  /* ---------------- Custom (advanced) effect live params ---------------- */
+  var customParams = { rate:1, echo:0.3, dist:10, filt:4000 };
+
+  /* ---------------- Effects Catalogue (22 total) ---------------- */
+  var EFFECTS = [
+    { id:'none', name:'بدون افکت', icon:'🎙️', rate:1, detune:0, tail:0.3,
+      build:function(ctx,input,I){ return input; } },
+    { id:'robot', name:'ربات', icon:'🤖', rate:1, detune:0, tail:0.4,
+      build:function(ctx,input,I){
+        var r = ringMod(ctx,input, 32*I);
+        var bp = biquad(ctx,'bandpass',1500,1); r.connect(bp);
+        return bp; } },
+    { id:'monster', name:'هیولا', icon:'👹', rate:0.62, detune:-180, tail:0.6,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass', 900,1); input.connect(lp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(10*I); lp.connect(ws);
+        return ws; } },
+    { id:'chipmunk', name:'جوجه‌تیغی', icon:'🐿️', rate:1.65, detune:220, tail:0.3,
+      build:function(ctx,input,I){ var hp = biquad(ctx,'highpass',450,0.7); input.connect(hp); return hp; } },
+    { id:'cave', name:'اکوی غار', icon:'🕳️', rate:1, detune:0, tail:3.2,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',2800,0.7); input.connect(lp);
+        return delayFx(ctx, lp, 0.32, Math.min(0.82, 0.5*I), 0.55); } },
+    { id:'radio', name:'رادیوی قدیمی', icon:'📻', rate:1, detune:0, tail:0.4,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',1300,4); input.connect(bp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(6*I); bp.connect(ws);
+        var out = ctx.createGain(); ws.connect(out);
+        var noiseSrc = ctx.createBufferSource();
+        noiseSrc.buffer = makeNoiseBuffer(ctx, 30); noiseSrc.loop = true;
+        var noiseGain = ctx.createGain(); noiseGain.gain.value = 0.05*I;
+        var noiseFilter = biquad(ctx,'bandpass',2000,2);
+        noiseSrc.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(out);
+        noiseSrc.start();
+        return out; } },
+    { id:'phone', name:'پشت خط تلفن', icon:'☎️', rate:1, detune:0, tail:0.3,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',400,0.7); input.connect(hp);
+        var lp = biquad(ctx,'lowpass',3200,0.7); hp.connect(lp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(4*I); lp.connect(ws);
+        return ws; } },
+    { id:'alien', name:'موجود فضایی', icon:'👽', rate:1.18, detune:150, tail:1.2,
+      build:function(ctx,input,I){
+        var r = ringMod(ctx, input, 50*I);
+        return delayFx(ctx, r, 0.08, 0.25, 0.35); } },
+    { id:'underwater', name:'زیر آب', icon:'🌊', rate:0.92, detune:-40, tail:0.6,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',420,0.9); input.connect(lp);
+        return tremolo(ctx, lp, 5.5, Math.min(0.85,0.55*I)); } },
+    { id:'dreamy', name:'اکوی رویایی', icon:'✨', rate:1, detune:0, tail:4.2,
+      build:function(ctx,input,I){
+        var d = delayFx(ctx, input, 0.24, 0.4, 0.4);
+        return reverbFx(ctx, d, 2.8, 2.5, Math.min(0.9,0.5*I)); } },
+    { id:'demon', name:'صدای شیطان', icon:'😈', rate:0.55, detune:-320, tail:3.2,
+      build:function(ctx,input,I){
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(35*I); input.connect(ws);
+        return reverbFx(ctx, ws, 2.2, 2.2, 0.4); } },
+    { id:'glitch', name:'گلیچ رباتیک', icon:'⚡', rate:1, detune:0, tail:1.2,
+      build:function(ctx,input,I){
+        var ws = ctx.createWaveShaper(); ws.curve = makeBitcrushCurve(Math.max(3,10/I)); input.connect(ws);
+        return delayFx(ctx, ws, 0.045, Math.min(0.8,0.55*I), 0.4); } },
+    { id:'heli', name:'بالگرد', icon:'🚁', rate:1, detune:0, tail:0.4,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',900,1.2); input.connect(bp);
+        return tremolo(ctx, bp, 9*I, 0.8); } },
+    { id:'whisper', name:'نجوا', icon:'🤫', rate:1, detune:20, tail:0.5,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',900,0.6); input.connect(hp);
+        var lp = biquad(ctx,'lowpass',6500,0.6); hp.connect(lp);
+        var g = ctx.createGain(); g.gain.value = 0.55; lp.connect(g);
+        var noiseSrc = ctx.createBufferSource();
+        noiseSrc.buffer = makeNoiseBuffer(ctx, 20); noiseSrc.loop = true;
+        var noiseGain = ctx.createGain(); noiseGain.gain.value = 0.06*I;
+        noiseSrc.connect(noiseGain); noiseGain.connect(g);
+        noiseSrc.start();
+        return g; } },
+    { id:'giant', name:'غول عظیم', icon:'🦣', rate:0.5, detune:-500, tail:1.4,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',650,1); input.connect(lp);
+        return reverbFx(ctx, lp, 1.4, 1.6, 0.3*I); } },
+    { id:'eightbit', name:'۸ بیتی', icon:'🕹️', rate:1.05, detune:0, tail:0.3,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',1800,2); input.connect(bp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeBitcrushCurve(Math.max(3,7/I)); bp.connect(ws);
+        return ws; } },
+    { id:'nightcore', name:'نایت‌کور', icon:'💫', rate:1.35, detune:280, tail:0.3,
+      build:function(ctx,input,I){
+        var hs = biquad(ctx,'highshelf',3000,0); hs.gain.value = 4*I; input.connect(hs);
+        return hs; } },
+    { id:'vaporwave', name:'ویپروِیو', icon:'🌴', rate:0.78, detune:-150, tail:3.0,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',3200,0.6); input.connect(lp);
+        return reverbFx(ctx, lp, 2.4, 2.0, Math.min(0.8,0.45*I)); } },
+    { id:'backwards', name:'وارونه', icon:'⏪', rate:1, detune:0, tail:0.3, reverse:true,
+      build:function(ctx,input,I){ return input; } },
+    { id:'megaphone', name:'بلندگو', icon:'📢', rate:1, detune:0, tail:0.3,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',1100,6); input.connect(bp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(20*I); bp.connect(ws);
+        return ws; } },
+    { id:'drunk', name:'حالت گیجی', icon:'🌀', rate:0.95, detune:0, tail:0.5,
+      build:function(ctx,input,I){
+        wobbleDetune(ctx, input, 4.5, 45*I);
+        var lp = biquad(ctx,'lowpass',2600,0.7); input.connect(lp);
+        return lp; } },
+    { id:'angel', name:'فرشته', icon:'👼', rate:1.08, detune:80, tail:3.6,
+      build:function(ctx,input,I){
+        var hs = biquad(ctx,'highshelf',4000,0); hs.gain.value=3; input.connect(hs);
+        var d = delayFx(ctx, hs, 0.18, 0.3, 0.3);
+        return reverbFx(ctx, d, 3.0, 2.8, Math.min(0.85,0.5*I)); } },
+    { id:'horror', name:'وحشت', icon:'🎃', rate:0.7, detune:-260, tail:3.6,
+      build:function(ctx,input,I){
+        var r = ringMod(ctx, input, 6*I);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(18*I); r.connect(ws);
+        return reverbFx(ctx, ws, 2.6, 2.4, 0.45); } },
+    { id:'custom', name:'سفارشی من', icon:'🛠️', rate:1, detune:0, tail:2.2,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass', customParams.filt, 0.8); input.connect(lp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(customParams.dist); lp.connect(ws);
+        return delayFx(ctx, ws, 0.22, customParams.echo, customParams.echo>0.04?0.4:0); } }
+  ];
+
+  var EFFECTS_MAP = {};
+  EFFECTS.forEach(function(e){ EFFECTS_MAP[e.id]=e; });
+  var customEffect = EFFECTS_MAP['custom'];
+
+  /* ---------------- State ---------------- */
+  var mediaStream = null;
+  var mediaRecorder = null;
+  var recordedChunks = [];
+  var originalBuffer = null;
+  var trimmedSourceBuffer = null;
+  var liveAnalyser, animId;
+  var isRecording = false;
+  var recStartTime = 0;
+  var recTimerInterval = null;
+  var currentFx = 'none';
+  var currentBlobUrl = null;
+  var originalBlobUrl = null;
+  var trimStart = 0, trimEnd = 1;
+  var draggingHandle = null;
+  var history = [];
+  var playbackAnalyser = null, playbackSourceCreated = false, playbackAnimId = null;
+
+  var recBtn = document.getElementById('recBtn');
+  var recTimer = document.getElementById('recTimer');
+  var recHint = document.getElementById('recHint');
+  var statusMsg = document.getElementById('statusMsg');
+  var trimHint = document.getElementById('trimHint');
+  var waveCanvas = document.getElementById('waveCanvas');
+  var waveCtx = waveCanvas.getContext('2d');
+  var fxCard = document.getElementById('fxCard');
+  var fxGrid = document.getElementById('fxGrid');
+  var advPanel = document.getElementById('advPanel');
+  var advPitch = document.getElementById('advPitch');
+  var advEcho = document.getElementById('advEcho');
+  var advDist = document.getElementById('advDist');
+  var advFilt = document.getElementById('advFilt');
+  var advPitchVal = document.getElementById('advPitchVal');
+  var advEchoVal = document.getElementById('advEchoVal');
+  var advDistVal = document.getElementById('advDistVal');
+  var advFiltVal = document.getElementById('advFiltVal');
+  var playerCard = document.getElementById('playerCard');
+  var player = document.getElementById('player');
+  var playerFxName = document.getElementById('playerFxName');
+  var playerIcon = document.getElementById('playerIcon');
+  var intensitySlider = document.getElementById('intensity');
+  var intVal = document.getElementById('intVal');
+  var secondarySelect = document.getElementById('secondaryFx');
+  var processingOverlay = document.getElementById('processingOverlay');
+  var magicBtn = document.getElementById('magicBtn');
+  var downloadBtn = document.getElementById('downloadBtn');
+  var shareBtn = document.getElementById('shareBtn');
+  var resetBtn = document.getElementById('resetBtn');
+  var btnProcessed = document.getElementById('btnProcessed');
+  var btnOriginal = document.getElementById('btnOriginal');
+  var historyRow = document.getElementById('historyRow');
+  var avatarMouth = document.getElementById('avatarMouth');
+
+  function resizeCanvas(){
+    waveCanvas.width = waveCanvas.clientWidth * devicePixelRatio;
+    waveCanvas.height = waveCanvas.clientHeight * devicePixelRatio;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  /* ---------------- Build effect grid ---------------- */
+  EFFECTS.forEach(function(fx){
+    if(fx.id === 'none') return;
+    var card = document.createElement('div');
+    card.className = 'fx-card';
+    card.dataset.id = fx.id;
+    card.innerHTML = '<span class="ic">'+fx.icon+'</span><span class="nm">'+fx.name+'</span>';
+    card.addEventListener('click', function(){ selectEffect(fx.id); });
+    fxGrid.appendChild(card);
+
+    var opt = document.createElement('option');
+    opt.value = fx.id; opt.textContent = fx.name;
+    secondarySelect.appendChild(opt);
+  });
+  document.getElementById('fxCount').textContent = (EFFECTS.length-1) + ' افکت';
+
+  function highlightFxCard(id){
+    Array.prototype.forEach.call(fxGrid.children, function(c){
+      c.classList.toggle('active', c.dataset.id === id);
+    });
+    advPanel.classList.toggle('show', id === 'custom');
+  }
+
+  /* ---------------- Advanced custom sliders ---------------- */
+  advPitch.addEventListener('input', function(){
+    var v = advPitch.value/100;
+    customEffect.rate = v;
+    advPitchVal.textContent = v.toFixed(2)+'x';
+  });
+  advEcho.addEventListener('input', function(){
+    customParams.echo = advEcho.value/100;
+    advEchoVal.textContent = advEcho.value+'٪';
+  });
+  advDist.addEventListener('input', function(){
+    customParams.dist = parseInt(advDist.value,10);
+    advDistVal.textContent = advDist.value;
+  });
+  advFilt.addEventListener('input', function(){
+    customParams.filt = parseInt(advFilt.value,10);
+    advFiltVal.textContent = advFilt.value+'Hz';
+  });
+  [advPitch,advEcho,advDist,advFilt].forEach(function(el){
+    el.addEventListener('change', function(){ if(trimmedSourceBuffer && currentFx==='custom') processCurrent(); });
+  });
+
+  /* ---------------- Recording ---------------- */
+  recBtn.addEventListener('click', function(){
+    vibrate(15);
+    if(!isRecording){ startRecording(); } else { stopRecording(); }
+  });
+
+  function startRecording(){
+    statusMsg.textContent = '';
+    trimHint.classList.add('hidden');
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      mediaStream = stream;
+      var ctx = getCtx();
+      var src = ctx.createMediaStreamSource(stream);
+      liveAnalyser = ctx.createAnalyser();
+      liveAnalyser.fftSize = 1024;
+      src.connect(liveAnalyser);
+      drawLiveWave();
+
+      recordedChunks = [];
+      var mime = '';
+      var candidates = ['audio/webm','audio/mp4','audio/ogg'];
+      for(var i=0;i<candidates.length;i++){
+        if(window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(candidates[i])){ mime = candidates[i]; break; }
+      }
+      try{
+        mediaRecorder = mime ? new MediaRecorder(stream,{mimeType:mime}) : new MediaRecorder(stream);
+      }catch(e){
+        mediaRecorder = new MediaRecorder(stream);
+      }
+      mediaRecorder.ondataavailable = function(e){ if(e.data && e.data.size>0) recordedChunks.push(e.data); };
+      mediaRecorder.onstop = onRecordingStop;
+      mediaRecorder.start();
+
+      isRecording = true;
+      recBtn.classList.add('recording');
+      recBtn.textContent = '⏹️';
+      recHint.textContent = 'در حال ضبط… برای پایان دوباره بزن';
+      recStartTime = Date.now();
+      recTimerInterval = setInterval(updateTimer, 200);
+    }).catch(function(err){
+      statusMsg.textContent = 'دسترسی به میکروفون داده نشد. لطفاً از تنظیمات مرورگر اجازه بده 🙏';
+    });
+  }
+
+  function updateTimer(){
+    var s = Math.floor((Date.now()-recStartTime)/1000);
+    var mm = String(Math.floor(s/60)).padStart(2,'0');
+    var ss = String(s%60).padStart(2,'0');
+    recTimer.textContent = mm+':'+ss;
+    if(s>=60){ stopRecording(); }
+  }
+
+  function stopRecording(){
+    if(!isRecording) return;
+    isRecording = false;
+    recBtn.classList.remove('recording');
+    recBtn.textContent = '🎤';
+    recHint.textContent = 'برای شروع ضبط صدا، دکمه رو بزن';
+    clearInterval(recTimerInterval);
+    cancelAnimationFrame(animId);
+    if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    if(mediaStream) mediaStream.getTracks().forEach(function(t){t.stop();});
+  }
+
+  function onRecordingStop(){
+    var blob = new Blob(recordedChunks, {type: mediaRecorder.mimeType||'audio/webm'});
+    blob.arrayBuffer().then(function(ab){
+      return getCtx().decodeAudioData(ab);
+    }).then(function(buf){
+      originalBuffer = buf;
+      trimStart = 0; trimEnd = 1;
+      recTimer.textContent = '۰۰:۰۰';
+      trimHint.classList.remove('hidden');
+      drawStaticWave();
+      fxCard.classList.remove('hidden');
+      fxCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+      selectEffect('none');
+    }).catch(function(err){
+      statusMsg.textContent = 'مشکلی در پردازش صدای ضبط‌شده پیش اومد، دوباره امتحان کن.';
+    });
+  }
+
+  function drawLiveWave(){
+    var w = waveCanvas.width, h = waveCanvas.height;
+    var data = new Uint8Array(liveAnalyser.fftSize);
+    function loop(){
+      if(!isRecording) return;
+      animId = requestAnimationFrame(loop);
+      liveAnalyser.getByteTimeDomainData(data);
+      waveCtx.clearRect(0,0,w,h);
+      var grad = waveCtx.createLinearGradient(0,0,w,0);
+      grad.addColorStop(0,'#7C3AED'); grad.addColorStop(1,'#EC4899');
+      waveCtx.fillStyle = grad;
+      var barW = w/ (data.length/6);
+      for(var i=0;i<data.length;i+=6){
+        var v = (data[i]-128)/128;
+        var barH = Math.max(2, Math.abs(v)*h*0.9);
+        var x = (i/6)*barW;
+        waveCtx.fillRect(x, (h-barH)/2, Math.max(1,barW-2), barH);
+      }
+    }
+    loop();
+  }
+
+  /* ---------------- Static waveform + trim handles ---------------- */
+  function drawStaticWave(){
+    if(!originalBuffer) return;
+    var w = waveCanvas.width, h = waveCanvas.height;
+    var data = originalBuffer.getChannelData(0);
+    var step = Math.ceil(data.length/140);
+    waveCtx.clearRect(0,0,w,h);
+    var barW = w/140;
+    for(var i=0;i<140;i++){
+      var idx = i*step;
+      var v = Math.abs(data[idx]||0);
+      var barH = Math.max(3, v*h*0.95);
+      var frac = i/140;
+      var inRange = frac>=trimStart && frac<=trimEnd;
+      waveCtx.fillStyle = inRange ? 'rgba(124,58,237,0.9)' : 'rgba(150,140,180,0.28)';
+      waveCtx.fillRect(i*barW, (h-barH)/2, Math.max(1,barW-2), barH);
+    }
+    var xs = trimStart*w, xe = trimEnd*w;
+    waveCtx.fillStyle = 'rgba(236,72,153,0.9)';
+    waveCtx.fillRect(xs-2, 0, 4, h);
+    waveCtx.fillRect(xe-2, 0, 4, h);
+  }
+
+  function canvasFracFromEvent(e){
+    var rect = waveCanvas.getBoundingClientRect();
+    var clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+    var x = clientX - rect.left;
+    return Math.max(0, Math.min(1, x/rect.width));
+  }
+  function handlePointerDown(e){
+    if(!originalBuffer) return;
+    var frac = canvasFracFromEvent(e);
+    draggingHandle = Math.abs(frac-trimStart) <= Math.abs(frac-trimEnd) ? 'start' : 'end';
+    e.preventDefault();
+  }
+  function handlePointerMove(e){
+    if(!draggingHandle || !originalBuffer) return;
+    var frac = canvasFracFromEvent(e);
+    if(draggingHandle==='start'){ trimStart = Math.min(frac, trimEnd-0.03); trimStart = Math.max(0,trimStart); }
+    else { trimEnd = Math.max(frac, trimStart+0.03); trimEnd = Math.min(1,trimEnd); }
+    drawStaticWave();
+  }
+  function handlePointerUp(){
+    if(draggingHandle){ draggingHandle=null; if(originalBuffer) processCurrent(); }
+  }
+  waveCanvas.addEventListener('mousedown', handlePointerDown);
+  waveCanvas.addEventListener('touchstart', handlePointerDown, {passive:false});
+  window.addEventListener('mousemove', handlePointerMove);
+  window.addEventListener('touchmove', handlePointerMove, {passive:true});
+  window.addEventListener('mouseup', handlePointerUp);
+  window.addEventListener('touchend', handlePointerUp);
+
+  function getTrimmedBuffer(){
+    if(!originalBuffer) return null;
+    if(trimStart<=0.001 && trimEnd>=0.999) return originalBuffer;
+    var ctx = getCtx();
+    var total = originalBuffer.length;
+    var s = Math.floor(total*trimStart);
+    var eIdx = Math.floor(total*trimEnd);
+    var len = Math.max(1, eIdx-s);
+    var nb = ctx.createBuffer(originalBuffer.numberOfChannels, len, originalBuffer.sampleRate);
+    for(var ch=0; ch<originalBuffer.numberOfChannels; ch++){
+      nb.getChannelData(ch).set(originalBuffer.getChannelData(ch).subarray(s,eIdx));
+    }
+    return nb;
+  }
+
+  function reverseBuffer(buf){
+    var ctx = getCtx();
+    var nb = ctx.createBuffer(buf.numberOfChannels, buf.length, buf.sampleRate);
+    for(var ch=0; ch<buf.numberOfChannels; ch++){
+      var src = buf.getChannelData(ch);
+      var dst = nb.getChannelData(ch);
+      for(var i=0;i<src.length;i++){ dst[i] = src[src.length-1-i]; }
+    }
+    return nb;
+  }
+
+  /* ---------------- Effect Selection & Processing ---------------- */
+  intensitySlider.addEventListener('input', function(){
+    intVal.textContent = intensitySlider.value + '٪';
+  });
+  intensitySlider.addEventListener('change', function(){ if(originalBuffer) processCurrent(); });
+  secondarySelect.addEventListener('change', function(){ if(originalBuffer) processCurrent(); });
+
+  function selectEffect(id){
+    currentFx = id;
+    highlightFxCard(id);
+    vibrate(10);
+    if(originalBuffer) processCurrent();
+  }
+
+  magicBtn.addEventListener('click', function(){
+    vibrate(20);
+    var pool = EFFECTS.filter(function(e){return e.id!=='none' && e.id!=='custom';});
+    var pick = pool[Math.floor(Math.random()*pool.length)];
+    var secondPick = Math.random()<0.5 ? pool[Math.floor(Math.random()*pool.length)] : null;
+    currentFx = pick.id;
+    highlightFxCard(pick.id);
+    secondarySelect.value = (secondPick && secondPick.id!==pick.id) ? secondPick.id : '';
+    intensitySlider.value = 70 + Math.floor(Math.random()*70);
+    intVal.textContent = intensitySlider.value+'٪';
+    if(originalBuffer) processCurrent();
+  });
+
+  function processCurrent(){
+    if(!originalBuffer) return;
+    processingOverlay.classList.add('show');
+    var I = parseInt(intensitySlider.value,10)/100;
+    var primary = EFFECTS_MAP[currentFx] || EFFECTS_MAP.none;
+    var secondaryId = secondarySelect.value;
+    var secondary = secondaryId ? EFFECTS_MAP[secondaryId] : null;
+
+    var srcBuffer = getTrimmedBuffer();
+    if(primary.reverse) srcBuffer = reverseBuffer(srcBuffer);
+    trimmedSourceBuffer = srcBuffer;
+
+    var rate = primary.rate || 1;
+    var detune = primary.detune || 0;
+    var tail = (primary.tail||0.3) + (secondary ? (secondary.tail||0.3) : 0);
+    var estDuration = (srcBuffer.duration / Math.min(1,rate)) + tail + 1;
+    var offlineCtx = new OfflineAudioContext(2, Math.ceil(estDuration*srcBuffer.sampleRate), srcBuffer.sampleRate);
+
+    var src = offlineCtx.createBufferSource();
+    src.buffer = srcBuffer;
+    src.playbackRate.value = rate;
+    if(src.detune) src.detune.value = detune;
+
+    var node = primary.build(offlineCtx, src, I);
+    if(secondary){ node = secondary.build(offlineCtx, node, I); }
+    var masterGain = offlineCtx.createGain();
+    masterGain.gain.value = 1.0;
+    node.connect(masterGain);
+    masterGain.connect(offlineCtx.destination);
+    src.start(0);
+
+    offlineCtx.startRendering().then(function(rendered){
+      var blob = bufferToWaveBlob(rendered);
+      if(currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+      currentBlobUrl = URL.createObjectURL(blob);
+
+      if(!originalBlobUrl){
+        var origBlob = bufferToWaveBlob(srcBuffer);
+        originalBlobUrl = URL.createObjectURL(origBlob);
+      }
+
+      setPlayerMode('processed');
+      var nm = primary.name + (secondary ? ' + '+secondary.name : '');
+      playerFxName.textContent = nm;
+      playerIcon.textContent = primary.icon;
+      playerCard.classList.remove('hidden');
+      processingOverlay.classList.remove('show');
+      window.__lastBlob = blob;
+      window.__lastName = 'voicemorph-'+primary.id+(secondary?('-'+secondary.id):'')+'.wav';
+      addHistory(nm, primary.icon, currentBlobUrl, window.__lastName);
+      playerCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }).catch(function(err){
+      processingOverlay.classList.remove('show');
+      statusMsg.textContent = 'پردازش این افکت با مشکل مواجه شد.';
+    });
+  }
+
+  function setPlayerMode(mode){
+    if(mode==='original' && originalBlobUrl){
+      player.src = originalBlobUrl;
+      btnOriginal.classList.add('on'); btnProcessed.classList.remove('on');
+    } else if(currentBlobUrl){
+      player.src = currentBlobUrl;
+      btnProcessed.classList.add('on'); btnOriginal.classList.remove('on');
+    }
+  }
+  btnProcessed.addEventListener('click', function(){ vibrate(8); setPlayerMode('processed'); });
+  btnOriginal.addEventListener('click', function(){ vibrate(8); setPlayerMode('original'); });
+
+  /* ---------------- Reactive talking avatar ---------------- */
+  function setupPlaybackAnalyser(){
+    if(playbackSourceCreated) return;
+    playbackSourceCreated = true;
+    var ctx = getCtx();
+    var srcNode = ctx.createMediaElementSource(player);
+    playbackAnalyser = ctx.createAnalyser();
+    playbackAnalyser.fftSize = 512;
+    srcNode.connect(playbackAnalyser);
+    srcNode.connect(ctx.destination);
+  }
+  player.addEventListener('play', function(){
+    setupPlaybackAnalyser();
+    var data = new Uint8Array(playbackAnalyser.fftSize);
+    function loop(){
+      playbackAnimId = requestAnimationFrame(loop);
+      playbackAnalyser.getByteTimeDomainData(data);
+      var sum=0;
+      for(var i=0;i<data.length;i++){ var v=(data[i]-128)/128; sum += v*v; }
+      var rms = Math.sqrt(sum/data.length);
+      var scale = 1 + Math.min(2.2, rms*9);
+      avatarMouth.style.transform = 'translateX(-50%) scaleY('+scale.toFixed(2)+')';
+    }
+    loop();
+  });
+  function stopAvatarAnim(){
+    if(playbackAnimId) cancelAnimationFrame(playbackAnimId);
+    avatarMouth.style.transform = 'translateX(-50%) scaleY(1)';
+  }
+  player.addEventListener('pause', stopAvatarAnim);
+  player.addEventListener('ended', stopAvatarAnim);
+
+  /* ---------------- WAV Encoding ---------------- */
+  function bufferToWaveBlob(abuffer){
+    var numChan = abuffer.numberOfChannels;
+    var len = abuffer.length * numChan * 2 + 44;
+    var buffer = new ArrayBuffer(len);
+    var view = new DataView(buffer);
+    var channels = [];
+    var i, sample, offset = 0, pos = 0;
+
+    function writeString(s){ for(i=0;i<s.length;i++){ view.setUint8(pos++, s.charCodeAt(i)); } }
+    function writeUint32(d){ view.setUint32(pos, d, true); pos+=4; }
+    function writeUint16(d){ view.setUint16(pos, d, true); pos+=2; }
+
+    writeString('RIFF'); writeUint32(len-8); writeString('WAVE');
+    writeString('fmt '); writeUint32(16); writeUint16(1); writeUint16(numChan);
+    writeUint32(abuffer.sampleRate); writeUint32(abuffer.sampleRate*numChan*2); writeUint16(numChan*2); writeUint16(16);
+    writeString('data'); writeUint32(len-pos-4);
+
+    for(i=0;i<numChan;i++) channels.push(abuffer.getChannelData(i));
+
+    while(pos < len){
+      for(i=0;i<numChan;i++){
+        sample = Math.max(-1, Math.min(1, channels[i][offset]||0));
+        sample = sample<0 ? sample*0x8000 : sample*0x7FFF;
+        view.setInt16(pos, sample, true); pos+=2;
+      }
+      offset++;
+    }
+    return new Blob([view], {type:'audio/wav'});
+  }
+
+  /* ---------------- Session history chips ---------------- */
+  function addHistory(name, icon, url, filename){
+    history.unshift({name:name, icon:icon, url:url, filename:filename});
+    if(history.length>5) history = history.slice(0,5);
+    renderHistory();
+  }
+  function renderHistory(){
+    historyRow.innerHTML = '';
+    history.forEach(function(h){
+      var chip = document.createElement('div');
+      chip.className = 'history-chip';
+      chip.innerHTML = '<span>'+h.icon+'</span><span>'+h.name+'</span>';
+      chip.addEventListener('click', function(){
+        vibrate(8);
+        currentBlobUrl = h.url;
+        window.__lastName = h.filename;
+        setPlayerMode('processed');
+        playerFxName.textContent = h.name;
+        playerIcon.textContent = h.icon;
+      });
+      historyRow.appendChild(chip);
+    });
+  }
+
+  /* ---------------- Actions ---------------- */
+  downloadBtn.addEventListener('click', function(){
+    if(!window.__lastBlob) return;
+    vibrate(12);
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(window.__lastBlob);
+    a.download = window.__lastName || 'voicemorph.wav';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  });
+
+  shareBtn.addEventListener('click', function(){
+    vibrate(12);
+    if(!window.__lastBlob){ return; }
+    if(navigator.share && navigator.canShare){
+      var file = new File([window.__lastBlob], window.__lastName||'voicemorph.wav', {type:'audio/wav'});
+      if(navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:'وویس‌مورف', text:'صدامو با وویس‌مورف عوض کردم! 🎙️'}).catch(function(){});
+        return;
+      }
+    }
+    downloadBtn.click();
+  });
+
+  resetBtn.addEventListener('click', function(){
+    vibrate(12);
+    originalBuffer = null;
+    trimmedSourceBuffer = null;
+    currentFx = 'none';
+    trimStart=0; trimEnd=1;
+    secondarySelect.value = '';
+    intensitySlider.value = 100; intVal.textContent = '۱۰۰٪';
+    fxCard.classList.add('hidden');
+    playerCard.classList.add('hidden');
+    trimHint.classList.add('hidden');
+    waveCtx.clearRect(0,0,waveCanvas.width, waveCanvas.height);
+    statusMsg.textContent = '';
+    stopAvatarAnim();
+  });
+
+})();
+</script>
+</body>
+</html>
