@@ -19,7 +19,7 @@
     --shadow: 0 10px 30px rgba(124,58,237,.12);
     --danger:#ef4444;
     --success:#10b981;
-    --radius:22px;
+    --radius:20px;
   }
   [data-theme="dark"]{
     --bg:#0f0b1e;
@@ -44,23 +44,49 @@
     transition:background .4s ease, color .4s ease;
     padding-bottom:40px;
     overflow-x:hidden;
+    position:relative;
   }
-  .wrap{max-width:520px; margin:0 auto; padding:16px 16px 10px;}
+  .bg-orb{position:fixed; border-radius:50%; filter:blur(50px); pointer-events:none; z-index:0; opacity:.55; will-change:transform;}
+  .bg-orb.o1{width:260px;height:260px; background:radial-gradient(circle,rgba(124,58,237,.55),transparent 70%); top:-60px; right:-60px; animation:orbDrift1 16s ease-in-out infinite;}
+  .bg-orb.o2{width:220px;height:220px; background:radial-gradient(circle,rgba(236,72,153,.5),transparent 70%); bottom:10%; left:-70px; animation:orbDrift2 19s ease-in-out infinite;}
+  .bg-orb.o3{width:180px;height:180px; background:radial-gradient(circle,rgba(6,182,212,.45),transparent 70%); top:40%; right:-50px; animation:orbDrift3 14s ease-in-out infinite;}
+  @keyframes orbDrift1{0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-24px,30px) scale(1.12)}}
+  @keyframes orbDrift2{0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(28px,-22px) scale(1.08)}}
+  @keyframes orbDrift3{0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-18px,-26px) scale(1.15)}}
+  /* Lite mode: applied automatically on lower-power devices to keep things smooth */
+  .lite-mode .bg-orb{display:none;}
+  .lite-mode .card{animation:none;}
+  .lite-mode .logo-pulse{display:none;}
+  .lite-mode .brand h1{animation:none; background-position:0% center;}
+  .lite-mode .fx-card.active{animation:none;}
+  .wrap{max-width:520px; margin:0 auto; padding:11px 12px 8px; position:relative; z-index:1;}
 
   header{
-    display:flex; align-items:center; justify-content:space-between; padding:8px 4px 18px;
-    margin-bottom:4px; border-bottom:1px solid var(--card-border);
+    display:flex; align-items:center; justify-content:space-between; padding:4px 2px 10px;
+    margin-bottom:2px; border-bottom:1px solid var(--card-border);
   }
-  .brand{display:flex; align-items:center; gap:10px;}
+  .brand{display:flex; align-items:center; gap:9px;}
   .brand .logo{
-    width:42px;height:42px;border-radius:14px;
+    width:38px;height:38px;border-radius:12px;
     background:linear-gradient(135deg,var(--accent),var(--accent2));
     display:flex;align-items:center;justify-content:center;font-size:22px;
     box-shadow:0 6px 16px rgba(124,58,237,.4);
     animation:floaty 3.5s ease-in-out infinite;
+    position:relative;
   }
+  .logo-pulse{
+    position:absolute; inset:-5px; border-radius:18px; border:1.5px solid rgba(124,58,237,.55);
+    animation:logoPulse 2.6s ease-out infinite; pointer-events:none;
+  }
+  @keyframes logoPulse{0%{transform:scale(.85); opacity:.9;} 100%{transform:scale(1.4); opacity:0;}}
   @keyframes floaty{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-4deg)}}
-  .brand h1{font-size:17px;margin:0;font-weight:800;letter-spacing:-.3px}
+  .brand h1{
+    font-size:18px;margin:0;font-weight:800;letter-spacing:-.3px;
+    background:linear-gradient(120deg,var(--accent),var(--accent2) 55%,var(--accent3));
+    background-size:200% auto; -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:hueSlide 6s ease-in-out infinite;
+  }
+  @keyframes hueSlide{0%,100%{background-position:0% center} 50%{background-position:100% center}}
   .brand p{margin:0;font-size:11px;color:var(--text-dim)}
   .theme-toggle{
     width:52px;height:30px;border-radius:20px;border:1px solid var(--card-border);
@@ -72,14 +98,23 @@
     transition:transform .3s ease; display:flex;align-items:center;justify-content:center;font-size:12px;
   }
   [data-theme="dark"] .theme-toggle .dot{transform:translateX(-22px)}
+  .header-controls{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+  .palette-toggle{
+    width:38px; height:38px; border-radius:12px; border:1px solid var(--card-border);
+    background:var(--card); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;
+    transition:transform .15s ease;
+  }
+  .palette-toggle:active{transform:scale(.9) rotate(-12deg);}
 
   .card{
     background:var(--card); border:1px solid var(--card-border); border-radius:var(--radius);
-    box-shadow:var(--shadow); padding:18px; margin-bottom:16px;
+    box-shadow:var(--shadow); padding:14px; margin-bottom:10px;
+    animation:cardIn .4s cubic-bezier(.22,1,.36,1);
   }
+  @keyframes cardIn{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)}}
 
-  .recorder{text-align:center; padding:26px 18px 20px;}
-  #waveCanvas{width:100%; height:70px; border-radius:14px; margin-bottom:14px; background:var(--bg2); display:block; touch-action:none;}
+  .recorder{text-align:center; padding:17px 14px 14px;}
+  #waveCanvas{width:100%; height:60px; border-radius:13px; margin-bottom:12px; background:var(--bg2); display:block; touch-action:none;}
   .rec-btn{
     width:92px;height:92px;border-radius:50%;border:none;cursor:pointer;
     background:linear-gradient(135deg,var(--accent),var(--accent2));
@@ -105,12 +140,14 @@
   .status-msg{font-size:12.5px; color:var(--accent2); margin-top:8px; min-height:16px;}
   .trim-hint{font-size:11px; color:var(--text-dim); margin-top:2px;}
 
-  .sec-title{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 10px;}
+  .sec-title{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 7px;}
   .sec-title h2{font-size:14.5px;margin:0;font-weight:800;}
   .sec-title span{font-size:11.5px;color:var(--text-dim);}
+  .sec-title span.milestone-pop{color:var(--accent2); font-weight:800; animation:milestonePop .5s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes milestonePop{0%{transform:scale(.7)} 60%{transform:scale(1.15)} 100%{transform:scale(1)}}
 
-  .fx-groups{display:flex; flex-direction:column; gap:16px;}
-  .fx-search-row{display:flex; gap:8px; margin-bottom:14px;}
+  .fx-groups{display:flex; flex-direction:column; gap:10px;}
+  .fx-search-row{display:flex; gap:8px; margin-bottom:12px;}
   .fx-search{
     flex:1; padding:10px 14px; border-radius:14px; border:1.5px solid var(--card-border);
     background:var(--bg2); color:var(--text); font-family:inherit; font-size:12.5px; outline:none;
@@ -124,6 +161,28 @@
   .fx-fav-toggle:active{transform:scale(.92);}
   .fx-empty{text-align:center; font-size:12.5px; color:var(--text-dim); padding:20px 0;}
   .fx-empty.hidden{display:none;}
+  .quick-voices{display:flex; gap:7px; margin-bottom:12px; overflow-x:auto; padding-bottom:2px;}
+  .quick-voice-btn{
+    flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:3px;
+    background:var(--bg2); border:1.5px solid var(--card-border); border-radius:14px; padding:8px 11px;
+    cursor:pointer; font-family:inherit; color:var(--text-dim); font-size:10px; font-weight:700;
+  }
+  .quick-voice-btn:active{transform:scale(.94);}
+  .quick-voice-btn .em{font-size:21px;}
+  .quick-voice-btn.active{
+    border-color:var(--accent); color:var(--text);
+    background:linear-gradient(160deg, rgba(124,58,237,.16), rgba(236,72,153,.10));
+    box-shadow:0 4px 12px rgba(124,58,237,.2);
+  }
+  .combo-row{display:flex; gap:7px; margin-bottom:12px; overflow-x:auto; padding-bottom:2px;}
+  .combo-chip{
+    flex-shrink:0; display:flex; align-items:center; gap:6px; padding:8px 12px; border-radius:16px;
+    background:linear-gradient(160deg, rgba(124,58,237,.10), rgba(6,182,212,.08));
+    border:1.5px dashed rgba(124,58,237,.32); cursor:pointer; font-family:inherit; color:var(--text);
+    font-size:11px; font-weight:700; white-space:nowrap;
+  }
+  .combo-chip:active{transform:scale(.95);}
+  .combo-chip .combo-em{font-size:15px;}
   .fx-cat-title{
     font-size:11.5px; font-weight:800; color:var(--accent); margin:0 2px 8px;
     display:flex; align-items:center; gap:6px;
@@ -132,21 +191,23 @@
     content:''; width:5px; height:5px; border-radius:50%;
     background:linear-gradient(135deg,var(--accent),var(--accent2)); flex-shrink:0;
   }
-  .fx-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  .fx-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
   .fx-card{
-    background:var(--bg2); border:1.5px solid var(--card-border); border-radius:16px;
-    padding:12px 6px; text-align:center; cursor:pointer; user-select:none; position:relative;
+    background:var(--bg2); border:1.5px solid var(--card-border); border-radius:14px;
+    padding:10px 4px; text-align:center; cursor:pointer; user-select:none; position:relative;
     transition:transform .12s ease, border-color .2s ease, box-shadow .2s ease;
   }
   .fx-card:active{transform:scale(.94)}
-  .fx-card .ic{font-size:24px; display:block; margin-bottom:6px; color:var(--accent);}
-  .fx-card .ic svg{width:24px; height:24px; display:block; margin:0 auto 6px;}
-  .fx-card .nm{font-size:11.5px; font-weight:700; line-height:1.3;}
+  .fx-card .ic{font-size:21px; display:block; margin-bottom:5px; color:var(--accent);}
+  .fx-card .ic svg{width:21px; height:21px; display:block; margin:0 auto 5px;}
+  .fx-card .nm{font-size:10.5px; font-weight:700; line-height:1.25;}
   .fx-card.active{
     border-color:var(--accent);
     background:linear-gradient(160deg, rgba(124,58,237,.14), rgba(236,72,153,.10));
     box-shadow:0 6px 16px rgba(124,58,237,.22);
+    animation:fxPop .32s cubic-bezier(.34,1.56,.64,1);
   }
+  @keyframes fxPop{0%{transform:scale(.92)} 60%{transform:scale(1.04)} 100%{transform:scale(1)}}
   .fx-card.active .ic{color:var(--accent2);}
   .fx-card.hidden-by-filter{display:none;}
   .fx-star{
@@ -156,11 +217,11 @@
   .fx-star.on{opacity:1;}
   .fx-cat.hidden-by-filter{display:none;}
 
-  .adv-panel{display:none; margin-top:14px; padding-top:14px; border-top:1px dashed var(--card-border);}
+  .adv-panel{display:none; margin-top:12px; padding-top:12px; border-top:1px dashed var(--card-border);}
   .adv-panel.show{display:block;}
-  .adv-row{margin-bottom:12px;}
+  .adv-row{margin-bottom:10px;}
 
-  .ctrl-row{margin-top:16px;}
+  .ctrl-row{margin-top:13px;}
   .ctrl-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:6px;}
   input[type=range]{
     width:100%; -webkit-appearance:none; height:6px; border-radius:6px;
@@ -182,6 +243,9 @@
     box-shadow:0 8px 18px rgba(6,182,212,.28);
   }
   .magic-btn:active{transform:scale(.98)}
+  .magic-btn.on{background:linear-gradient(135deg,var(--danger),var(--accent2)) !important; animation:pulseRec 1.4s ease-in-out infinite;}
+  .dual-btn-row{display:flex; gap:8px; margin-top:12px;}
+  .magic-btn.compact{margin-top:0; flex:1; padding:11px 6px; font-size:12px;}
 
   .player-title{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
   .player-title .badge{
@@ -206,41 +270,90 @@
   .avatar-opt.active .mini-wrap{transform:scale(1.08);}
   .avatar-opt .mini-wrap{width:44px;height:44px;position:relative;display:flex;align-items:center;justify-content:center; transition:transform .2s ease;}
 
-  .avatar-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; margin:8px 0 16px; position:relative;}
-  .avatar-stage{position:relative; width:110px; height:110px; display:flex; align-items:center; justify-content:center;}
+  .avatar-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; margin:6px 0 14px; position:relative;}
+  .avatar-stage{position:relative; width:124px; height:124px; display:flex; align-items:center; justify-content:center;}
   .avatar-glow{
-    position:absolute; inset:0; border-radius:50%;
-    background:radial-gradient(circle, rgba(124,58,237,.5), rgba(236,72,153,.14) 55%, transparent 72%);
+    position:absolute; inset:-6px; border-radius:50%;
+    background:radial-gradient(circle, rgba(124,58,237,.55), rgba(236,72,153,.18) 50%, transparent 72%);
     opacity:.5; transform:scale(1); transition:opacity .25s ease;
-    filter:blur(2px); pointer-events:none;
+    filter:blur(3px); pointer-events:none;
+  }
+  .avatar-glow2{
+    position:absolute; inset:8px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(6,182,212,.35), transparent 65%);
+    opacity:.55; transform:scale(1); filter:blur(4px); pointer-events:none; mix-blend-mode:screen;
   }
   .avatar-ring{
-    position:absolute; inset:6px; border-radius:50%; border:2px solid rgba(124,58,237,.35);
+    position:absolute; inset:8px; border-radius:50%; border:2px solid rgba(124,58,237,.35);
     transform:scale(1); pointer-events:none;
   }
+  .avatar-ring2{
+    position:absolute; inset:1px; border-radius:50%; border:1.5px dashed rgba(236,72,153,.28);
+    transform:scale(1) rotate(0deg); pointer-events:none; will-change:transform;
+  }
+  .avatar-shadow{
+    position:absolute; bottom:-13px; left:50%; width:58px; height:12px; transform:translateX(-50%);
+    background:radial-gradient(ellipse at center, rgba(0,0,0,.28), transparent 72%);
+    border-radius:50%; pointer-events:none; transition:transform .2s ease, opacity .2s ease;
+  }
   .avatar-face{
-    width:82px;height:82px;border-radius:50%;
+    width:92px;height:92px;border-radius:50%;
     background:linear-gradient(150deg,var(--accent),var(--accent2));
-    position:relative; box-shadow:0 8px 22px rgba(124,58,237,.4);
+    position:relative; box-shadow:0 10px 24px rgba(124,58,237,.42), inset 0 -8px 16px rgba(0,0,0,.14), inset 0 6px 10px rgba(255,255,255,.16);
     transition:background .3s ease, border-radius .3s ease;
     animation:avatarBreathe 3.4s ease-in-out infinite;
-    will-change:transform;
+    will-change:transform; filter:drop-shadow(0 4px 8px rgba(0,0,0,.08));
   }
   .avatar-face.talking{ animation:none; }
+  .avatar-face.reacting{ animation:reactWiggle .6s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes reactWiggle{
+    0%{transform:scale(1) rotate(0)}
+    30%{transform:scale(1.08,.92) rotate(-6deg)}
+    60%{transform:scale(.96,1.06) rotate(5deg)}
+    100%{transform:scale(1) rotate(0)}
+  }
+  .avatar-stage{cursor:pointer;}
   @keyframes avatarBreathe{
     0%,100%{ transform:translateY(0) scale(1) rotate(0deg); }
     50%{ transform:translateY(-3px) scale(1.02) rotate(-1deg); }
   }
-  .avatar-face.mini{box-shadow:none; transform:scale(.55); animation:none;}
-  .avatar-face .eye{position:absolute; top:28px; width:9px;height:9px;border-radius:50%;background:#fff; transition:transform .09s ease;}
-  .avatar-face .eye.l{left:20px;} .avatar-face .eye.r{right:20px;}
+  .avatar-face.mini{box-shadow:0 4px 10px rgba(124,58,237,.3); transform:scale(.48); animation:none;}
+  .avatar-face .eye{position:absolute; top:31px; width:9px;height:9px;border-radius:50%;background:#fff; transition:transform .11s cubic-bezier(.4,0,.2,1), margin .5s cubic-bezier(.4,0,.2,1);}
+  .avatar-face .eye.l{left:23px;} .avatar-face .eye.r{right:23px;}
   .avatar-face .eye.blink{ transform:scaleY(.12); }
-  .avatar-face .mouth{
-    position:absolute; bottom:18px; left:50%; transform:translateX(-50%) scaleY(1);
-    width:26px; height:8px; background:#fff; border-radius:0 0 14px 14px; transform-origin:top center;
-    transition:transform .045s ease-out;
+  .avatar-face .cheek{
+    position:absolute; top:44px; width:15px; height:9px; border-radius:50%;
+    background:radial-gradient(ellipse, rgba(255,255,255,.55), transparent 72%);
+    opacity:0; pointer-events:none; transition:opacity .3s ease; filter:blur(.4px);
   }
-  .avatar-caption{font-size:11px; color:var(--text-dim); margin-top:8px; text-align:center; min-height:14px;}
+  .avatar-face .cheek.l{left:9px;} .avatar-face .cheek.r{right:9px;}
+  .avatar-face .mouth-shine{
+    position:absolute; top:1px; left:15%; width:70%; height:35%; border-radius:50%;
+    background:linear-gradient(180deg, rgba(255,255,255,.5), transparent 80%);
+    pointer-events:none;
+  }
+  .avatar-face .brow{
+    position:absolute; top:20px; width:11px; height:2.6px; border-radius:3px; background:rgba(255,255,255,.85);
+    transition:transform .12s ease, opacity .12s ease; transform-origin:center; will-change:transform;
+  }
+  .avatar-face .brow.l{left:20px; transform:rotate(-6deg);} .avatar-face .brow.r{right:20px; transform:rotate(6deg);}
+  .avatar-face .mouth{
+    position:absolute; bottom:20px; left:50%; transform:translateX(-50%) scaleY(1) scaleX(1);
+    width:28px; height:9px; background:linear-gradient(180deg,#fff 55%,#ffd3de 100%); border-radius:0 0 14px 14px; transform-origin:top center;
+    transition:transform .04s linear; box-shadow:inset 0 -2px 4px rgba(0,0,0,.12); overflow:hidden;
+  }
+  .avatar-caption{font-size:11px; color:var(--text-dim); margin-top:9px; text-align:center; min-height:14px; transition:opacity .15s ease;}
+  .avatar-eq{display:flex; align-items:flex-end; justify-content:center; gap:3px; height:20px; margin-top:6px;}
+  .avatar-eq span{
+    width:3.5px; height:20px; border-radius:3px; background:linear-gradient(180deg,var(--accent2),var(--accent));
+    transform:scaleY(.15); transform-origin:bottom; opacity:.85; will-change:transform;
+  }
+  .avatar-sparkle{
+    position:absolute; width:5px; height:5px; border-radius:50%;
+    background:radial-gradient(circle,var(--sp-color,#fff),rgba(255,255,255,0) 70%);
+    pointer-events:none; z-index:3; animation:sparkleFade .65s ease-out forwards;
+  }
+  @keyframes sparkleFade{0%{opacity:1; transform:translateY(0) scale(1);} 100%{opacity:0; transform:translateY(-20px) scale(.4);}}
 
   /* --- Avatar variants (pure CSS, no emoji) --- */
   .avatar-face.avatar-classic{ background:linear-gradient(150deg,var(--accent),var(--accent2)); border-radius:50%; }
@@ -504,6 +617,35 @@
   .avatar-face.avatar-elf::after{ right:-9px; clip-path:polygon(0 0,100% 50%,0 100%); }
   .avatar-face.avatar-elf .eye{ background:#052e16; }
 
+  .avatar-face.avatar-ghost{ background:linear-gradient(150deg,#e0e7ff,#a5b4fc); border-radius:50% 50% 42% 42%/58% 58% 42% 42%; opacity:.92; box-shadow:0 0 22px rgba(165,180,252,.5); }
+  .avatar-face.avatar-ghost::after{
+    content:''; position:absolute; bottom:-10px; left:0; right:0; height:16px;
+    background:repeating-linear-gradient(90deg, #a5b4fc 0 8px, transparent 8px 16px);
+    border-radius:0 0 6px 6px;
+  }
+  .avatar-face.avatar-ghost .eye{ background:#312e81; }
+  .avatar-face.avatar-ghost .mouth{ background:#312e81; width:12px; height:12px; border-radius:50%; bottom:16px; }
+
+  .avatar-face.avatar-cowboy{ background:linear-gradient(150deg,#eab676,#92400e); border-radius:50%; }
+  .avatar-face.avatar-cowboy::before{
+    content:''; position:absolute; top:-13px; left:-10px; right:-10px; height:16px;
+    background:#78350f; border-radius:50% 50% 0 0/100% 100% 0 0;
+  }
+  .avatar-face.avatar-cowboy::after{
+    content:''; position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:46px; height:10px; background:#92400e; border-radius:50%;
+  }
+  .avatar-face.avatar-cowboy .eye{ background:#1c1917; }
+
+  .avatar-face.avatar-icequeen{ background:linear-gradient(150deg,#e0f2fe,#38bdf8); border-radius:50%; box-shadow:0 0 20px rgba(125,211,252,.6); }
+  .avatar-face.avatar-icequeen::before{
+    content:''; position:absolute; top:-26px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-bottom:26px solid #0ea5e9;
+    clip-path:polygon(0 100%,50% 0,100% 100%,80% 60%,50% 100%,20% 60%);
+  }
+  .avatar-face.avatar-icequeen .eye{ background:#0c4a6e; }
+  .avatar-face.avatar-icequeen .mouth{ background:#0c4a6e; }
+
   /* Generic quality boost: soft pupils + glossy highlight applied to every avatar */
   .avatar-face .eye::after{
     content:''; position:absolute; top:50%; left:50%; width:3px; height:3px; border-radius:50%;
@@ -516,7 +658,7 @@
   }
 
   audio{width:100%; border-radius:12px;}
-  .toggle-row{display:flex; align-items:center; justify-content:space-between; margin-top:12px; font-size:12.5px; color:var(--text-dim);}
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; margin-top:10px; font-size:12.5px; color:var(--text-dim);}
   .mini-switch{display:flex; gap:8px;}
   .mini-btn{
     padding:7px 12px; border-radius:20px; border:1.5px solid var(--card-border); background:var(--bg2);
@@ -524,7 +666,7 @@
   }
   .mini-btn.on{background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none;}
 
-  .action-row{display:flex; gap:10px; margin-top:14px;}
+  .action-row{display:flex; gap:8px; margin-top:12px;}
   .action-btn{
     flex:1; padding:12px; border-radius:14px; border:1.5px solid var(--card-border); background:var(--bg2);
     color:var(--text); font-weight:700; font-size:12.5px; cursor:pointer; display:flex; align-items:center;
@@ -535,7 +677,24 @@
   }
   .action-btn:active{transform:scale(.96)}
 
-  .history-row{display:flex; gap:8px; margin-top:14px; overflow-x:auto; padding-bottom:4px;}
+  .preset-row{display:flex; gap:7px; margin-top:10px; overflow-x:auto; padding-bottom:2px; align-items:center;}
+  .preset-chip{
+    flex-shrink:0; padding:7px 11px; border-radius:14px; background:var(--bg2); border:1.5px solid var(--card-border);
+    font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px; color:var(--text);
+  }
+  .preset-chip:active{transform:scale(.95)}
+  .preset-chip .rm{opacity:.5; font-size:10px; padding:0 1px;}
+  .preset-add-btn{
+    flex-shrink:0; width:34px; height:34px; border-radius:12px; border:1.5px dashed var(--card-border);
+    background:var(--bg2); color:var(--accent); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .preset-add-btn:active{transform:scale(.9)}
+  .loop-btn{
+    flex-shrink:0; width:38px; height:34px; border-radius:12px; border:1.5px solid var(--card-border);
+    background:var(--bg2); color:var(--text-dim); font-size:13px; cursor:pointer;
+  }
+  .loop-btn.on{background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none;}
+  .history-row{display:flex; gap:7px; margin-top:11px; overflow-x:auto; padding-bottom:4px;}
   .history-chip{
     flex-shrink:0; padding:8px 12px; border-radius:14px; background:var(--bg2); border:1.5px solid var(--card-border);
     font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px;
@@ -556,19 +715,25 @@
 </style>
 </head>
 <body data-theme="light">
+<div class="bg-orb o1"></div>
+<div class="bg-orb o2"></div>
+<div class="bg-orb o3"></div>
 <div class="wrap">
 
   <header>
     <div class="brand">
-      <div class="logo">🎙️</div>
+      <div class="logo">🎙️<span class="logo-pulse"></span></div>
       <div>
         <h1>وویس‌مورف</h1>
         <p>صدای خودت رو به هر چیزی تبدیل کن</p>
       </div>
     </div>
-    <button class="theme-toggle" id="themeToggle" aria-label="تغییر تم">
-      <div class="dot">🌙</div>
-    </button>
+    <div class="header-controls">
+      <button class="palette-toggle" id="paletteToggle" aria-label="تغییر رنگ" title="تغییر پالت رنگی">🎨</button>
+      <button class="theme-toggle" id="themeToggle" aria-label="تغییر تم">
+        <div class="dot">🌙</div>
+      </button>
+    </div>
   </header>
 
   <div class="card recorder">
@@ -590,6 +755,8 @@
       <h2>✨ افکت‌ها رو انتخاب کن</h2>
       <span id="fxCount"></span>
     </div>
+    <div class="quick-voices" id="quickVoices"></div>
+    <div class="combo-row" id="comboRow"></div>
     <div class="fx-search-row">
       <input type="text" id="fxSearch" class="fx-search" placeholder="🔎 جستجوی افکت (مثلاً ربات، ترسناک، اکو…)">
       <button class="fx-fav-toggle" id="fxFavToggle" title="فقط موردعلاقه‌ها">⭐</button>
@@ -628,7 +795,17 @@
       </select>
     </div>
 
-    <button class="magic-btn" id="magicBtn">🪄 شانس جادویی — یه ترکیب تصادفی و دیوونه‌وار!</button>
+    <div class="toggle-row">
+      <span>🌗 محو ملایم ابتدا و انتهای صدا</span>
+      <div class="mini-switch">
+        <button class="mini-btn" id="fadeToggle">خاموش</button>
+      </div>
+    </div>
+
+    <div class="dual-btn-row">
+      <button class="magic-btn compact" id="magicBtn">🪄 شانس جادویی</button>
+      <button class="magic-btn compact" id="livePreviewBtn" style="background:linear-gradient(135deg,var(--accent3),var(--accent2));">🎙️ پیش‌نمایش زنده</button>
+    </div>
     <div class="processing-overlay" id="processingOverlay"><div class="spinner"></div><span>در حال ساخت صدای جدید…</span></div>
   </div>
 
@@ -644,19 +821,28 @@
     <div class="avatar-picker-title">🎭 آواتار زنده‌ت رو انتخاب کن</div>
     <div class="avatar-picker" id="avatarPicker"></div>
     <div class="avatar-wrap">
-      <div class="avatar-stage">
+      <div class="avatar-stage" id="avatarStage">
+        <div class="avatar-shadow" id="avatarShadow"></div>
         <div class="avatar-glow" id="avatarGlow"></div>
+        <div class="avatar-glow2" id="avatarGlow2"></div>
+        <div class="avatar-ring2" id="avatarRing2"></div>
         <div class="avatar-ring" id="avatarRing"></div>
         <div class="avatar-face avatar-classic" id="avatarFace">
           <div class="shine"></div>
+          <div class="cheek l" id="cheekL"></div><div class="cheek r" id="cheekR"></div>
+          <div class="brow l" id="browL"></div><div class="brow r" id="browR"></div>
           <div class="eye l" id="eyeL"></div><div class="eye r" id="eyeR"></div>
-          <div class="mouth" id="avatarMouth"></div>
+          <div class="mouth" id="avatarMouth"><div class="mouth-shine"></div></div>
         </div>
       </div>
+      <div class="avatar-eq" id="avatarEq"></div>
       <div class="avatar-caption" id="avatarCaption">آماده صحبت 🎧</div>
     </div>
 
-    <audio id="player" controls></audio>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <audio id="player" controls style="flex:1;"></audio>
+      <button class="loop-btn" id="loopBtn" title="پخش تکراری">🔁</button>
+    </div>
 
     <div class="toggle-row">
       <span>مقایسه با صدای اصلی</span>
@@ -684,6 +870,13 @@
 
     <button class="magic-btn" id="videoBtn" style="background:linear-gradient(135deg,var(--accent2),var(--accent));">🎬 ساخت ویدیوی آواتار برای استوری</button>
     <div class="processing-overlay" id="videoOverlay"><div class="spinner"></div><span>در حال ساخت ویدیو…</span></div>
+
+    <div class="sec-title" style="margin-top:14px;">
+      <h2 style="font-size:12.5px;">💾 ترکیب‌های ذخیره‌شده من</h2>
+    </div>
+    <div class="preset-row" id="presetRow">
+      <button class="preset-add-btn" id="presetAddBtn" title="ذخیره ترکیب فعلی">＋</button>
+    </div>
 
     <div class="history-row" id="historyRow"></div>
   </div>
@@ -722,6 +915,43 @@
   });
 
   function vibrate(ms){ if(navigator.vibrate){ try{ navigator.vibrate(ms); }catch(e){} } }
+
+  /* ---------------- New feature: accent color palette switcher ---------------- */
+  var paletteToggle = document.getElementById('paletteToggle');
+  var PALETTES = [
+    { accent:'#7C3AED', accent2:'#EC4899', accent3:'#06B6D4' }, /* default violet/pink */
+    { accent:'#0891B2', accent2:'#22D3EE', accent3:'#6366F1' }, /* ocean teal */
+    { accent:'#EA580C', accent2:'#F59E0B', accent3:'#EF4444' }, /* sunset */
+    { accent:'#16A34A', accent2:'#84CC16', accent3:'#059669' }  /* forest */
+  ];
+  var paletteIdx = 0;
+  try{ paletteIdx = parseInt(localStorage.getItem('voicemorph_palette')||'0',10) || 0; }catch(e){}
+  function applyPalette(i){
+    var p = PALETTES[i % PALETTES.length];
+    var root = document.documentElement.style;
+    root.setProperty('--accent', p.accent);
+    root.setProperty('--accent2', p.accent2);
+    root.setProperty('--accent3', p.accent3);
+  }
+  applyPalette(paletteIdx);
+  paletteToggle.addEventListener('click', function(){
+    vibrate(10);
+    paletteIdx = (paletteIdx+1) % PALETTES.length;
+    applyPalette(paletteIdx);
+    try{ localStorage.setItem('voicemorph_palette', String(paletteIdx)); }catch(e){}
+  });
+
+  /* ---------------- Adaptive performance: auto-detect weaker devices ---------------- */
+  var isLiteMode = false;
+  try{
+    var lowMem = navigator.deviceMemory && navigator.deviceMemory <= 4;
+    var lowCpu = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
+    var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(lowMem || lowCpu || reducedMotion){
+      isLiteMode = true;
+      document.body.classList.add('lite-mode');
+    }
+  }catch(e){}
 
   /* ---------------- Shared Audio Context ---------------- */
   var appCtx = null;
@@ -868,6 +1098,7 @@
 
   /* ---------------- Custom (advanced) effect live params ---------------- */
   var customParams = { rate:1, echo:0.3, dist:10, filt:4000 };
+  var fadeEnabled = false;
 
   /* ---------------- Custom-drawn icons (used where no emoji fits well) ---------------- */
   var SVG_TWIN    = '<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="12" r="7" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="12" r="7" stroke="currentColor" stroke-width="1.6"/></svg>';
@@ -877,8 +1108,11 @@
   var SVG_SPEED   = '<svg viewBox="0 0 24 24" fill="none"><path d="M3 8h9M3 12h13M3 16h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M16.5 6l5 6-5 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var SVG_BATTERY = '<svg viewBox="0 0 24 24" fill="none"><rect x="2" y="8" width="17" height="8" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="19.5" y="10.3" width="2" height="3.4" fill="currentColor"/><rect x="4" y="10" width="3" height="4" fill="currentColor"/></svg>';
   var SVG_CHOIR   = '<svg viewBox="0 0 24 24" fill="none"><circle cx="7" cy="8" r="2.8" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="8" r="2.8" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="9" r="3.4" stroke="currentColor" stroke-width="1.5"/><path d="M2 20c0-3.5 2.4-5.3 5-5.3s5 1.8 5 5.3M12 20c0-4 3-5.8 5-5.8s5 1.8 5 5.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  var SVG_STUDIOMIC = '<svg viewBox="0 0 24 24" fill="none"><rect x="9" y="2" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M6 11a6 6 0 0 0 12 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 17v4M9 21h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  var SVG_WIDE    = '<svg viewBox="0 0 24 24" fill="none"><path d="M3 12h4M3 12l2.6-2.6M3 12l2.6 2.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12h-4M21 12l-2.6-2.6M21 12l-2.6 2.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="9" y="6" width="6" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/></svg>';
+  var SVG_CLARITY = '<svg viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M15.2 15.2L21 21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M10.5 7.5v6M7.5 10.5h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
 
-  /* ---------------- Effects Catalogue (36 total) ---------------- */
+  /* ---------------- Effects Catalogue ---------------- */
   var EFFECTS = [
     { id:'none', name:'بدون افکت', icon:'🎙️', rate:1, detune:0, tail:0.3,
       build:function(ctx,input,I){ return input; } },
@@ -1132,18 +1366,6 @@
         lp.connect(panner);
         var g = ctx.createGain(); g.gain.value = 1.1*I; panner.connect(g);
         return g; } },
-    { id:'starship', name:'سفینه فضایی', icon:'🛸', rate:1.03, detune:30, tail:1.6,
-      build:function(ctx,input,I){
-        var bp = biquad(ctx,'bandpass',1700,1.4); input.connect(bp);
-        var r = ringMod(ctx, bp, 4*I);
-        var out = ctx.createGain(); r.connect(out);
-        return reverbFx(ctx, out, 1.6, 1.8, Math.min(0.55,0.3*I)); } },
-    { id:'circus', name:'سیرک شادی', icon:'🎪', rate:1.15, detune:100, tail:0.4,
-      build:function(ctx,input,I){
-        wobbleDetune(ctx, input, 6.5, 30*I);
-        var t = tremolo(ctx, input, 8*I, 0.25);
-        var hs = biquad(ctx,'highshelf',2800,0); hs.gain.value = 3; t.connect(hs);
-        return hs; } },
     { id:'galaxy', name:'کهکشانی', icon:'🌌', rate:1.06, detune:20, tail:4.5,
       build:function(ctx,input,I){
         var r = ringMod(ctx, input, 3.2*I);
@@ -1177,21 +1399,6 @@
         });
         var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(16*I); out.connect(ws);
         return reverbFx(ctx, ws, 2.6, 2.4, 0.4); } },
-    { id:'telepathy', name:'ارتباط ذهنی', icon:'🧠', rate:0.98, detune:-10, tail:2.0,
-      build:function(ctx,input,I){
-        var hp = biquad(ctx,'highpass',350,0.7); input.connect(hp);
-        var panner = ctx.createStereoPanner();
-        var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = 0.35;
-        var lfoGain = ctx.createGain(); lfoGain.gain.value = 0.7;
-        lfo.connect(lfoGain); lfoGain.connect(panner.pan); lfo.start();
-        hp.connect(panner);
-        var d = delayFx(ctx, panner, 0.28, 0.35, 0.45);
-        return reverbFx(ctx, d, 1.8, 1.7, Math.min(0.6,0.35*I)); } },
-    { id:'kawaii', name:'کیوت ژاپنی', icon:'🎀', rate:1.5, detune:260, tail:0.4,
-      build:function(ctx,input,I){
-        var hs = biquad(ctx,'highshelf',2800,0); hs.gain.value = 5*I; input.connect(hs);
-        var t = tremolo(ctx, hs, 5*I, 0.15);
-        return t; } },
     { id:'cathedral', name:'کلیسای بزرگ', icon:'⛪', rate:0.99, detune:0, tail:5.5,
       build:function(ctx,input,I){
         var out = ctx.createGain(); input.connect(out);
@@ -1201,12 +1408,6 @@
           input.connect(d); d.connect(g); g.connect(out);
         });
         return reverbFx(ctx, out, 4.4, 3.4, Math.min(0.85,0.5*I)); } },
-    { id:'warbot', name:'ربات جنگی', icon:'🛡️', rate:0.85, detune:-90, tail:0.5,
-      build:function(ctx,input,I){
-        var r = ringMod(ctx, input, 40*I);
-        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(28*I); r.connect(ws);
-        var bp = biquad(ctx,'bandpass',1400,1.4); ws.connect(bp);
-        return bp; } },
     { id:'hypnotic', name:'هیپنوتیزم', icon:'🌀', rate:0.9, detune:-40, tail:3.0,
       build:function(ctx,input,I){
         wobbleDetune(ctx, input, 1.1, 70*I);
@@ -1232,11 +1433,335 @@
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass',700,1); input.connect(lp);
         return reverbFx(ctx, lp, 4.5, 3.8, Math.min(0.9,0.55*I)); } },
+    { id:'crystal', name:'پژواک کریستالی', icon:'💎', rate:1.05, detune:60, tail:3.4,
+      build:function(ctx,input,I){
+        var hs = biquad(ctx,'highshelf',3500,0); hs.gain.value = 5*I; input.connect(hs);
+        var d = delayFx(ctx, hs, 0.14, 0.45, 0.4);
+        return reverbFx(ctx, d, 2.6, 1.8, Math.min(0.7,0.4*I)); } },
+    { id:'earthquake', name:'لرزش زمین', icon:'🌍', rate:0.65, detune:-420, tail:1.6,
+      build:function(ctx,input,I){
+        wobbleDetune(ctx, input, 3.2, 50*I);
+        var lp = biquad(ctx,'lowpass',260,1.3); input.connect(lp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(12*I); lp.connect(ws);
+        return ws; } },
+    { id:'gatecut', name:'برش ریتمیک دی‌جی', icon:'🎚️', rate:1, detune:0, tail:0.3,
+      build:function(ctx,input,I){
+        var g = ctx.createGain(); g.gain.value = 0;
+        var lfo = ctx.createOscillator(); lfo.type='square'; lfo.frequency.value = 5.5*I;
+        var lfoGain = ctx.createGain(); lfoGain.gain.value = 0.5;
+        lfo.connect(lfoGain); lfoGain.connect(g.gain);
+        if(ctx.createConstantSource){
+          var off = ctx.createConstantSource(); off.offset.value = 0.5;
+          off.connect(g.gain); off.start();
+        } else { g.gain.value = 0.5; }
+        lfo.start();
+        input.connect(g);
+        return g; } },
+    { id:'frost', name:'سرمای یخ‌زده', icon:'❄️', rate:1.1, detune:90, tail:2.2,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',600,0.7); input.connect(hp);
+        var hs = biquad(ctx,'highshelf',4500,0); hs.gain.value = 6*I; hp.connect(hs);
+        var t = tremolo(ctx, hs, 3*I, 0.25);
+        return reverbFx(ctx, t, 2.0, 1.6, Math.min(0.55,0.3*I)); } },
+    { id:'explosion', name:'انفجار مهیب', icon:'💥', rate:0.75, detune:-300, tail:2.0, speedRamp:true, rampFrom:1.3, rampTo:0.55,
+      build:function(ctx,input,I){
+        var ls = ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=150; ls.gain.value=16*I;
+        input.connect(ls);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(40*I); ls.connect(ws);
+        return reverbFx(ctx, ws, 2.2, 1.8, 0.42); } },
+    { id:'boy', name:'صدای پسر بچه', icon:'👦', rate:1.3, detune:190, tail:0.3,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',280,0.7); input.connect(hp);
+        wobbleDetune(ctx, hp, 5.2, 6*I);
+        var presence = biquad(ctx,'peaking',2500,1.1); presence.gain.value = 4.5*I; hp.connect(presence);
+        var hs = biquad(ctx,'highshelf',4200,0); hs.gain.value = 2.5*I; presence.connect(hs);
+        var breath = ctx.createBufferSource(); breath.buffer = makeNoiseBuffer(ctx,20); breath.loop = true;
+        var breathFilter = biquad(ctx,'highpass',5000,0.7);
+        var breathGain = ctx.createGain(); breathGain.gain.value = 0.012*I;
+        breath.connect(breathFilter); breathFilter.connect(breathGain);
+        var mixed = ctx.createGain(); hs.connect(mixed); breathGain.connect(mixed); breath.start();
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value=-16; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.15;
+        mixed.connect(comp);
+        return comp; } },
+    { id:'oldman', name:'صدای پیرمرد', icon:'👴', rate:0.84, detune:-160, tail:0.6,
+      build:function(ctx,input,I){
+        wobbleDetune(ctx, input, 4.3, 9*I);
+        var ls = ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=280; ls.gain.value=3*I; input.connect(ls);
+        var lp = biquad(ctx,'lowpass',2300,0.8); ls.connect(lp);
+        var rasp = biquad(ctx,'peaking',900,1.4); rasp.gain.value = 3*I; lp.connect(rasp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(4*I); rasp.connect(ws);
+        var t = tremolo(ctx, ws, 5*I, 0.1);
+        var breath = ctx.createBufferSource(); breath.buffer = makeNoiseBuffer(ctx,20); breath.loop = true;
+        var breathFilter = biquad(ctx,'bandpass',1800,1.2);
+        var breathGain = ctx.createGain(); breathGain.gain.value = 0.02*I;
+        breath.connect(breathFilter); breathFilter.connect(breathGain);
+        var mixed = ctx.createGain(); t.connect(mixed); breathGain.connect(mixed); breath.start();
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value=-18; comp.ratio.value=3.5; comp.attack.value=0.006; comp.release.value=0.2;
+        mixed.connect(comp);
+        return comp; } },
+    { id:'baby', name:'صدای نوزاد', icon:'👶', rate:1.8, detune:350, tail:0.3,
+      build:function(ctx,input,I){
+        wobbleDetune(ctx, input, 4.5, 18*I);
+        var peaking = biquad(ctx,'peaking',3400,1.3); peaking.gain.value = 5*I; input.connect(peaking);
+        var hs = biquad(ctx,'highshelf',5200,0); hs.gain.value = 3*I; peaking.connect(hs);
+        var t = tremolo(ctx, hs, 10*I, 0.2);
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value=-16; comp.ratio.value=3; comp.attack.value=0.003; comp.release.value=0.12;
+        t.connect(comp);
+        return comp; } },
+    { id:'girl', name:'صدای دختر جوان', icon:'👧', rate:1.26, detune:210, tail:0.3,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',260,0.6); input.connect(hp);
+        var presence = biquad(ctx,'peaking',2900,1.2); presence.gain.value = 4*I; hp.connect(presence);
+        var hs = biquad(ctx,'highshelf',4400,0); hs.gain.value = 2.5*I; presence.connect(hs);
+        var breath = ctx.createBufferSource(); breath.buffer = makeNoiseBuffer(ctx,20); breath.loop = true;
+        var breathFilter = biquad(ctx,'highpass',5500,0.7);
+        var breathGain = ctx.createGain(); breathGain.gain.value = 0.01*I;
+        breath.connect(breathFilter); breathFilter.connect(breathGain);
+        var mixed = ctx.createGain(); hs.connect(mixed); breathGain.connect(mixed); breath.start();
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value=-16; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.15;
+        mixed.connect(comp);
+        return comp; } },
+    { id:'oldwoman', name:'صدای پیرزن', icon:'👵', rate:1.02, detune:-50, tail:0.5,
+      build:function(ctx,input,I){
+        wobbleDetune(ctx, input, 5.6, 14*I);
+        var bp = biquad(ctx,'bandpass',1700,1.1); input.connect(bp);
+        var rasp = biquad(ctx,'peaking',2400,1.3); rasp.gain.value = 2.5*I; bp.connect(rasp);
+        var t = tremolo(ctx, rasp, 4.5*I, 0.14);
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value=-17; comp.ratio.value=3; comp.attack.value=0.005; comp.release.value=0.18;
+        t.connect(comp);
+        return comp; } },
+    { id:'newsanchor', name:'مجری اخبار حرفه‌ای', icon:'📰', rate:1, detune:0, tail:0.3,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',1500,0.7); input.connect(bp);
+        var hs = biquad(ctx,'highshelf',5000,0); hs.gain.value = -3; bp.connect(hs);
+        var g = ctx.createGain(); g.gain.value = 1.15; hs.connect(g);
+        return g; } },
+    { id:'sportscaster', name:'گزارشگر ورزشی هیجانی', icon:'🏟️', rate:1.12, detune:60, tail:0.6,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',1400,1.4); input.connect(bp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(10*I); bp.connect(ws);
+        return reverbFx(ctx, ws, 0.6, 1.0, 0.18*I); } },
+    { id:'autotune', name:'افکت اتوتون خواننده‌ها', icon:'🎵', rate:1.03, detune:20, tail:0.6,
+      build:function(ctx,input,I){
+        var r = ringMod(ctx, input, 2.5*I);
+        var hs = biquad(ctx,'highshelf',3500,0); hs.gain.value=3; r.connect(hs);
+        return delayFx(ctx, hs, 0.012, 0.2, 0.3); } },
+    { id:'vocoder', name:'وکودر رباتیک', icon:'🎛️', rate:1, detune:0, tail:0.6,
+      build:function(ctx,input,I){
+        var r = ringMod(ctx, input, 90+60*I);
+        var bp = biquad(ctx,'bandpass',1200,3); r.connect(bp);
+        var hs = biquad(ctx,'highshelf',3000,0); hs.gain.value=3; bp.connect(hs);
+        return hs; } },
+    { id:'jetengine', name:'موتور جت پرقدرت', icon:'✈️', rate:0.8, detune:-120, tail:1.0,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',500,1.4); input.connect(lp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(30*I); lp.connect(ws);
+        var out = ctx.createGain(); ws.connect(out);
+        var noiseSrc = ctx.createBufferSource();
+        noiseSrc.buffer = makeNoiseBuffer(ctx,30); noiseSrc.loop = true;
+        var noiseFilter = biquad(ctx,'lowpass',800,1);
+        var noiseGain = ctx.createGain(); noiseGain.gain.value = 0.18*I;
+        noiseSrc.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(out);
+        noiseSrc.start();
+        return out; } },
+    { id:'deepsea', name:'اعماق اقیانوس', icon:'🐋', rate:0.62, detune:-260, tail:2.4,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',380,1); input.connect(lp);
+        var t = tremolo(ctx, lp, 0.8, 0.4);
+        return reverbFx(ctx, t, 3.2, 2.6, Math.min(0.7,0.4*I)); } },
+    { id:'discofunk', name:'دیسکوی فانکی', icon:'🕺', rate:1.05, detune:20, tail:0.5,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',1200,1.4); input.connect(bp);
+        var t = tremolo(ctx, bp, 6*I, 0.45);
+        return delayFx(ctx, t, 0.02, 0.3, 0.35); } },
+    { id:'auctioneer', name:'حراج‌چی تندگو', icon:'📣', rate:1.55, detune:60, tail:0.3,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',1600,1.6); input.connect(bp);
+        var g = ctx.createGain(); g.gain.value=1.15; bp.connect(g);
+        return g; } },
+    { id:'crowdroar', name:'غرش هواداران استادیوم', icon:'📯', rate:1, detune:0, tail:1.0,
+      build:function(ctx,input,I){
+        var out = ctx.createGain(); input.connect(out);
+        var noiseSrc = ctx.createBufferSource();
+        noiseSrc.buffer = makeNoiseBuffer(ctx,30); noiseSrc.loop = true;
+        var noiseFilter = biquad(ctx,'bandpass',1000,0.6);
+        var noiseGain = ctx.createGain(); noiseGain.gain.value = 0.22*I;
+        noiseSrc.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(out);
+        noiseSrc.start();
+        return reverbFx(ctx, out, 2.0, 1.6, 0.3); } },
+    { id:'lullaby', name:'لالایی رویایی', icon:'🌙', rate:0.94, detune:-30, tail:3.4,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',3200,0.7); input.connect(lp);
+        var d = delayFx(ctx, lp, 0.3, 0.25, 0.3);
+        return reverbFx(ctx, d, 3.0, 2.4, Math.min(0.6,0.35*I)); } },
+    { id:'submarine', name:'رادار زیردریایی', icon:'🚢', rate:0.7, detune:-220, tail:1.2,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',450,1); input.connect(lp);
+        var out = ctx.createGain(); lp.connect(out);
+        var ping = ctx.createOscillator(); ping.type='sine'; ping.frequency.value=1400;
+        var pingEnv = ctx.createGain(); pingEnv.gain.value=0;
+        var lfo = ctx.createOscillator(); lfo.type='square'; lfo.frequency.value=0.4;
+        var lfoGain = ctx.createGain(); lfoGain.gain.value=0.05*I;
+        lfo.connect(lfoGain); lfoGain.connect(pingEnv.gain);
+        ping.connect(pingEnv); pingEnv.connect(out);
+        ping.start(); lfo.start();
+        return out; } },
+    { id:'teleporter', name:'تله‌پورت فضایی', icon:'🌀', rate:1, detune:0, tail:0.8, speedRamp:true, rampFrom:0.55, rampTo:2.3,
+      build:function(ctx,input,I){
+        var r = ringMod(ctx, input, 30*I);
+        var bp = biquad(ctx,'bandpass',1600,1.5); r.connect(bp);
+        return bp; } },
+    { id:'wolfhowl', name:'زوزه گرگ', icon:'🐺', rate:1, detune:0, tail:2.2, speedRamp:true, rampFrom:1, rampTo:1.6,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',900,1.6); input.connect(bp);
+        return reverbFx(ctx, bp, 2.4, 2.0, Math.min(0.6,0.35*I)); } },
+    { id:'campfire', name:'قصه‌گوی کنار آتش', icon:'🔥', rate:0.95, detune:-20, tail:1.0,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',3200,0.7); input.connect(lp);
+        var out = ctx.createGain(); lp.connect(out);
+        var crackle = ctx.createBufferSource(); crackle.buffer = makeCrackleBuffer(ctx,30,I); crackle.loop = true;
+        var crackleGain = ctx.createGain(); crackleGain.gain.value = 0.35;
+        crackle.connect(crackleGain); crackleGain.connect(out); crackle.start();
+        return reverbFx(ctx, out, 1.2, 1.3, 0.15); } },
+    { id:'flock', name:'دسته پرندگان', icon:'🐦', rate:1.3, detune:150, tail:0.4,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',2200,3); input.connect(bp);
+        var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = 5*I;
+        var lfoGain = ctx.createGain(); lfoGain.gain.value = 800;
+        lfo.connect(lfoGain); lfoGain.connect(bp.frequency); lfo.start();
+        return tremolo(ctx, bp, 12*I, 0.35); } },
+    { id:'hologram', name:'هولوگرام شناور', icon:'🔷', rate:1, detune:0, tail:0.6,
+      build:function(ctx,input,I){
+        var delay = ctx.createDelay(0.02); delay.delayTime.value = 0.005;
+        var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = 0.3;
+        var lfoGain = ctx.createGain(); lfoGain.gain.value = 0.004*I;
+        lfo.connect(lfoGain); lfoGain.connect(delay.delayTime); lfo.start();
+        var fb = ctx.createGain(); fb.gain.value = 0.5;
+        var wet = ctx.createGain(); wet.gain.value = 0.6;
+        var dry = ctx.createGain(); dry.gain.value = 1;
+        var out = ctx.createGain();
+        input.connect(dry); dry.connect(out);
+        input.connect(delay); delay.connect(fb); fb.connect(delay); delay.connect(wet); wet.connect(out);
+        var hs = biquad(ctx,'highshelf',4000,0); hs.gain.value=4; out.connect(hs);
+        return hs; } },
+    { id:'reverseecho', name:'پژواک معکوس', icon:'🔁', rate:1, detune:0, tail:2.0, reverse:true,
+      build:function(ctx,input,I){
+        return reverbFx(ctx, delayFx(ctx,input,0.15,0.4,0.35), 2.0, 1.8, Math.min(0.6,0.35*I)); } },
+    { id:'antigrav', name:'بی‌وزنی فضایی', icon:'🪐', rate:1.1, detune:80, tail:2.0,
+      build:function(ctx,input,I){
+        wobbleDetune(ctx, input, 0.6, 90*I);
+        var hp = biquad(ctx,'highpass',900,0.6); input.connect(hp);
+        return reverbFx(ctx, hp, 2.0, 1.6, Math.min(0.5,0.3*I)); } },
     { id:'custom', name:'سفارشی من', icon:'🛠️', rate:1, detune:0, tail:2.2,
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass', customParams.filt, 0.8); input.connect(lp);
         var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(customParams.dist); lp.connect(ws);
-        return delayFx(ctx, ws, 0.22, customParams.echo, customParams.echo>0.04?0.4:0); } }
+        return delayFx(ctx, ws, 0.22, customParams.echo, customParams.echo>0.04?0.4:0); } },
+    /* ---------------- New: studio-quality utility effects (clean up / polish real voice rather than transform it) ---------------- */
+    { id:'clarity', name:'شفافیت و وضوح صدا', icon:SVG_CLARITY, rate:1, detune:0, tail:0.2,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',90,0.7); input.connect(hp);
+        var presence = biquad(ctx,'peaking',3200,1.1); presence.gain.value = 6*I; hp.connect(presence);
+        var air = biquad(ctx,'highshelf',9000,0); air.gain.value = 4*I; presence.connect(air);
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value=-20; comp.ratio.value=2.5; comp.attack.value=0.004; comp.release.value=0.15;
+        air.connect(comp);
+        return comp; } },
+    { id:'bassboost', name:'باس‌بوستر قدرتمند', icon:'🔊', rate:1, detune:0, tail:0.2,
+      build:function(ctx,input,I){
+        var ls = ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=180; ls.gain.value=10*I; input.connect(ls);
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value=-18; comp.ratio.value=3; comp.attack.value=0.005; comp.release.value=0.2;
+        ls.connect(comp);
+        return comp; } },
+    { id:'warmth', name:'گرمای آنالوگ نواری', icon:'🌇', rate:1, detune:0, tail:0.3,
+      build:function(ctx,input,I){
+        wobbleDetune(ctx, input, 3.2, 2.5*I);
+        var lp = biquad(ctx,'lowpass',7200,0.7); input.connect(lp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(3*I); lp.connect(ws);
+        var ls = ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=220; ls.gain.value=2.5*I; ws.connect(ls);
+        return ls; } },
+    { id:'podcast', name:'صدای پادکست استودیویی', icon:SVG_STUDIOMIC, rate:1, detune:0, tail:0.2,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',85,0.7); input.connect(hp);
+        var presence = biquad(ctx,'peaking',2800,1); presence.gain.value = 4*I; hp.connect(presence);
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value=-22; comp.ratio.value=4; comp.attack.value=0.003; comp.release.value=0.25;
+        presence.connect(comp);
+        var g = ctx.createGain(); g.gain.value=1.08; comp.connect(g);
+        return g; } },
+    { id:'stereowide', name:'استریوی پهن و فراخ', icon:SVG_WIDE, rate:1, detune:0, tail:0.3,
+      build:function(ctx,input,I){
+        var d = ctx.createDelay(0.04); d.delayTime.value = 0.014*Math.max(0.3,I);
+        var merger = ctx.createChannelMerger(2);
+        input.connect(merger,0,0);
+        input.connect(d); d.connect(merger,0,1);
+        return merger; } },
+    { id:'denoise', name:'صدای تمیز بدون نویز', icon:'🧼', rate:1, detune:0, tail:0.2,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',150,0.8); input.connect(hp);
+        var lp = biquad(ctx,'lowpass',7000,0.8); hp.connect(lp);
+        var gate = ctx.createDynamicsCompressor();
+        gate.threshold.value=-40; gate.ratio.value=1.6; gate.attack.value=0.01; gate.release.value=0.1;
+        lp.connect(gate);
+        return gate; } },
+    /* ---------------- New: second wave of fresh, distinct effects ---------------- */
+    { id:'growl', name:'غرش هیولایی خشن', icon:'🐺', rate:0.55, detune:-380, tail:0.6,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',700,1.1); input.connect(lp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(28*I); lp.connect(ws);
+        return ringMod(ctx, ws, 14*I); } },
+    { id:'chibi', name:'صدای چیبی کیوت', icon:'🐥', rate:1.55, detune:280, tail:0.3,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',350,0.7); input.connect(hp);
+        var peaking = biquad(ctx,'peaking',3800,1.3); peaking.gain.value=5*I; hp.connect(peaking);
+        var hs = biquad(ctx,'highshelf',6000,0); hs.gain.value=3*I; peaking.connect(hs);
+        return hs; } },
+    { id:'walkietalkie', name:'بی‌سیم واکی‌تاکی', icon:'📻', rate:1, detune:0, tail:0.3,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',1600,3.5); input.connect(bp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(9*I); bp.connect(ws);
+        var out = ctx.createGain(); ws.connect(out);
+        var noiseSrc = ctx.createBufferSource();
+        noiseSrc.buffer = makeNoiseBuffer(ctx, 0.3);
+        var noiseGain = ctx.createGain(); noiseGain.gain.value = 0.35*I;
+        noiseSrc.connect(noiseGain); noiseGain.connect(out);
+        noiseSrc.start();
+        return out; } },
+    { id:'orchestrahall', name:'تالار کنسرت بزرگ', icon:'🎼', rate:1, detune:0, tail:4.5,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',5000,0.7); input.connect(lp);
+        return reverbFx(ctx, lp, 4.2, 3.2, Math.min(0.75,0.5*I)); } },
+    { id:'glassbell', name:'صدای بلورین زنگوله‌ای', icon:'🔔', rate:1.15, detune:100, tail:2.0,
+      build:function(ctx,input,I){
+        var r = ringMod(ctx, input, 220*I);
+        var hp = biquad(ctx,'highpass',800,0.8); r.connect(hp);
+        return reverbFx(ctx, hp, 1.8, 2.0, Math.min(0.6,0.35*I)); } },
+    { id:'timewarp', name:'اعوجاج زمان', icon:'🌀', rate:1, detune:0, tail:1.5,
+      build:function(ctx,input,I){
+        wobbleDetune(ctx, input, 1.1, 140*I);
+        return delayFx(ctx, input, 0.09, 0.5, 0.4); } },
+    { id:'lofi', name:'لوفای آرامش‌بخش', icon:'☕', rate:0.98, detune:-20, tail:0.5,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',3200,0.6); input.connect(lp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(2.5*I); lp.connect(ws);
+        var crackle = ctx.createBufferSource(); crackle.buffer = makeCrackleBuffer(ctx,30,0.5*I); crackle.loop=true;
+        var crackleGain = ctx.createGain(); crackleGain.gain.value=0.3;
+        var out = ctx.createGain(); ws.connect(out);
+        crackle.connect(crackleGain); crackleGain.connect(out); crackle.start();
+        return out; } },
+    { id:'gameshow', name:'مجری برنامه سرگرمی', icon:'🎉', rate:1.1, detune:40, tail:0.4,
+      build:function(ctx,input,I){
+        var presence = biquad(ctx,'peaking',2600,1.1); presence.gain.value=5*I; input.connect(presence);
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value=-16; comp.ratio.value=4; comp.attack.value=0.003; comp.release.value=0.15;
+        presence.connect(comp);
+        return comp; } }
   ];
 
   var EFFECTS_MAP = {};
@@ -1244,7 +1769,7 @@
   var customEffect = EFFECTS_MAP['custom'];
 
   /* ---------------- Effect categories (for a tidier, grouped grid) ---------------- */
-  var CATEGORY_ORDER = ['بامزه و شاد','ترسناک','فانتزی و کاراکتر','محیط و فضا','دیجیتال و ربات','رترو','سفارشی'];
+  var CATEGORY_ORDER = ['بامزه و شاد','صداپیشگی','ترسناک','فانتزی و کاراکتر','محیط و فضا','دیجیتال و ربات','رترو','استودیو و کیفیت','سفارشی'];
   var CATEGORY_MAP = {
     chipmunk:'بامزه و شاد', nightcore:'بامزه و شاد', drunk:'بامزه و شاد', speedup:'بامزه و شاد',
     slowdown:'بامزه و شاد', cartoon:'بامزه و شاد', heartbeat:'بامزه و شاد', muffled:'بامزه و شاد', circus:'بامزه و شاد',
@@ -1268,6 +1793,36 @@
   CATEGORY_MAP.arcade = 'دیجیتال و ربات';
   CATEGORY_MAP.thunder = 'ترسناک';
   CATEGORY_MAP.blackhole = 'محیط و فضا';
+  CATEGORY_MAP.crystal = 'محیط و فضا';
+  CATEGORY_MAP.earthquake = 'محیط و فضا';
+  CATEGORY_MAP.satellite = 'دیجیتال و ربات';
+  CATEGORY_MAP.gatecut = 'دیجیتال و ربات';
+  CATEGORY_MAP.frost = 'فانتزی و کاراکتر';
+  CATEGORY_MAP.explosion = 'ترسناک';
+  CATEGORY_MAP.hummingbird = 'بامزه و شاد';
+  CATEGORY_MAP.monk = 'فانتزی و کاراکتر';
+  CATEGORY_MAP.boy = 'صداپیشگی';
+  CATEGORY_MAP.oldman = 'صداپیشگی';
+  CATEGORY_MAP.baby = 'صداپیشگی';
+  CATEGORY_MAP.girl = 'صداپیشگی';
+  CATEGORY_MAP.oldwoman = 'صداپیشگی';
+  CATEGORY_MAP.newsanchor = 'صداپیشگی';
+  CATEGORY_MAP.sportscaster = 'صداپیشگی';
+  CATEGORY_MAP.autotune = 'صداپیشگی';
+  CATEGORY_MAP.clarity = 'استودیو و کیفیت';
+  CATEGORY_MAP.bassboost = 'استودیو و کیفیت';
+  CATEGORY_MAP.warmth = 'استودیو و کیفیت';
+  CATEGORY_MAP.podcast = 'استودیو و کیفیت';
+  CATEGORY_MAP.stereowide = 'استودیو و کیفیت';
+  CATEGORY_MAP.denoise = 'استودیو و کیفیت';
+  CATEGORY_MAP.growl = 'ترسناک';
+  CATEGORY_MAP.chibi = 'بامزه و شاد';
+  CATEGORY_MAP.walkietalkie = 'رترو';
+  CATEGORY_MAP.orchestrahall = 'محیط و فضا';
+  CATEGORY_MAP.glassbell = 'فانتزی و کاراکتر';
+  CATEGORY_MAP.timewarp = 'دیجیتال و ربات';
+  CATEGORY_MAP.lofi = 'استودیو و کیفیت';
+  CATEGORY_MAP.gameshow = 'صداپیشگی';
   function categoryOf(id){ return CATEGORY_MAP[id] || 'بامزه و شاد'; }
 
   /* ---------------- State ---------------- */
@@ -1313,6 +1868,14 @@
   var intensitySlider = document.getElementById('intensity');
   var intVal = document.getElementById('intVal');
   var secondarySelect = document.getElementById('secondaryFx');
+  var fadeToggle = document.getElementById('fadeToggle');
+  fadeToggle.addEventListener('click', function(){
+    vibrate(8);
+    fadeEnabled = !fadeEnabled;
+    fadeToggle.classList.toggle('on', fadeEnabled);
+    fadeToggle.textContent = fadeEnabled ? 'روشن' : 'خاموش';
+    if(trimmedSourceBuffer && originalBuffer) processCurrent();
+  });
   var processingOverlay = document.getElementById('processingOverlay');
   var magicBtn = document.getElementById('magicBtn');
   var downloadBtn = document.getElementById('downloadBtn');
@@ -1325,10 +1888,40 @@
   var avatarFace = document.getElementById('avatarFace');
   var avatarPicker = document.getElementById('avatarPicker');
   var avatarGlow = document.getElementById('avatarGlow');
+  var avatarGlow2 = document.getElementById('avatarGlow2');
   var avatarRing = document.getElementById('avatarRing');
+  var avatarRing2 = document.getElementById('avatarRing2');
+  var avatarShadow = document.getElementById('avatarShadow');
   var avatarCaption = document.getElementById('avatarCaption');
   var eyeL = document.getElementById('eyeL');
   var eyeR = document.getElementById('eyeR');
+  var browL = document.getElementById('browL');
+  var browR = document.getElementById('browR');
+  var cheekL = document.getElementById('cheekL');
+  var cheekR = document.getElementById('cheekR');
+  var avatarEq = document.getElementById('avatarEq');
+  var avatarStage = document.getElementById('avatarStage');
+  var loopBtn = document.getElementById('loopBtn');
+  var presetRow = document.getElementById('presetRow');
+  var presetAddBtn = document.getElementById('presetAddBtn');
+
+  /* ---------------- EQ bar visualizer (built once) ---------------- */
+  var EQ_BAR_COUNT = 9;
+  var eqBars = [];
+  (function buildEqBars(){
+    for(var i=0;i<EQ_BAR_COUNT;i++){
+      var b = document.createElement('span');
+      avatarEq.appendChild(b);
+      eqBars.push(b);
+    }
+  })();
+
+  /* ---------------- Loop toggle ---------------- */
+  loopBtn.addEventListener('click', function(){
+    vibrate(8);
+    player.loop = !player.loop;
+    loopBtn.classList.toggle('on', player.loop);
+  });
 
   /* ---------------- Avatar picker (custom-drawn characters, no emoji) ---------------- */
   var AVATARS = [
@@ -1359,7 +1952,10 @@
     { id:'samurai',   label:'سامورایی' },
     { id:'unicorn',   label:'یونیکورن' },
     { id:'reaper',    label:'عزراییل' },
-    { id:'elf',       label:'الف' }
+    { id:'elf',       label:'الف' },
+    { id:'ghost',     label:'روح' },
+    { id:'cowboy',    label:'کابوی' },
+    { id:'icequeen',  label:'ملکه یخ' }
   ];
   var selectedAvatar = 'classic';
   AVATARS.forEach(function(a){
@@ -1379,6 +1975,9 @@
   });
   function applyAvatar(){
     avatarFace.className = 'avatar-face avatar-'+selectedAvatar;
+    var colors = (typeof AVATAR_COLORS !== 'undefined' && AVATAR_COLORS[selectedAvatar]) || ['#7C3AED','#EC4899'];
+    if(avatarGlow2) avatarGlow2.style.background = 'radial-gradient(circle at 35% 30%, '+colors[0]+'59, transparent 65%)';
+    if(avatarRing2) avatarRing2.style.borderColor = colors[0]+'48';
   }
   applyAvatar();
 
@@ -1393,7 +1992,8 @@
     zombie:['#84cc16','#365314'], devil:['#f87171','#7f1d1d'], angelic:['#fef9c3','#facc15'],
     witch:['#6d28d9','#1e1b4b'], cyborg:['#94a3b8','#1e293b'], phoenix:['#fb923c','#dc2626'],
     samurai:['#dc2626','#1c1917'], unicorn:['#f5d0fe','#e879f9'], reaper:['#334155','#020617'],
-    elf:['#4ade80','#166534']
+    elf:['#4ade80','#166534'], ghost:['#e0e7ff','#a5b4fc'], cowboy:['#eab676','#92400e'],
+    icequeen:['#e0f2fe','#38bdf8']
   };
   function drawAccessory(g,id,cx,cy,r,colors){
     g.fillStyle = colors[1];
@@ -1500,6 +2100,17 @@
       g.fillStyle=colors[0];
       g.beginPath(); g.moveTo(cx-r*1.05,cy-r*0.2); g.lineTo(cx-r*0.75,cy-r*0.65); g.lineTo(cx-r*0.75,cy+r*0.15); g.closePath(); g.fill();
       g.beginPath(); g.moveTo(cx+r*1.05,cy-r*0.2); g.lineTo(cx+r*0.75,cy-r*0.65); g.lineTo(cx+r*0.75,cy+r*0.15); g.closePath(); g.fill();
+    } else if(id==='ghost'){
+      g.fillStyle='#a5b4fc';
+      g.beginPath();
+      for(var gx=-1;gx<=1;gx+=0.5){ g.lineTo(cx+gx*r*0.9, cy+r*(1.1+(Math.abs(gx*2)%2===0?0.25:0))); }
+      g.lineTo(cx+r*0.9,cy+r*0.7); g.lineTo(cx-r*0.9,cy+r*0.7); g.closePath(); g.fill();
+    } else if(id==='cowboy'){
+      g.fillStyle='#78350f'; g.beginPath(); g.ellipse(cx,cy-r*1.0,r*1.05,r*0.34,0,Math.PI,0); g.fill();
+      g.fillStyle='#92400e'; g.beginPath(); g.ellipse(cx,cy-r*1.28,r*0.42,r*0.32,0,0,Math.PI*2); g.fill();
+    } else if(id==='icequeen'){
+      g.fillStyle='#0ea5e9';
+      g.beginPath(); g.moveTo(cx-r*0.5,cy-r*0.9); g.lineTo(cx,cy-r*1.7); g.lineTo(cx+r*0.5,cy-r*0.9); g.closePath(); g.fill();
     }
   }
   function drawAvatarCanvas(g, w, h, id, mouthScale){
@@ -1664,6 +2275,83 @@
   function saveFavorites(){ try{ localStorage.setItem('voicemorph_favs', JSON.stringify(favorites)); }catch(e){} }
   var showFavOnly = false;
 
+  /* ---------------- New feature: track explored effects and celebrate milestones ---------------- */
+  var triedFx = {};
+  try{
+    var savedTried = JSON.parse(localStorage.getItem('voicemorph_tried') || '{}');
+    if(savedTried && typeof savedTried === 'object') triedFx = savedTried;
+  }catch(e){}
+  var TOTAL_FX = EFFECTS.length - 1;
+  var MILESTONES = [10,25,50,80,TOTAL_FX];
+  function markTried(id){
+    if(id==='none' || id==='custom' || triedFx[id]) { renderTriedCount(); return; }
+    triedFx[id] = true;
+    try{ localStorage.setItem('voicemorph_tried', JSON.stringify(triedFx)); }catch(e){}
+    var count = Object.keys(triedFx).length;
+    renderTriedCount();
+    if(MILESTONES.indexOf(count) !== -1){
+      var fxCountEl = document.getElementById('fxCount');
+      var msg = (count===TOTAL_FX) ? '🏆 همه‌ی افکت‌ها رو امتحان کردی!' : '🎉 '+count+' افکت امتحان شد!';
+      fxCountEl.textContent = msg;
+      fxCountEl.classList.add('milestone-pop');
+      vibrate([15,30,15]);
+      setTimeout(function(){ fxCountEl.classList.remove('milestone-pop'); renderTriedCount(); }, 2200);
+    }
+  }
+  function renderTriedCount(){
+    var fxCountEl = document.getElementById('fxCount');
+    if(fxCountEl.classList.contains('milestone-pop')) return;
+    fxCountEl.textContent = Object.keys(triedFx).length + ' از ' + TOTAL_FX + ' امتحان شده';
+  }
+
+  /* ---------------- New feature: save/reuse favorite effect combos as presets ---------------- */
+  var presets = [];
+  try{
+    var savedPresets = JSON.parse(localStorage.getItem('voicemorph_presets') || '[]');
+    if(Array.isArray(savedPresets)) presets = savedPresets;
+  }catch(e){}
+  function savePresets(){ try{ localStorage.setItem('voicemorph_presets', JSON.stringify(presets)); }catch(e){} }
+  function renderPresets(){
+    Array.prototype.forEach.call(presetRow.querySelectorAll('.preset-chip'), function(c){ c.remove(); });
+    presets.forEach(function(p, idx){
+      var chip = document.createElement('button');
+      chip.className = 'preset-chip';
+      var fx = EFFECTS_MAP[p.primary];
+      chip.innerHTML = '<span>'+(fx?fx.icon:'✨')+'</span><span>'+p.name+'</span><span class="rm" data-rm="'+idx+'">✕</span>';
+      chip.addEventListener('click', function(e){
+        if(e.target && e.target.dataset && e.target.dataset.rm !== undefined) return;
+        vibrate(10);
+        currentFx = p.primary;
+        highlightFxCard(p.primary);
+        secondarySelect.value = p.secondary || '';
+        intensitySlider.value = p.intensity;
+        intVal.textContent = p.intensity+'٪';
+        if(originalBuffer) processCurrent();
+      });
+      chip.querySelector('.rm').addEventListener('click', function(e){
+        e.stopPropagation();
+        vibrate(10);
+        presets.splice(idx,1);
+        savePresets();
+        renderPresets();
+      });
+      presetRow.insertBefore(chip, presetAddBtn);
+    });
+  }
+  renderPresets();
+  presetAddBtn.addEventListener('click', function(){
+    vibrate(10);
+    var fx = EFFECTS_MAP[currentFx];
+    if(!fx || fx.id==='none'){ statusMsg.textContent = 'اول یه افکت انتخاب کن، بعد ذخیره‌ش کن ✨'; return; }
+    var defaultName = fx.name + (secondarySelect.value ? (' + '+EFFECTS_MAP[secondarySelect.value].name) : '');
+    var name = prompt('اسم این ترکیب رو انتخاب کن:', defaultName);
+    if(!name) return;
+    presets.push({ name: name.slice(0,18), primary: currentFx, secondary: secondarySelect.value, intensity: intensitySlider.value });
+    if(presets.length>10) presets.shift();
+    savePresets();
+    renderPresets();
+  });
+
   /* ---------------- Build effect grid, grouped into tidy categories ---------------- */
   var allFxCards = [];
   var byCategory = {};
@@ -1713,7 +2401,47 @@
     fxGrid.appendChild(section);
     fxCatSections.push(section);
   });
-  document.getElementById('fxCount').textContent = (EFFECTS.length-1) + ' افکت';
+  renderTriedCount();
+
+  /* ---------------- Quick-access strip for the requested family/age voices ---------------- */
+  var QUICK_VOICE_IDS = ['boy','girl','baby','oldman','oldwoman'];
+  var quickVoicesEl = document.getElementById('quickVoices');
+  QUICK_VOICE_IDS.forEach(function(id){
+    var fx = EFFECTS_MAP[id];
+    if(!fx) return;
+    var btn = document.createElement('button');
+    btn.className = 'quick-voice-btn';
+    btn.dataset.id = id;
+    btn.innerHTML = '<span class="em">'+fx.icon+'</span><span>'+fx.name.replace('صدای ','')+'</span>';
+    btn.addEventListener('click', function(){ selectEffect(id); });
+    quickVoicesEl.appendChild(btn);
+  });
+
+  /* ---------------- New feature: curated combo presets — hand-picked effect pairs that sound great together ---------------- */
+  var COMBO_PRESETS = [
+    { name:'ربات در غار', em:'🤖🕳️', primary:'robot', secondary:'cave' },
+    { name:'شیطان با پژواک', em:'😈✨', primary:'demon', secondary:'dreamy' },
+    { name:'فضایی گمشده', em:'👽🌌', primary:'alien', secondary:'vaporwave' },
+    { name:'جادوگر رویایی', em:'🧙✨', primary:'wizard', secondary:'angel' },
+    { name:'رادیوی ترسناک', em:'📻🎃', primary:'radio', secondary:'horror' },
+    { name:'غول در اقیانوس', em:'🦣🐋', primary:'giant', secondary:'deepsea' }
+  ];
+  var comboRowEl = document.getElementById('comboRow');
+  COMBO_PRESETS.forEach(function(combo){
+    if(!EFFECTS_MAP[combo.primary] || !EFFECTS_MAP[combo.secondary]) return;
+    var chip = document.createElement('div');
+    chip.className = 'combo-chip';
+    chip.innerHTML = '<span class="combo-em">'+combo.em+'</span><span>'+combo.name+'</span>';
+    chip.addEventListener('click', function(){
+      vibrate(10);
+      currentFx = combo.primary;
+      highlightFxCard(combo.primary);
+      secondarySelect.value = combo.secondary;
+      markTried(combo.primary);
+      if(originalBuffer) processCurrent();
+    });
+    comboRowEl.appendChild(chip);
+  });
 
   /* ---------------- Effect search + favorites filter ---------------- */
   var fxSearch = document.getElementById('fxSearch');
@@ -1747,6 +2475,9 @@
   function highlightFxCard(id){
     allFxCards.forEach(function(c){
       c.classList.toggle('active', c.dataset.id === id);
+    });
+    Array.prototype.forEach.call(quickVoicesEl.querySelectorAll('.quick-voice-btn'), function(b){
+      b.classList.toggle('active', b.dataset.id === id);
     });
     advPanel.classList.toggle('show', id === 'custom');
   }
@@ -2028,6 +2759,8 @@
     currentFx = id;
     highlightFxCard(id);
     vibrate(10);
+    markTried(id);
+    if(typeof stopLivePreview === 'function' && liveActive) stopLivePreview();
     if(originalBuffer) processCurrent();
   }
 
@@ -2041,6 +2774,7 @@
     secondarySelect.value = (secondPick && secondPick.id!==pick.id) ? secondPick.id : '';
     intensitySlider.value = 70 + Math.floor(Math.random()*70);
     intVal.textContent = intensitySlider.value+'٪';
+    markTried(pick.id);
     if(originalBuffer) processCurrent();
   });
 
@@ -2074,6 +2808,13 @@
     masterGain.gain.value = 1.0;
     node.connect(masterGain);
     masterGain.connect(offlineCtx.destination);
+    if(fadeEnabled){
+      var fadeLen = Math.min(0.5, estDuration*0.18);
+      masterGain.gain.setValueAtTime(0, 0);
+      masterGain.gain.linearRampToValueAtTime(1, fadeLen);
+      masterGain.gain.setValueAtTime(1, Math.max(fadeLen, estDuration-fadeLen));
+      masterGain.gain.linearRampToValueAtTime(0, estDuration);
+    }
     src.start(0);
 
     offlineCtx.startRendering().then(function(rendered){
@@ -2136,37 +2877,136 @@
     srcNode.connect(playbackAnalyser);
     srcNode.connect(ctx.destination);
   }
-  var mouthScaleCur = 1, bobCur = 0, tiltCur = 0, glowCur = 0.5;
+  var mouthScaleCur = 1, mouthWideCur = 1, bobCur = 0, tiltCur = 0, glowCur = 0.5, browCur = 0, ring2Rot = 0;
+  var bobVel = 0, mouthVel = 0;
+  function springStep(cur, vel, target, stiffness, damping){
+    var force = (target-cur)*stiffness - vel*damping;
+    vel += force;
+    cur += vel;
+    return [cur, vel];
+  }
+  var eqCur = new Array(EQ_BAR_COUNT).fill(0.15);
+  var sparkleCooldown = 0;
+  var SPARKLE_COLORS = ['#ffffff','#f0abfc','#67e8f9'];
+  function spawnSparkle(){
+    if(isLiteMode || !avatarStage) return;
+    if(avatarStage.querySelectorAll('.avatar-sparkle').length >= 7) return;
+    var s = document.createElement('div');
+    s.className = 'avatar-sparkle';
+    s.style.setProperty('--sp-color', SPARKLE_COLORS[Math.floor(Math.random()*SPARKLE_COLORS.length)]);
+    var angle = Math.random()*Math.PI*2;
+    var dist = 50 + Math.random()*18;
+    s.style.left = (62 + Math.cos(angle)*dist) + 'px';
+    s.style.top = (62 + Math.sin(angle)*dist) + 'px';
+    s.addEventListener('animationend', function(){ s.remove(); });
+    avatarStage.appendChild(s);
+  }
+
+  /* ---------------- Viseme-based mouth shapes: cycles between mouth "poses" driven
+     by loudness + spectral tilt, instead of a single open/close pulse, so the
+     avatar looks like it's actually forming different sounds. ---------------- */
+  var VISEMES = [
+    { open:0.18, wide:1.00 },  /* rest / closed */
+    { open:1.85, wide:0.82 },  /* open vowel (a/o) */
+    { open:1.05, wide:1.35 },  /* wide consonant (s/t/e) */
+    { open:1.45, wide:0.68 },  /* rounded vowel (u/o) */
+    { open:0.65, wide:1.10 }   /* light/mid */
+  ];
+  var visemeTimer = 0;
+  var openTarget = 0.18, wideTarget = 1.0;
+
   player.addEventListener('play', function(){
     setupPlaybackAnalyser();
     avatarFace.classList.add('talking');
+    avatarFace.classList.add('reacting');
+    setTimeout(function(){ avatarFace.classList.remove('reacting'); }, 600);
     avatarCaption.textContent = 'در حال صحبت… 🗣️';
     var data = new Uint8Array(playbackAnalyser.fftSize);
+    var freqData = new Uint8Array(playbackAnalyser.frequencyBinCount);
     var t = 0;
+    var frameSkip = 0;
     function loop(){
       playbackAnimId = requestAnimationFrame(loop);
       t += 0.06;
+      /* on lite devices, run the heavier analysis every other frame to halve the cost */
+      frameSkip++;
+      if(isLiteMode && (frameSkip % 2 === 0)){ return; }
+
       playbackAnalyser.getByteTimeDomainData(data);
+      playbackAnalyser.getByteFrequencyData(freqData);
       var sum=0;
       for(var i=0;i<data.length;i++){ var v=(data[i]-128)/128; sum += v*v; }
       var rms = Math.sqrt(sum/data.length);
-      var targetMouth = 1 + Math.min(2.4, rms*10);
+
+      /* pick a new mouth "viseme" every few frames, based on loudness + tone balance,
+         so the shape snaps between poses like real speech rather than one smooth pulse */
+      visemeTimer--;
+      if(visemeTimer<=0){
+        var lowSum=0, highSum=0;
+        for(var li=2; li<12; li++) lowSum += freqData[li]||0;
+        for(var hi=25; hi<70; hi++) highSum += freqData[hi]||0;
+        var ratio = highSum/(lowSum+highSum+1);
+        var idx;
+        if(rms < 0.035) idx = 0;
+        else if(ratio > 0.55) idx = 2;
+        else if(ratio < 0.28) idx = 3;
+        else idx = (Math.random()<0.2) ? 4 : 1;
+        var vs = VISEMES[idx];
+        var loudness = Math.min(1.6, Math.max(0.45, rms*7));
+        openTarget = vs.open * (idx===0 ? 1 : loudness);
+        wideTarget = vs.wide;
+        visemeTimer = 3 + Math.floor(Math.random()*4);
+      }
+
       var targetBob = -Math.min(6, rms*22);
       var targetTilt = Math.sin(t*1.6) * Math.min(3.5, rms*10);
       var targetGlow = 0.45 + Math.min(0.55, rms*2.2);
+      var targetBrow = Math.min(1, Math.max(0, (rms-0.12)*3.4));
+      var sway = Math.sin(t*0.7) * 1.4;
 
-      /* smooth interpolation for a fluid, less jittery motion */
-      mouthScaleCur += (targetMouth - mouthScaleCur) * 0.45;
-      bobCur += (targetBob - bobCur) * 0.22;
+      /* smooth interpolation for fluid, professional motion between viseme poses.
+         Head bob and mouth-open use a light spring (slight natural overshoot) for a livelier,
+         less mechanical feel; the rest stay on critically-smoothed lerp to stay legible. */
+      var mouthSpring = springStep(mouthScaleCur, mouthVel, openTarget, 0.34, 0.62);
+      mouthScaleCur = mouthSpring[0]; mouthVel = mouthSpring[1];
+      var bobSpring = springStep(bobCur, bobVel, targetBob, 0.3, 0.62);
+      bobCur = bobSpring[0]; bobVel = bobSpring[1];
+      mouthWideCur += (wideTarget - mouthWideCur) * 0.32;
       tiltCur += (targetTilt - tiltCur) * 0.22;
       glowCur += (targetGlow - glowCur) * 0.18;
+      browCur += (targetBrow - browCur) * 0.15;
+      ring2Rot += 0.6 + rms*1.4;
 
-      avatarMouth.style.transform = 'translateX(-50%) scaleY('+mouthScaleCur.toFixed(2)+')';
-      avatarFace.style.transform = 'translateY('+bobCur.toFixed(1)+'px) rotate('+tiltCur.toFixed(1)+'deg) scale('+(1+rms*0.06).toFixed(3)+')';
+      avatarMouth.style.transform = 'translateX(-50%) scaleY('+Math.max(0.05,mouthScaleCur).toFixed(2)+') scaleX('+mouthWideCur.toFixed(2)+')';
+      avatarFace.style.transform = 'translateY('+bobCur.toFixed(1)+'px) translateX('+sway.toFixed(1)+'px) rotate('+tiltCur.toFixed(1)+'deg) scale('+(1+rms*0.06).toFixed(3)+')';
       avatarGlow.style.opacity = glowCur.toFixed(2);
       avatarGlow.style.transform = 'scale('+(1+rms*0.5).toFixed(2)+')';
+      avatarGlow2.style.opacity = (0.4 + rms*0.5).toFixed(2);
+      avatarGlow2.style.transform = 'scale('+(1+rms*0.4).toFixed(2)+') rotate('+(t*8).toFixed(0)+'deg)';
       avatarRing.style.transform = 'scale('+(1+rms*0.35).toFixed(2)+')';
       avatarRing.style.borderColor = 'rgba(236,72,153,'+Math.min(0.7,0.25+rms).toFixed(2)+')';
+      avatarRing2.style.transform = 'scale('+(1+rms*0.2).toFixed(2)+') rotate('+ring2Rot.toFixed(0)+'deg)';
+      avatarShadow.style.transform = 'translateX(-50%) scaleX('+(1-Math.min(0.3,rms*0.7)).toFixed(2)+')';
+      browL.style.transform = 'translateY(-'+(browCur*3.4).toFixed(1)+'px) rotate(-'+(6+browCur*4).toFixed(1)+'deg)';
+      browR.style.transform = 'translateY(-'+(browCur*3.4).toFixed(1)+'px) rotate('+(6+browCur*4).toFixed(1)+'deg)';
+      var cheekOp = Math.min(0.6, Math.max(0, (rms-0.05)*2.2)).toFixed(2);
+      cheekL.style.opacity = cheekOp; cheekR.style.opacity = cheekOp;
+
+      /* EQ bars: sample spread bins across the spectrum, updated via transform (cheap) */
+      var binStep = Math.floor(freqData.length/EQ_BAR_COUNT/2) || 1;
+      for(var b=0;b<EQ_BAR_COUNT;b++){
+        var idx2 = 2 + b*binStep;
+        var mag = (freqData[idx2]||0)/255;
+        eqCur[b] += (mag - eqCur[b]) * 0.5;
+        eqBars[b].style.transform = 'scaleY('+Math.max(0.12, eqCur[b]).toFixed(2)+')';
+      }
+
+      /* occasional sparkle burst on loud moments (skipped entirely in lite mode) */
+      sparkleCooldown -= 1;
+      if(rms > 0.24 && sparkleCooldown <= 0){
+        spawnSparkle();
+        sparkleCooldown = 8;
+      }
     }
     loop();
   });
@@ -2174,18 +3014,28 @@
     if(playbackAnimId) cancelAnimationFrame(playbackAnimId);
     avatarFace.classList.remove('talking');
     avatarFace.style.transform = '';
-    avatarMouth.style.transform = 'translateX(-50%) scaleY(1)';
+    avatarMouth.style.transform = 'translateX(-50%) scaleY(1) scaleX(1)';
     avatarGlow.style.opacity = '';
     avatarGlow.style.transform = '';
+    avatarGlow2.style.opacity = '';
+    avatarGlow2.style.transform = '';
     avatarRing.style.transform = '';
     avatarRing.style.borderColor = '';
+    avatarRing2.style.transform = '';
+    avatarShadow.style.transform = '';
+    browL.style.transform = ''; browR.style.transform = '';
+    cheekL.style.opacity = ''; cheekR.style.opacity = '';
     avatarCaption.textContent = 'آماده صحبت 🎧';
-    mouthScaleCur = 1; bobCur = 0; tiltCur = 0; glowCur = 0.5;
+    mouthScaleCur = 1; mouthWideCur = 1; bobCur = 0; tiltCur = 0; glowCur = 0.5; browCur = 0;
+    bobVel = 0; mouthVel = 0;
+    visemeTimer = 0; openTarget = 0.18; wideTarget = 1.0;
+    eqCur = new Array(EQ_BAR_COUNT).fill(0.15);
+    eqBars.forEach(function(b){ b.style.transform = 'scaleY(.15)'; });
   }
   player.addEventListener('pause', stopAvatarAnim);
   player.addEventListener('ended', stopAvatarAnim);
 
-  /* ---------------- Idle blinking, always running for a lifelike feel ---------------- */
+  /* ---------------- Idle blinking + occasional glance, always running for a lifelike feel ---------------- */
   function scheduleBlink(){
     var delay = 1800 + Math.random()*3200;
     setTimeout(function(){
@@ -2195,6 +3045,34 @@
     }, delay);
   }
   scheduleBlink();
+  function scheduleGlance(){
+    var delay = 3200 + Math.random()*4500;
+    setTimeout(function(){
+      var dir = (Math.random()<0.5 ? -1 : 1) * (2 + Math.random()*2);
+      eyeL.style.marginLeft = dir+'px'; eyeR.style.marginLeft = dir+'px';
+      setTimeout(function(){ eyeL.style.marginLeft = ''; eyeR.style.marginLeft = ''; }, 700);
+      scheduleGlance();
+    }, delay);
+  }
+  scheduleGlance();
+
+  /* ---------------- New feature: tap the avatar for a playful reaction (wink + sparkle burst) ---------------- */
+  var REACT_CAPTIONS = ['هه هه! 😄','قلقلکم اومد 😆','بزن بریم! ✨','عاااااع 😍','خب چیه؟ 😏'];
+  avatarStage.addEventListener('click', function(){
+    if(avatarFace.classList.contains('talking')) return;
+    vibrate(12);
+    avatarFace.classList.add('reacting');
+    eyeR.classList.add('blink');
+    var prevCaption = avatarCaption.textContent;
+    avatarCaption.textContent = REACT_CAPTIONS[Math.floor(Math.random()*REACT_CAPTIONS.length)];
+    for(var i=0;i<4;i++){ setTimeout(spawnSparkleSafe, i*70); }
+    setTimeout(function(){
+      eyeR.classList.remove('blink');
+      avatarFace.classList.remove('reacting');
+      avatarCaption.textContent = prevCaption;
+    }, 900);
+  });
+  function spawnSparkleSafe(){ if(typeof spawnSparkle === 'function') spawnSparkle(); }
 
   /* ---------------- WAV Encoding ---------------- */
   function bufferToWaveBlob(abuffer){
@@ -2259,6 +3137,9 @@
     a.href = URL.createObjectURL(window.__lastBlob);
     a.download = window.__lastName || 'voicemorph.wav';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    var origTxt = downloadBtn.textContent;
+    downloadBtn.textContent = '✅ ذخیره شد';
+    setTimeout(function(){ downloadBtn.textContent = origTxt; }, 1600);
   });
 
   shareBtn.addEventListener('click', function(){
@@ -2274,8 +3155,45 @@
     downloadBtn.click();
   });
 
+  /* ---------------- New feature: live mic preview through the selected effect ---------------- */
+  var livePreviewBtn = document.getElementById('livePreviewBtn');
+  var liveStream = null, liveActive = false, liveOutGain = null;
+  livePreviewBtn.addEventListener('click', function(){
+    vibrate(10);
+    if(liveActive){ stopLivePreview(); return; }
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      statusMsg.textContent = 'مرورگرت از پیش‌نمایش زنده پشتیبانی نمی‌کنه.';
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}}).then(function(stream){
+      liveStream = stream;
+      var ctx = getCtx();
+      var srcNode = ctx.createMediaStreamSource(stream);
+      var I = parseInt(intensitySlider.value,10)/100;
+      var fx = EFFECTS_MAP[currentFx] || EFFECTS_MAP.none;
+      var node = fx.build(ctx, srcNode, I);
+      liveOutGain = ctx.createGain(); liveOutGain.gain.value = 1;
+      node.connect(liveOutGain);
+      liveOutGain.connect(ctx.destination);
+      liveActive = true;
+      livePreviewBtn.textContent = '⏹️ توقف پیش‌نمایش زنده';
+      livePreviewBtn.classList.add('on');
+      statusMsg.textContent = 'صدات با افکت زنده پخش می‌شه — حتماً از هدفون استفاده کن تا اکو نشنوی 🎧';
+    }).catch(function(){
+      statusMsg.textContent = 'دسترسی به میکروفون رد شد یا ممکن نبود.';
+    });
+  });
+  function stopLivePreview(){
+    if(liveStream){ liveStream.getTracks().forEach(function(t){ t.stop(); }); liveStream = null; }
+    liveActive = false;
+    livePreviewBtn.textContent = '🎙️ پیش‌نمایش زنده با میکروفون';
+    livePreviewBtn.classList.remove('on');
+    if(statusMsg.textContent.indexOf('اکو')>-1 || statusMsg.textContent.indexOf('میکروفون')>-1) statusMsg.textContent = '';
+  }
+
   resetBtn.addEventListener('click', function(){
     vibrate(12);
+    if(liveActive) stopLivePreview();
     originalBuffer = null;
     trimmedSourceBuffer = null;
     currentFx = 'none';
@@ -2290,10 +3208,15 @@
     statusMsg.textContent = '';
     stopAvatarAnim();
     player.playbackRate = 1;
+    player.loop = false;
+    loopBtn.classList.remove('on');
     Array.prototype.forEach.call(speedSwitch.querySelectorAll('.mini-btn'), function(b){ b.classList.toggle('on', b.dataset.speed==='1'); });
     fxSearch.value = '';
     showFavOnly = false;
     fxFavToggle.classList.remove('on');
+    fadeEnabled = false;
+    fadeToggle.classList.remove('on');
+    fadeToggle.textContent = 'خاموش';
     applyFxFilter();
   });
 
