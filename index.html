@@ -110,6 +110,20 @@
   .sec-title span{font-size:11.5px;color:var(--text-dim);}
 
   .fx-groups{display:flex; flex-direction:column; gap:16px;}
+  .fx-search-row{display:flex; gap:8px; margin-bottom:14px;}
+  .fx-search{
+    flex:1; padding:10px 14px; border-radius:14px; border:1.5px solid var(--card-border);
+    background:var(--bg2); color:var(--text); font-family:inherit; font-size:12.5px; outline:none;
+  }
+  .fx-search:focus{border-color:var(--accent);}
+  .fx-fav-toggle{
+    flex-shrink:0; width:42px; border-radius:14px; border:1.5px solid var(--card-border); background:var(--bg2);
+    font-size:16px; cursor:pointer; opacity:.45; transition:opacity .2s ease, transform .15s ease, border-color .2s ease;
+  }
+  .fx-fav-toggle.on{opacity:1; border-color:#f59e0b; background:rgba(245,158,11,.12);}
+  .fx-fav-toggle:active{transform:scale(.92);}
+  .fx-empty{text-align:center; font-size:12.5px; color:var(--text-dim); padding:20px 0;}
+  .fx-empty.hidden{display:none;}
   .fx-cat-title{
     font-size:11.5px; font-weight:800; color:var(--accent); margin:0 2px 8px;
     display:flex; align-items:center; gap:6px;
@@ -121,7 +135,7 @@
   .fx-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
   .fx-card{
     background:var(--bg2); border:1.5px solid var(--card-border); border-radius:16px;
-    padding:12px 6px; text-align:center; cursor:pointer; user-select:none;
+    padding:12px 6px; text-align:center; cursor:pointer; user-select:none; position:relative;
     transition:transform .12s ease, border-color .2s ease, box-shadow .2s ease;
   }
   .fx-card:active{transform:scale(.94)}
@@ -134,6 +148,13 @@
     box-shadow:0 6px 16px rgba(124,58,237,.22);
   }
   .fx-card.active .ic{color:var(--accent2);}
+  .fx-card.hidden-by-filter{display:none;}
+  .fx-star{
+    position:absolute; top:3px; left:3px; width:20px; height:20px; border:none; background:none;
+    font-size:12px; opacity:.35; cursor:pointer; line-height:20px; z-index:2;
+  }
+  .fx-star.on{opacity:1;}
+  .fx-cat.hidden-by-filter{display:none;}
 
   .adv-panel{display:none; margin-top:14px; padding-top:14px; border-top:1px dashed var(--card-border);}
   .adv-panel.show{display:block;}
@@ -171,31 +192,55 @@
   .player-title b{font-size:14px;}
   .player-title span{font-size:11.5px; color:var(--text-dim); display:block;}
 
-  .avatar-picker{display:flex; gap:8px; overflow-x:auto; padding:2px 2px 10px; margin-top:2px;}
+  .avatar-picker-title{font-size:11.5px; font-weight:800; color:var(--text-dim); margin:0 2px 8px; display:flex; align-items:center; gap:6px;}
+  .avatar-picker{display:flex; gap:6px; overflow-x:auto; padding:2px 2px 12px; margin-top:2px; scroll-snap-type:x proximity;}
   .avatar-opt{
-    flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px;
-    background:none; border:none; cursor:pointer; padding:6px 8px; border-radius:14px;
+    flex-shrink:0; scroll-snap-align:start; display:flex; flex-direction:column; align-items:center; gap:5px;
+    background:none; border:1.5px solid transparent; cursor:pointer; padding:7px 9px 8px; border-radius:16px;
     font-family:inherit; color:var(--text-dim); font-size:10.5px; font-weight:700;
+    transition:transform .15s ease, border-color .2s ease, background .2s ease;
   }
-  .avatar-opt.active{background:rgba(124,58,237,.12);}
+  .avatar-opt:active{transform:scale(.92);}
+  .avatar-opt.active{background:linear-gradient(160deg, rgba(124,58,237,.16), rgba(236,72,153,.10)); border-color:rgba(124,58,237,.35);}
   .avatar-opt.active span{color:var(--accent);}
-  .avatar-opt .mini-wrap{width:44px;height:44px;position:relative;display:flex;align-items:center;justify-content:center;}
+  .avatar-opt.active .mini-wrap{transform:scale(1.08);}
+  .avatar-opt .mini-wrap{width:44px;height:44px;position:relative;display:flex;align-items:center;justify-content:center; transition:transform .2s ease;}
 
-  .avatar-wrap{display:flex; align-items:center; justify-content:center; margin:6px 0 14px;}
-  .avatar-face{
-    width:78px;height:78px;border-radius:50%;
-    background:linear-gradient(150deg,var(--accent),var(--accent2));
-    position:relative; box-shadow:0 8px 20px rgba(124,58,237,.35);
-    transition:background .3s ease, border-radius .3s ease;
+  .avatar-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; margin:8px 0 16px; position:relative;}
+  .avatar-stage{position:relative; width:110px; height:110px; display:flex; align-items:center; justify-content:center;}
+  .avatar-glow{
+    position:absolute; inset:0; border-radius:50%;
+    background:radial-gradient(circle, rgba(124,58,237,.5), rgba(236,72,153,.14) 55%, transparent 72%);
+    opacity:.5; transform:scale(1); transition:opacity .25s ease;
+    filter:blur(2px); pointer-events:none;
   }
-  .avatar-face.mini{box-shadow:none; transform:scale(.55);}
-  .avatar-face .eye{position:absolute; top:28px; width:9px;height:9px;border-radius:50%;background:#fff;}
+  .avatar-ring{
+    position:absolute; inset:6px; border-radius:50%; border:2px solid rgba(124,58,237,.35);
+    transform:scale(1); pointer-events:none;
+  }
+  .avatar-face{
+    width:82px;height:82px;border-radius:50%;
+    background:linear-gradient(150deg,var(--accent),var(--accent2));
+    position:relative; box-shadow:0 8px 22px rgba(124,58,237,.4);
+    transition:background .3s ease, border-radius .3s ease;
+    animation:avatarBreathe 3.4s ease-in-out infinite;
+    will-change:transform;
+  }
+  .avatar-face.talking{ animation:none; }
+  @keyframes avatarBreathe{
+    0%,100%{ transform:translateY(0) scale(1) rotate(0deg); }
+    50%{ transform:translateY(-3px) scale(1.02) rotate(-1deg); }
+  }
+  .avatar-face.mini{box-shadow:none; transform:scale(.55); animation:none;}
+  .avatar-face .eye{position:absolute; top:28px; width:9px;height:9px;border-radius:50%;background:#fff; transition:transform .09s ease;}
   .avatar-face .eye.l{left:20px;} .avatar-face .eye.r{right:20px;}
+  .avatar-face .eye.blink{ transform:scaleY(.12); }
   .avatar-face .mouth{
     position:absolute; bottom:18px; left:50%; transform:translateX(-50%) scaleY(1);
     width:26px; height:8px; background:#fff; border-radius:0 0 14px 14px; transform-origin:top center;
-    transition:transform .05s linear;
+    transition:transform .045s ease-out;
   }
+  .avatar-caption{font-size:11px; color:var(--text-dim); margin-top:8px; text-align:center; min-height:14px;}
 
   /* --- Avatar variants (pure CSS, no emoji) --- */
   .avatar-face.avatar-classic{ background:linear-gradient(150deg,var(--accent),var(--accent2)); border-radius:50%; }
@@ -341,6 +386,135 @@
   .avatar-face.avatar-dragon::after{ right:13px; transform:rotate(10deg); }
   .avatar-face.avatar-dragon .eye{ background:#fde047; box-shadow:0 0 5px #fde047; width:10px; height:6px; border-radius:3px; }
 
+  .avatar-face.avatar-fairy{ background:linear-gradient(150deg,#f9a8d4,#a21caf); border-radius:50%; }
+  .avatar-face.avatar-fairy::before, .avatar-face.avatar-fairy::after{
+    content:''; position:absolute; top:-2px; width:22px; height:26px; background:rgba(255,255,255,.55);
+    border-radius:60% 20% 60% 20%; box-shadow:0 0 8px rgba(255,255,255,.6);
+  }
+  .avatar-face.avatar-fairy::before{ left:-18px; transform:rotate(-25deg); }
+  .avatar-face.avatar-fairy::after{ right:-18px; transform:rotate(25deg) scaleX(-1); }
+  .avatar-face.avatar-fairy .eye{ background:#fdf2ff; box-shadow:0 0 5px #f0abfc; }
+
+  .avatar-face.avatar-astronaut{ background:linear-gradient(150deg,#cbd5e1,#475569); border-radius:50%; }
+  .avatar-face.avatar-astronaut::before{
+    content:''; position:absolute; inset:-6px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(147,197,253,.55), rgba(30,41,59,.85) 70%);
+    border:3px solid #e2e8f0; box-shadow:inset 0 0 10px rgba(0,0,0,.4);
+  }
+  .avatar-face.avatar-astronaut .eye{ background:#60a5fa; box-shadow:0 0 6px #60a5fa; z-index:2; }
+  .avatar-face.avatar-astronaut .mouth{ z-index:2; }
+
+  .avatar-face.avatar-mermaid{ background:linear-gradient(150deg,#2dd4bf,#0e7490); border-radius:50%; }
+  .avatar-face.avatar-mermaid::before{
+    content:''; position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+    width:44px; height:16px; background:linear-gradient(90deg,#fbbf24,#f59e0b);
+    clip-path:polygon(0 100%,10% 20%,25% 100%,40% 10%,55% 100%,70% 15%,85% 100%,100% 30%,100% 100%);
+  }
+  .avatar-face.avatar-mermaid .eye{ background:#083344; }
+
+  .avatar-face.avatar-zombie{ background:linear-gradient(150deg,#84cc16,#365314); border-radius:52% 48% 50% 50%/58% 58% 42% 42%; }
+  .avatar-face.avatar-zombie::before{
+    content:''; position:absolute; top:18px; left:10px; width:9px; height:9px; border-radius:50%;
+    background:#365314; box-shadow:12px 22px 0 -2px #1a2e05, -4px 30px 0 -3px #1a2e05;
+  }
+  .avatar-face.avatar-zombie .eye.l{ background:#dc2626; box-shadow:0 0 5px #dc2626; }
+  .avatar-face.avatar-zombie .eye.r{ background:#fff; }
+  .avatar-face.avatar-zombie .mouth{ background:#4d0f0f; border-radius:0; height:10px; }
+
+  .avatar-face.avatar-devil{ background:linear-gradient(150deg,#f87171,#7f1d1d); border-radius:50%; }
+  .avatar-face.avatar-devil::before, .avatar-face.avatar-devil::after{
+    content:''; position:absolute; top:-14px; width:0; height:0;
+    border-left:8px solid transparent; border-right:8px solid transparent; border-bottom:18px solid #7f1d1d;
+  }
+  .avatar-face.avatar-devil::before{ left:6px; transform:rotate(-18deg); }
+  .avatar-face.avatar-devil::after{ right:6px; transform:rotate(18deg); }
+  .avatar-face.avatar-devil .eye{ background:#fde047; box-shadow:0 0 6px #facc15; }
+
+  .avatar-face.avatar-angelic{ background:linear-gradient(150deg,#fef9c3,#facc15); border-radius:50%; box-shadow:0 0 22px rgba(250,204,21,.55); }
+  .avatar-face.avatar-angelic::before{
+    content:''; position:absolute; top:-22px; left:50%; transform:translateX(-50%);
+    width:34px; height:34px; border-radius:50%; border:4px solid #fde68a; box-shadow:0 0 10px rgba(253,224,71,.7);
+  }
+  .avatar-face.avatar-angelic .eye{ background:#78350f; }
+
+  .avatar-face.avatar-witch{ background:linear-gradient(150deg,#6d28d9,#1e1b4b); border-radius:50%; }
+  .avatar-face.avatar-witch::before{
+    content:''; position:absolute; top:-33px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:17px solid transparent; border-right:17px solid transparent; border-bottom:30px solid #1e1b4b;
+  }
+  .avatar-face.avatar-witch::after{
+    content:''; position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:38px; height:9px; background:#1e1b4b; border-radius:50%;
+  }
+  .avatar-face.avatar-witch .eye{ background:#a3e635; box-shadow:0 0 5px #a3e635; }
+
+  .avatar-face.avatar-cyborg{ background:linear-gradient(150deg,#94a3b8,#1e293b); border-radius:38%; }
+  .avatar-face.avatar-cyborg::before{
+    content:''; position:absolute; top:22px; right:8px; width:20px; height:14px; border-radius:6px;
+    background:#0f172a; border:2px solid #f43f5e; box-shadow:0 0 8px #f43f5e;
+  }
+  .avatar-face.avatar-cyborg .eye.l{ background:#38bdf8; box-shadow:0 0 6px #38bdf8; }
+  .avatar-face.avatar-cyborg .eye.r{ opacity:0; }
+  .avatar-face.avatar-cyborg .mouth{ background:#334155; border-radius:2px; height:5px; }
+
+  .avatar-face.avatar-phoenix{ background:linear-gradient(150deg,#fb923c,#dc2626); border-radius:48% 52% 50% 50%/58% 58% 42% 42%; }
+  .avatar-face.avatar-phoenix::before, .avatar-face.avatar-phoenix::after{
+    content:''; position:absolute; top:-19px; width:0; height:0;
+    border-left:9px solid transparent; border-right:9px solid transparent; border-bottom:26px solid #facc15;
+  }
+  .avatar-face.avatar-phoenix::before{ left:5px; transform:rotate(-20deg); }
+  .avatar-face.avatar-phoenix::after{ right:5px; transform:rotate(20deg); }
+  .avatar-face.avatar-phoenix .eye{ background:#fef08a; box-shadow:0 0 6px #fde047; }
+
+  .avatar-face.avatar-samurai{ background:linear-gradient(150deg,#dc2626,#1c1917); border-radius:50%; }
+  .avatar-face.avatar-samurai::before{
+    content:''; position:absolute; top:-16px; left:-6px; right:-6px; height:20px;
+    background:#1c1917; border-radius:50% 50% 0 0/100% 100% 0 0;
+  }
+  .avatar-face.avatar-samurai::after{
+    content:''; position:absolute; top:-4px; left:50%; transform:translateX(-50%);
+    width:6px; height:14px; background:#facc15; border-radius:2px;
+  }
+  .avatar-face.avatar-samurai .eye{ background:#1c1917; }
+
+  .avatar-face.avatar-unicorn{ background:linear-gradient(150deg,#f5d0fe,#e879f9); border-radius:50%; }
+  .avatar-face.avatar-unicorn::before{
+    content:''; position:absolute; top:-30px; left:50%; transform:translateX(-50%) rotate(3deg);
+    width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-bottom:26px solid #fde68a;
+  }
+  .avatar-face.avatar-unicorn::after{
+    content:''; position:absolute; top:-8px; left:-16px; width:20px; height:20px; border-radius:50%;
+    background:conic-gradient(#f472b6,#a78bfa,#60a5fa,#4ade80,#facc15,#f472b6);
+  }
+  .avatar-face.avatar-unicorn .eye{ background:#701a75; }
+
+  .avatar-face.avatar-reaper{ background:linear-gradient(150deg,#334155,#020617); border-radius:46% 46% 50% 50%/50% 50% 50% 50%; }
+  .avatar-face.avatar-reaper::before{
+    content:''; position:absolute; top:-14px; left:-10px; right:-10px; height:30px;
+    background:#111827; border-radius:50% 50% 0 0/100% 100% 0 0;
+  }
+  .avatar-face.avatar-reaper .eye{ background:#f97316; box-shadow:0 0 8px #f97316; width:7px; }
+  .avatar-face.avatar-reaper .mouth{ opacity:0; }
+
+  .avatar-face.avatar-elf{ background:linear-gradient(150deg,#4ade80,#166534); border-radius:50%; }
+  .avatar-face.avatar-elf::before, .avatar-face.avatar-elf::after{
+    content:''; position:absolute; top:22px; width:9px; height:16px; background:inherit;
+  }
+  .avatar-face.avatar-elf::before{ left:-9px; clip-path:polygon(100% 0,0 50%,100% 100%); }
+  .avatar-face.avatar-elf::after{ right:-9px; clip-path:polygon(0 0,100% 50%,0 100%); }
+  .avatar-face.avatar-elf .eye{ background:#052e16; }
+
+  /* Generic quality boost: soft pupils + glossy highlight applied to every avatar */
+  .avatar-face .eye::after{
+    content:''; position:absolute; top:50%; left:50%; width:3px; height:3px; border-radius:50%;
+    background:rgba(0,0,0,.4); transform:translate(-50%,-50%); pointer-events:none;
+  }
+  .avatar-face .shine{
+    position:absolute; top:9%; left:20%; width:36%; height:24%; border-radius:50%;
+    background:linear-gradient(160deg, rgba(255,255,255,.6), rgba(255,255,255,0) 75%);
+    pointer-events:none; filter:blur(.3px); mix-blend-mode:soft-light;
+  }
+
   audio{width:100%; border-radius:12px;}
   .toggle-row{display:flex; align-items:center; justify-content:space-between; margin-top:12px; font-size:12.5px; color:var(--text-dim);}
   .mini-switch{display:flex; gap:8px;}
@@ -416,7 +590,12 @@
       <h2>✨ افکت‌ها رو انتخاب کن</h2>
       <span id="fxCount"></span>
     </div>
+    <div class="fx-search-row">
+      <input type="text" id="fxSearch" class="fx-search" placeholder="🔎 جستجوی افکت (مثلاً ربات، ترسناک، اکو…)">
+      <button class="fx-fav-toggle" id="fxFavToggle" title="فقط موردعلاقه‌ها">⭐</button>
+    </div>
     <div class="fx-groups" id="fxGrid"></div>
+    <div class="fx-empty hidden" id="fxEmpty">چیزی با این جستجو پیدا نشد 🤔</div>
 
     <div class="adv-panel" id="advPanel">
       <div class="adv-row">
@@ -462,12 +641,19 @@
       </div>
     </div>
 
+    <div class="avatar-picker-title">🎭 آواتار زنده‌ت رو انتخاب کن</div>
     <div class="avatar-picker" id="avatarPicker"></div>
     <div class="avatar-wrap">
-      <div class="avatar-face avatar-classic" id="avatarFace">
-        <div class="eye l"></div><div class="eye r"></div>
-        <div class="mouth" id="avatarMouth"></div>
+      <div class="avatar-stage">
+        <div class="avatar-glow" id="avatarGlow"></div>
+        <div class="avatar-ring" id="avatarRing"></div>
+        <div class="avatar-face avatar-classic" id="avatarFace">
+          <div class="shine"></div>
+          <div class="eye l" id="eyeL"></div><div class="eye r" id="eyeR"></div>
+          <div class="mouth" id="avatarMouth"></div>
+        </div>
       </div>
+      <div class="avatar-caption" id="avatarCaption">آماده صحبت 🎧</div>
     </div>
 
     <audio id="player" controls></audio>
@@ -477,6 +663,16 @@
       <div class="mini-switch">
         <button class="mini-btn on" id="btnProcessed">تغییر یافته</button>
         <button class="mini-btn" id="btnOriginal">نسخه اصلی</button>
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <span>⏱️ سرعت پخش</span>
+      <div class="mini-switch" id="speedSwitch">
+        <button class="mini-btn" data-speed="0.75">۰.۷۵x</button>
+        <button class="mini-btn on" data-speed="1">۱x</button>
+        <button class="mini-btn" data-speed="1.25">۱.۲۵x</button>
+        <button class="mini-btn" data-speed="1.5">۱.۵x</button>
       </div>
     </div>
 
@@ -948,6 +1144,94 @@
         var t = tremolo(ctx, input, 8*I, 0.25);
         var hs = biquad(ctx,'highshelf',2800,0); hs.gain.value = 3; t.connect(hs);
         return hs; } },
+    { id:'galaxy', name:'کهکشانی', icon:'🌌', rate:1.06, detune:20, tail:4.5,
+      build:function(ctx,input,I){
+        var r = ringMod(ctx, input, 3.2*I);
+        var bp = biquad(ctx,'bandpass',1600,1.3); r.connect(bp);
+        var d = delayFx(ctx, bp, 0.3, 0.45, 0.4);
+        return reverbFx(ctx, d, 3.6, 3.0, Math.min(0.85,0.5*I)); } },
+    { id:'insect', name:'حشره غول‌پیکر', icon:'🪰', rate:1.1, detune:60, tail:0.5,
+      build:function(ctx,input,I){
+        var r = ringMod(ctx, input, 90*I);
+        var bp = biquad(ctx,'bandpass',2400,3); r.connect(bp);
+        return tremolo(ctx, bp, 22*I, 0.5); } },
+    { id:'tvstatic', name:'تلویزیون خراب', icon:'📺', rate:1, detune:0, tail:0.5,
+      build:function(ctx,input,I){
+        var ws = ctx.createWaveShaper(); ws.curve = makeBitcrushCurve(Math.max(4,9/I)); input.connect(ws);
+        var bp = biquad(ctx,'bandpass',1400,1.6); ws.connect(bp);
+        var t = tremolo(ctx, bp, 14*I, 0.5);
+        var out = ctx.createGain(); t.connect(out);
+        var noiseSrc = ctx.createBufferSource();
+        noiseSrc.buffer = makeNoiseBuffer(ctx, 30); noiseSrc.loop = true;
+        var noiseGain = ctx.createGain(); noiseGain.gain.value = 0.09*I;
+        noiseSrc.connect(noiseGain); noiseGain.connect(out); noiseSrc.start();
+        return out; } },
+    { id:'possessed', name:'روح تسخیرشده', icon:'🕯️', rate:0.68, detune:-220, tail:3.4,
+      build:function(ctx,input,I){
+        wobbleDetune(ctx, input, 3.2, 60*I);
+        var out = ctx.createGain(); input.connect(out);
+        [0.014,0.021].forEach(function(t){
+          var d = ctx.createDelay(0.05); d.delayTime.value = t;
+          var g = ctx.createGain(); g.gain.value = 0.35*I;
+          input.connect(d); d.connect(g); g.connect(out);
+        });
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(16*I); out.connect(ws);
+        return reverbFx(ctx, ws, 2.6, 2.4, 0.4); } },
+    { id:'telepathy', name:'ارتباط ذهنی', icon:'🧠', rate:0.98, detune:-10, tail:2.0,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',350,0.7); input.connect(hp);
+        var panner = ctx.createStereoPanner();
+        var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = 0.35;
+        var lfoGain = ctx.createGain(); lfoGain.gain.value = 0.7;
+        lfo.connect(lfoGain); lfoGain.connect(panner.pan); lfo.start();
+        hp.connect(panner);
+        var d = delayFx(ctx, panner, 0.28, 0.35, 0.45);
+        return reverbFx(ctx, d, 1.8, 1.7, Math.min(0.6,0.35*I)); } },
+    { id:'kawaii', name:'کیوت ژاپنی', icon:'🎀', rate:1.5, detune:260, tail:0.4,
+      build:function(ctx,input,I){
+        var hs = biquad(ctx,'highshelf',2800,0); hs.gain.value = 5*I; input.connect(hs);
+        var t = tremolo(ctx, hs, 5*I, 0.15);
+        return t; } },
+    { id:'cathedral', name:'کلیسای بزرگ', icon:'⛪', rate:0.99, detune:0, tail:5.5,
+      build:function(ctx,input,I){
+        var out = ctx.createGain(); input.connect(out);
+        [0.02,0.034,0.047].forEach(function(t){
+          var d = ctx.createDelay(0.06); d.delayTime.value = t;
+          var g = ctx.createGain(); g.gain.value = 0.28*I;
+          input.connect(d); d.connect(g); g.connect(out);
+        });
+        return reverbFx(ctx, out, 4.4, 3.4, Math.min(0.85,0.5*I)); } },
+    { id:'warbot', name:'ربات جنگی', icon:'🛡️', rate:0.85, detune:-90, tail:0.5,
+      build:function(ctx,input,I){
+        var r = ringMod(ctx, input, 40*I);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(28*I); r.connect(ws);
+        var bp = biquad(ctx,'bandpass',1400,1.4); ws.connect(bp);
+        return bp; } },
+    { id:'hypnotic', name:'هیپنوتیزم', icon:'🌀', rate:0.9, detune:-40, tail:3.0,
+      build:function(ctx,input,I){
+        wobbleDetune(ctx, input, 1.1, 70*I);
+        var d = delayFx(ctx, input, 0.35, 0.55, 0.5);
+        return reverbFx(ctx, d, 2.6, 2.2, Math.min(0.7,0.4*I)); } },
+    { id:'asmr', name:'نجوای آرامش‌بخش', icon:'🎧', rate:1, detune:10, tail:0.6,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',700,0.7); input.connect(hp);
+        var lp = biquad(ctx,'lowpass',7500,0.6); hp.connect(lp);
+        var g = ctx.createGain(); g.gain.value = 0.6; lp.connect(g);
+        return reverbFx(ctx, g, 1.2, 1.4, Math.min(0.4,0.22*I)); } },
+    { id:'arcade', name:'بازی آرکید', icon:'🎮', rate:1.2, detune:100, tail:0.3,
+      build:function(ctx,input,I){
+        var ws = ctx.createWaveShaper(); ws.curve = makeBitcrushCurve(Math.max(3,6/I)); input.connect(ws);
+        var bp = biquad(ctx,'bandpass',2000,1.8); ws.connect(bp);
+        return bp; } },
+    { id:'thunder', name:'رعد و برق', icon:'⛈️', rate:0.6, detune:-380, tail:2.6,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',500,1.2); input.connect(lp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(24*I); lp.connect(ws);
+        return reverbFx(ctx, ws, 2.4, 2.0, 0.42); } },
+    { id:'blackhole', name:'سیاه‌چاله', icon:'🕳️', rate:0.4, detune:-600, tail:5.0, speedRamp:true, rampFrom:1, rampTo:0.25,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',700,1); input.connect(lp);
+        return reverbFx(ctx, lp, 4.5, 3.8, Math.min(0.9,0.55*I)); } },
     { id:'custom', name:'سفارشی من', icon:'🛠️', rate:1, detune:0, tail:2.2,
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass', customParams.filt, 0.8); input.connect(lp);
@@ -968,12 +1252,22 @@
     alien:'فانتزی و کاراکتر', angel:'فانتزی و کاراکتر', choir:'فانتزی و کاراکتر', pirate:'فانتزی و کاراکتر',
     superhero:'فانتزی و کاراکتر', wizard:'فانتزی و کاراکتر', ninja:'فانتزی و کاراکتر', opera:'فانتزی و کاراکتر',
     cave:'محیط و فضا', underwater:'محیط و فضا', dreamy:'محیط و فضا', heli:'محیط و فضا', vaporwave:'محیط و فضا',
-    wind:'محیط و فضا', doppler:'محیط و فضا', starship:'محیط و فضا',
+    wind:'محیط و فضا', doppler:'محیط و فضا', starship:'محیط و فضا', galaxy:'محیط و فضا',
     robot:'دیجیتال و ربات', glitch:'دیجیتال و ربات', eightbit:'دیجیتال و ربات', twin:'دیجیتال و ربات',
-    autopan:'دیجیتال و ربات', metallic:'دیجیتال و ربات',
+    autopan:'دیجیتال و ربات', metallic:'دیجیتال و ربات', tvstatic:'دیجیتال و ربات', telepathy:'دیجیتال و ربات',
     radio:'رترو', phone:'رترو', backwards:'رترو', megaphone:'رترو', oldtape:'رترو', megabass:'رترو',
     custom:'سفارشی'
   };
+  CATEGORY_MAP.insect = 'ترسناک';
+  CATEGORY_MAP.possessed = 'ترسناک';
+  CATEGORY_MAP.kawaii = 'بامزه و شاد';
+  CATEGORY_MAP.cathedral = 'محیط و فضا';
+  CATEGORY_MAP.warbot = 'دیجیتال و ربات';
+  CATEGORY_MAP.hypnotic = 'فانتزی و کاراکتر';
+  CATEGORY_MAP.asmr = 'بامزه و شاد';
+  CATEGORY_MAP.arcade = 'دیجیتال و ربات';
+  CATEGORY_MAP.thunder = 'ترسناک';
+  CATEGORY_MAP.blackhole = 'محیط و فضا';
   function categoryOf(id){ return CATEGORY_MAP[id] || 'بامزه و شاد'; }
 
   /* ---------------- State ---------------- */
@@ -1030,6 +1324,11 @@
   var avatarMouth = document.getElementById('avatarMouth');
   var avatarFace = document.getElementById('avatarFace');
   var avatarPicker = document.getElementById('avatarPicker');
+  var avatarGlow = document.getElementById('avatarGlow');
+  var avatarRing = document.getElementById('avatarRing');
+  var avatarCaption = document.getElementById('avatarCaption');
+  var eyeL = document.getElementById('eyeL');
+  var eyeR = document.getElementById('eyeR');
 
   /* ---------------- Avatar picker (custom-drawn characters, no emoji) ---------------- */
   var AVATARS = [
@@ -1047,14 +1346,27 @@
     { id:'clown',     label:'دلقک' },
     { id:'king',      label:'پادشاه' },
     { id:'panda',     label:'پاندا' },
-    { id:'dragon',    label:'اژدها' }
+    { id:'dragon',    label:'اژدها' },
+    { id:'fairy',     label:'پری' },
+    { id:'astronaut', label:'فضانورد' },
+    { id:'mermaid',   label:'پری دریایی' },
+    { id:'zombie',    label:'زامبی' },
+    { id:'devil',     label:'شیطونک' },
+    { id:'angelic',   label:'فرشته' },
+    { id:'witch',     label:'ساحره' },
+    { id:'cyborg',    label:'سایبورگ' },
+    { id:'phoenix',   label:'ققنوس' },
+    { id:'samurai',   label:'سامورایی' },
+    { id:'unicorn',   label:'یونیکورن' },
+    { id:'reaper',    label:'عزراییل' },
+    { id:'elf',       label:'الف' }
   ];
   var selectedAvatar = 'classic';
   AVATARS.forEach(function(a){
     var btn = document.createElement('button');
     btn.className = 'avatar-opt' + (a.id===selectedAvatar ? ' active' : '');
     btn.dataset.avatar = a.id;
-    btn.innerHTML = '<div class="mini-wrap"><div class="avatar-face mini avatar-'+a.id+'"></div></div><span>'+a.label+'</span>';
+    btn.innerHTML = '<div class="mini-wrap"><div class="avatar-face mini avatar-'+a.id+'"><div class="shine"></div></div></div><span>'+a.label+'</span>';
     btn.addEventListener('click', function(){
       vibrate(8);
       selectedAvatar = a.id;
@@ -1076,7 +1388,12 @@
     alien:['#5eead4','#0f766e'], cat:['#fb923c','#c2410c'], pirate:['#d9a566','#8a5a2b'],
     superhero:['#3b82f6','#1e3a8a'], wizard:['#8b5cf6','#4c1d95'], ninja:['#475569','#0f172a'],
     vampire:['#9d3355','#2a0a14'], skeleton:['#e7ebf0','#9aa4b2'], clown:['#f472b6','#7e22ce'],
-    king:['#fde68a','#b45309'], panda:['#f8fafc','#cbd5e1'], dragon:['#10b981','#065f46']
+    king:['#fde68a','#b45309'], panda:['#f8fafc','#cbd5e1'], dragon:['#10b981','#065f46'],
+    fairy:['#f9a8d4','#a21caf'], astronaut:['#cbd5e1','#475569'], mermaid:['#2dd4bf','#0e7490'],
+    zombie:['#84cc16','#365314'], devil:['#f87171','#7f1d1d'], angelic:['#fef9c3','#facc15'],
+    witch:['#6d28d9','#1e1b4b'], cyborg:['#94a3b8','#1e293b'], phoenix:['#fb923c','#dc2626'],
+    samurai:['#dc2626','#1c1917'], unicorn:['#f5d0fe','#e879f9'], reaper:['#334155','#020617'],
+    elf:['#4ade80','#166534']
   };
   function drawAccessory(g,id,cx,cy,r,colors){
     g.fillStyle = colors[1];
@@ -1133,6 +1450,56 @@
       g.fillStyle='#d97706';
       g.beginPath(); g.moveTo(cx-r*0.5,cy-r*0.85); g.lineTo(cx-r*0.35,cy-r*1.32); g.lineTo(cx-r*0.18,cy-r*0.85); g.closePath(); g.fill();
       g.beginPath(); g.moveTo(cx+r*0.5,cy-r*0.85); g.lineTo(cx+r*0.35,cy-r*1.32); g.lineTo(cx+r*0.18,cy-r*0.85); g.closePath(); g.fill();
+    } else if(id==='fairy'){
+      g.fillStyle='rgba(255,255,255,.7)';
+      g.beginPath(); g.ellipse(cx-r*1.15,cy-r*0.1,r*0.42,r*0.5,-0.4,0,Math.PI*2); g.fill();
+      g.beginPath(); g.ellipse(cx+r*1.15,cy-r*0.1,r*0.42,r*0.5,0.4,0,Math.PI*2); g.fill();
+    } else if(id==='astronaut'){
+      g.strokeStyle='#e2e8f0'; g.lineWidth=r*0.12;
+      g.beginPath(); g.arc(cx,cy,r*1.06,0,Math.PI*2); g.stroke();
+    } else if(id==='mermaid'){
+      g.fillStyle='#f59e0b';
+      g.beginPath();
+      for(var mx=-1;mx<=1;mx+=0.5){
+        g.lineTo(cx+mx*r*0.8, cy-r*(1.1+(Math.abs(mx)%1===0?0.3:0)));
+      }
+      g.lineTo(cx+r*0.8,cy-r*0.8); g.lineTo(cx-r*0.8,cy-r*0.8); g.closePath(); g.fill();
+    } else if(id==='zombie'){
+      g.fillStyle='#1a2e05';
+      g.beginPath(); g.arc(cx-r*0.55,cy-r*0.15,r*0.07,0,Math.PI*2); g.fill();
+      g.beginPath(); g.arc(cx+r*0.1,cy+r*0.35,r*0.06,0,Math.PI*2); g.fill();
+    } else if(id==='devil'){
+      g.fillStyle='#7f1d1d';
+      g.beginPath(); g.moveTo(cx-r*0.5,cy-r*0.85); g.lineTo(cx-r*0.34,cy-r*1.2); g.lineTo(cx-r*0.18,cy-r*0.85); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(cx+r*0.5,cy-r*0.85); g.lineTo(cx+r*0.34,cy-r*1.2); g.lineTo(cx+r*0.18,cy-r*0.85); g.closePath(); g.fill();
+    } else if(id==='angelic'){
+      g.strokeStyle='#fde68a'; g.lineWidth=r*0.08;
+      g.beginPath(); g.arc(cx,cy-r*1.28,r*0.32,0,Math.PI*2); g.stroke();
+    } else if(id==='witch'){
+      g.fillStyle='#1e1b4b';
+      g.beginPath(); g.moveTo(cx-r*0.62,cy-r*1.05); g.lineTo(cx,cy-r*2.05); g.lineTo(cx+r*0.62,cy-r*1.05); g.closePath(); g.fill();
+      g.beginPath(); g.ellipse(cx,cy-r*0.98,r*0.7,r*0.16,0,0,Math.PI*2); g.fill();
+    } else if(id==='cyborg'){
+      g.strokeStyle='#f43f5e'; g.lineWidth=r*0.08;
+      g.strokeRect(cx+r*0.1,cy-r*0.25,r*0.5,r*0.34);
+    } else if(id==='phoenix'){
+      g.fillStyle='#facc15';
+      g.beginPath(); g.moveTo(cx-r*0.55,cy-r*0.9); g.lineTo(cx-r*0.32,cy-r*1.55); g.lineTo(cx-r*0.1,cy-r*0.9); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(cx+r*0.55,cy-r*0.9); g.lineTo(cx+r*0.32,cy-r*1.55); g.lineTo(cx+r*0.1,cy-r*0.9); g.closePath(); g.fill();
+    } else if(id==='samurai'){
+      g.fillStyle='#1c1917';
+      g.beginPath(); g.ellipse(cx,cy-r*0.9,r*1.08,r*0.34,0,Math.PI,0); g.fill();
+      g.fillStyle='#facc15'; g.fillRect(cx-r*0.05,cy-r*1.15,r*0.1,r*0.3);
+    } else if(id==='unicorn'){
+      g.fillStyle='#fde68a';
+      g.beginPath(); g.moveTo(cx-r*0.1,cy-r*0.9); g.lineTo(cx+r*0.08,cy-r*1.75); g.lineTo(cx+r*0.22,cy-r*0.9); g.closePath(); g.fill();
+    } else if(id==='reaper'){
+      g.fillStyle='#111827';
+      g.beginPath(); g.ellipse(cx,cy-r*0.95,r*1.15,r*0.5,0,Math.PI,0); g.fill();
+    } else if(id==='elf'){
+      g.fillStyle=colors[0];
+      g.beginPath(); g.moveTo(cx-r*1.05,cy-r*0.2); g.lineTo(cx-r*0.75,cy-r*0.65); g.lineTo(cx-r*0.75,cy+r*0.15); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(cx+r*1.05,cy-r*0.2); g.lineTo(cx+r*0.75,cy-r*0.65); g.lineTo(cx+r*0.75,cy+r*0.15); g.closePath(); g.fill();
     }
   }
   function drawAvatarCanvas(g, w, h, id, mouthScale){
@@ -1152,11 +1519,21 @@
     g.fillStyle = '#fff';
     g.beginPath(); g.arc(cx-r*0.32, eyeY, r*0.12, 0, Math.PI*2); g.fill();
     g.beginPath(); g.arc(cx+r*0.32, eyeY, r*0.12, 0, Math.PI*2); g.fill();
+    g.fillStyle = 'rgba(0,0,0,.4)';
+    g.beginPath(); g.arc(cx-r*0.32, eyeY, r*0.035, 0, Math.PI*2); g.fill();
+    g.beginPath(); g.arc(cx+r*0.32, eyeY, r*0.035, 0, Math.PI*2); g.fill();
 
     var mw = r*0.55, mh = Math.max(3, r*0.16*mouthScale);
+    g.fillStyle = '#fff';
     g.beginPath(); g.ellipse(cx, cy+r*0.32, mw/2, mh/2, 0, 0, Math.PI*2); g.fill();
 
     drawAccessory(g,id,cx,cy,r,colors);
+
+    /* glossy highlight for extra visual quality */
+    var shine = g.createRadialGradient(cx-r*0.35,cy-r*0.4,1,cx-r*0.35,cy-r*0.4,r*0.55);
+    shine.addColorStop(0,'rgba(255,255,255,.35)'); shine.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle = shine;
+    g.beginPath(); g.arc(cx,cy,r,0,Math.PI*2); g.fill();
   }
 
   var videoBtn = document.getElementById('videoBtn');
@@ -1278,6 +1655,15 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
+  /* ---------------- Favorites (persisted) ---------------- */
+  var favorites = {};
+  try{
+    var savedFav = JSON.parse(localStorage.getItem('voicemorph_favs') || '{}');
+    if(savedFav && typeof savedFav === 'object') favorites = savedFav;
+  }catch(e){}
+  function saveFavorites(){ try{ localStorage.setItem('voicemorph_favs', JSON.stringify(favorites)); }catch(e){} }
+  var showFavOnly = false;
+
   /* ---------------- Build effect grid, grouped into tidy categories ---------------- */
   var allFxCards = [];
   var byCategory = {};
@@ -1290,6 +1676,7 @@
     opt.value = fx.id; opt.textContent = fx.name;
     secondarySelect.appendChild(opt);
   });
+  var fxCatSections = [];
   CATEGORY_ORDER.forEach(function(cat){
     var list = byCategory[cat];
     if(!list || !list.length) return;
@@ -1305,15 +1692,57 @@
       var card = document.createElement('div');
       card.className = 'fx-card';
       card.dataset.id = fx.id;
-      card.innerHTML = '<span class="ic">'+fx.icon+'</span><span class="nm">'+fx.name+'</span>';
-      card.addEventListener('click', function(){ selectEffect(fx.id); });
+      card.dataset.name = fx.name;
+      card.innerHTML = '<button type="button" class="fx-star'+(favorites[fx.id]?' on':'')+'" data-star="'+fx.id+'">★</button><span class="ic">'+fx.icon+'</span><span class="nm">'+fx.name+'</span>';
+      card.addEventListener('click', function(e){
+        if(e.target && e.target.dataset && e.target.dataset.star) return;
+        selectEffect(fx.id);
+      });
+      card.querySelector('.fx-star').addEventListener('click', function(e){
+        e.stopPropagation();
+        vibrate(10);
+        favorites[fx.id] = !favorites[fx.id];
+        e.target.classList.toggle('on', !!favorites[fx.id]);
+        saveFavorites();
+        if(showFavOnly) applyFxFilter();
+      });
       grid.appendChild(card);
       allFxCards.push(card);
     });
     section.appendChild(grid);
     fxGrid.appendChild(section);
+    fxCatSections.push(section);
   });
   document.getElementById('fxCount').textContent = (EFFECTS.length-1) + ' افکت';
+
+  /* ---------------- Effect search + favorites filter ---------------- */
+  var fxSearch = document.getElementById('fxSearch');
+  var fxFavToggle = document.getElementById('fxFavToggle');
+  var fxEmpty = document.getElementById('fxEmpty');
+  function applyFxFilter(){
+    var q = (fxSearch.value||'').trim();
+    var anyVisible = false;
+    fxCatSections.forEach(function(section){
+      var sectionHasVisible = false;
+      Array.prototype.forEach.call(section.querySelectorAll('.fx-card'), function(card){
+        var matchesText = !q || card.dataset.name.indexOf(q) !== -1;
+        var matchesFav = !showFavOnly || favorites[card.dataset.id];
+        var visible = matchesText && matchesFav;
+        card.classList.toggle('hidden-by-filter', !visible);
+        if(visible) sectionHasVisible = true;
+      });
+      section.classList.toggle('hidden-by-filter', !sectionHasVisible);
+      if(sectionHasVisible) anyVisible = true;
+    });
+    fxEmpty.classList.toggle('hidden', anyVisible);
+  }
+  fxSearch.addEventListener('input', applyFxFilter);
+  fxFavToggle.addEventListener('click', function(){
+    vibrate(10);
+    showFavOnly = !showFavOnly;
+    fxFavToggle.classList.toggle('on', showFavOnly);
+    applyFxFilter();
+  });
 
   function highlightFxCard(id){
     allFxCards.forEach(function(c){
@@ -1345,10 +1774,35 @@
   });
 
   /* ---------------- Recording ---------------- */
+  var countingDown = false;
   recBtn.addEventListener('click', function(){
+    if(countingDown) return;
     vibrate(15);
-    if(!isRecording){ startRecording(); } else { stopRecording(); }
+    if(!isRecording){ startCountdown(); } else { stopRecording(); }
   });
+
+  /* ---------------- New feature: quick 3-2-1 countdown before recording ---------------- */
+  function startCountdown(){
+    countingDown = true;
+    recBtn.disabled = true;
+    var n = 3;
+    recHint.textContent = 'آماده باش… '+n;
+    recBtn.textContent = n;
+    var iv = setInterval(function(){
+      n--;
+      vibrate(10);
+      if(n>0){
+        recHint.textContent = 'آماده باش… '+n;
+        recBtn.textContent = n;
+      } else {
+        clearInterval(iv);
+        recBtn.textContent = '🎤';
+        recBtn.disabled = false;
+        countingDown = false;
+        startRecording();
+      }
+    }, 480);
+  }
 
   function startRecording(){
     statusMsg.textContent = '';
@@ -1660,7 +2114,18 @@
   btnProcessed.addEventListener('click', function(){ vibrate(8); setPlayerMode('processed'); });
   btnOriginal.addEventListener('click', function(){ vibrate(8); setPlayerMode('original'); });
 
-  /* ---------------- Reactive talking avatar ---------------- */
+  /* ---------------- New feature: playback speed control ---------------- */
+  var speedSwitch = document.getElementById('speedSwitch');
+  Array.prototype.forEach.call(speedSwitch.querySelectorAll('.mini-btn'), function(btn){
+    btn.addEventListener('click', function(){
+      vibrate(8);
+      player.playbackRate = parseFloat(btn.dataset.speed);
+      Array.prototype.forEach.call(speedSwitch.querySelectorAll('.mini-btn'), function(b){ b.classList.remove('on'); });
+      btn.classList.add('on');
+    });
+  });
+
+  /* ---------------- Reactive talking avatar (smoothed, livelier) ---------------- */
   function setupPlaybackAnalyser(){
     if(playbackSourceCreated) return;
     playbackSourceCreated = true;
@@ -1671,26 +2136,65 @@
     srcNode.connect(playbackAnalyser);
     srcNode.connect(ctx.destination);
   }
+  var mouthScaleCur = 1, bobCur = 0, tiltCur = 0, glowCur = 0.5;
   player.addEventListener('play', function(){
     setupPlaybackAnalyser();
+    avatarFace.classList.add('talking');
+    avatarCaption.textContent = 'در حال صحبت… 🗣️';
     var data = new Uint8Array(playbackAnalyser.fftSize);
+    var t = 0;
     function loop(){
       playbackAnimId = requestAnimationFrame(loop);
+      t += 0.06;
       playbackAnalyser.getByteTimeDomainData(data);
       var sum=0;
       for(var i=0;i<data.length;i++){ var v=(data[i]-128)/128; sum += v*v; }
       var rms = Math.sqrt(sum/data.length);
-      var scale = 1 + Math.min(2.2, rms*9);
-      avatarMouth.style.transform = 'translateX(-50%) scaleY('+scale.toFixed(2)+')';
+      var targetMouth = 1 + Math.min(2.4, rms*10);
+      var targetBob = -Math.min(6, rms*22);
+      var targetTilt = Math.sin(t*1.6) * Math.min(3.5, rms*10);
+      var targetGlow = 0.45 + Math.min(0.55, rms*2.2);
+
+      /* smooth interpolation for a fluid, less jittery motion */
+      mouthScaleCur += (targetMouth - mouthScaleCur) * 0.45;
+      bobCur += (targetBob - bobCur) * 0.22;
+      tiltCur += (targetTilt - tiltCur) * 0.22;
+      glowCur += (targetGlow - glowCur) * 0.18;
+
+      avatarMouth.style.transform = 'translateX(-50%) scaleY('+mouthScaleCur.toFixed(2)+')';
+      avatarFace.style.transform = 'translateY('+bobCur.toFixed(1)+'px) rotate('+tiltCur.toFixed(1)+'deg) scale('+(1+rms*0.06).toFixed(3)+')';
+      avatarGlow.style.opacity = glowCur.toFixed(2);
+      avatarGlow.style.transform = 'scale('+(1+rms*0.5).toFixed(2)+')';
+      avatarRing.style.transform = 'scale('+(1+rms*0.35).toFixed(2)+')';
+      avatarRing.style.borderColor = 'rgba(236,72,153,'+Math.min(0.7,0.25+rms).toFixed(2)+')';
     }
     loop();
   });
   function stopAvatarAnim(){
     if(playbackAnimId) cancelAnimationFrame(playbackAnimId);
+    avatarFace.classList.remove('talking');
+    avatarFace.style.transform = '';
     avatarMouth.style.transform = 'translateX(-50%) scaleY(1)';
+    avatarGlow.style.opacity = '';
+    avatarGlow.style.transform = '';
+    avatarRing.style.transform = '';
+    avatarRing.style.borderColor = '';
+    avatarCaption.textContent = 'آماده صحبت 🎧';
+    mouthScaleCur = 1; bobCur = 0; tiltCur = 0; glowCur = 0.5;
   }
   player.addEventListener('pause', stopAvatarAnim);
   player.addEventListener('ended', stopAvatarAnim);
+
+  /* ---------------- Idle blinking, always running for a lifelike feel ---------------- */
+  function scheduleBlink(){
+    var delay = 1800 + Math.random()*3200;
+    setTimeout(function(){
+      eyeL.classList.add('blink'); eyeR.classList.add('blink');
+      setTimeout(function(){ eyeL.classList.remove('blink'); eyeR.classList.remove('blink'); }, 130);
+      scheduleBlink();
+    }, delay);
+  }
+  scheduleBlink();
 
   /* ---------------- WAV Encoding ---------------- */
   function bufferToWaveBlob(abuffer){
@@ -1785,6 +2289,12 @@
     waveCtx.clearRect(0,0,waveCanvas.width, waveCanvas.height);
     statusMsg.textContent = '';
     stopAvatarAnim();
+    player.playbackRate = 1;
+    Array.prototype.forEach.call(speedSwitch.querySelectorAll('.mini-btn'), function(b){ b.classList.toggle('on', b.dataset.speed==='1'); });
+    fxSearch.value = '';
+    showFavOnly = false;
+    fxFavToggle.classList.remove('on');
+    applyFxFilter();
   });
 
 })();
