@@ -148,6 +148,21 @@
 
   .fx-groups{display:flex; flex-direction:column; gap:8px;}
   .fx-search-row{display:flex; gap:7px; margin-bottom:10px;}
+  /* New feature: quick category-jump chips — with 90+ effects across 9 groups, this lets
+     people hop straight to "ترسناک" or "فضایی" etc. instead of scrolling past everything. */
+  .mood-chips{display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; margin-bottom:10px; scroll-snap-type:x proximity;}
+  .mood-chip{
+    flex-shrink:0; scroll-snap-align:start; padding:6px 13px; border-radius:14px; border:1.5px solid var(--card-border);
+    background:var(--bg2); color:var(--text-dim); font-size:11px; font-weight:700; cursor:pointer;
+    font-family:inherit; white-space:nowrap; transition:transform .15s ease, border-color .2s ease, color .2s ease, background .2s ease;
+  }
+  .mood-chip:active{transform:scale(.92);}
+  .mood-chip.flash{border-color:var(--accent); color:var(--accent); background:rgba(124,58,237,.12);}
+  .fx-cat.flash{animation:catFlash 1s ease;}
+  @keyframes catFlash{
+    0%,100%{box-shadow:none;}
+    30%{box-shadow:0 0 0 2px rgba(124,58,237,.4); border-radius:16px;}
+  }
   .fx-search{
     flex:1; padding:10px 14px; border-radius:14px; border:1.5px solid var(--card-border);
     background:var(--bg2); color:var(--text); font-family:inherit; font-size:12.5px; outline:none;
@@ -274,7 +289,7 @@
   .avatar-opt .mini-wrap{width:44px;height:44px;position:relative;display:flex;align-items:center;justify-content:center; transition:transform .2s ease;}
 
   .avatar-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; margin:6px 0 14px; position:relative;}
-  .avatar-stage{position:relative; width:124px; height:124px; display:flex; align-items:center; justify-content:center; perspective:640px;}
+  .avatar-stage{position:relative; width:124px; height:124px; display:flex; align-items:center; justify-content:center; perspective:420px;}
   /* Soft studio backdrop: a subtle vignette + ground-plane gradient behind the character,
      like a small render turntable, so the avatar reads as an object placed in a lit
      scene rather than a flat sticker on the page background. */
@@ -335,7 +350,7 @@
      ambient-occlusion falloff toward the shadow edge (multiply), and a rim/bounce light on
      the dark side (screen). Sits as real child elements so it layers on top of every
      avatar's own colors/shapes without touching each character's individual CSS. ---------------- */
-  .avatar-face .shade-key, .avatar-face .shade-spec, .avatar-face .shade-ao, .avatar-face .shade-rim{
+  .avatar-face .shade-key, .avatar-face .shade-spec, .avatar-face .shade-spec2, .avatar-face .shade-ao, .avatar-face .shade-rim{
     position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
   }
   .avatar-face .shade-key{
@@ -345,6 +360,13 @@
   .avatar-face .shade-spec{
     background:radial-gradient(circle 9px at var(--hl-x,29%) var(--hl-y,21%), rgba(255,255,255,.95), rgba(255,255,255,0) 100%);
     mix-blend-mode:screen; opacity:.85;
+  }
+  /* Secondary, dimmer catch-light offset from the main hotspot — real glossy/PBR materials
+     almost never show a single highlight; a small secondary one is what sells "rendered
+     sphere with a material" rather than "flat circle with one gradient". */
+  .avatar-face .shade-spec2{
+    background:radial-gradient(circle 5px at calc(var(--hl-x,29%) + 22%) calc(var(--hl-y,21%) + 30%), rgba(255,255,255,.55), rgba(255,255,255,0) 100%);
+    mix-blend-mode:screen; opacity:.5;
   }
   .avatar-face .shade-ao{
     background:
@@ -356,7 +378,23 @@
     background:radial-gradient(ellipse 46% 36% at 84% 76%, rgba(255,255,255,.30), transparent 68%);
     mix-blend-mode:screen; opacity:.65;
   }
-  .avatar-face.mini .shade-key, .avatar-face.mini .shade-spec, .avatar-face.mini .shade-ao, .avatar-face.mini .shade-rim{ opacity:.8; }
+  .avatar-face.mini .shade-key, .avatar-face.mini .shade-spec, .avatar-face.mini .shade-spec2, .avatar-face.mini .shade-ao, .avatar-face.mini .shade-rim{ opacity:.8; }
+  /* Ambient dust motes drifting behind the character — a cheap trick real renders use
+     (depth-of-field particles) to make a subject read as "in a lit scene" rather than
+     pasted on top of the page. */
+  .avatar-dust{ position:absolute; inset:-20px; pointer-events:none; z-index:-1; overflow:hidden; border-radius:50%; }
+  .avatar-dust span{
+    position:absolute; width:3px; height:3px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.8), transparent 70%);
+    opacity:0; filter:blur(.2px);
+  }
+  .avatar-dust span:nth-child(1){ left:18%; top:70%; animation:dustFloat1 7s ease-in-out infinite; animation-delay:.2s; }
+  .avatar-dust span:nth-child(2){ left:78%; top:60%; animation:dustFloat2 9s ease-in-out infinite; animation-delay:1.6s; }
+  .avatar-dust span:nth-child(3){ left:50%; top:82%; animation:dustFloat3 8s ease-in-out infinite; animation-delay:3.1s; }
+  @keyframes dustFloat1{ 0%{opacity:0; transform:translateY(0) translateX(0);} 15%{opacity:.7;} 85%{opacity:.4;} 100%{opacity:0; transform:translateY(-70px) translateX(10px);} }
+  @keyframes dustFloat2{ 0%{opacity:0; transform:translateY(0) translateX(0);} 15%{opacity:.6;} 85%{opacity:.35;} 100%{opacity:0; transform:translateY(-85px) translateX(-14px);} }
+  @keyframes dustFloat3{ 0%{opacity:0; transform:translateY(0) translateX(0);} 15%{opacity:.55;} 85%{opacity:.3;} 100%{opacity:0; transform:translateY(-60px) translateX(-6px);} }
+  .lite-mode .avatar-dust{ display:none; }
   .avatar-face.talking{ animation:none; }
   .avatar-face.reacting{ animation:reactWiggle .6s cubic-bezier(.34,1.56,.64,1); }
   @keyframes reactWiggle{
@@ -373,25 +411,31 @@
     72%{ transform:translateY(-1.4px) translateX(-.6px) rotateX(2deg) rotateY(3.5deg) scale(1.009) rotate(.5deg); }
   }
   .avatar-face.mini{box-shadow:0 4px 10px rgba(124,58,237,.3); transform:scale(.48); animation:none;}
+  /* ---------------- Real parallax depth: since .avatar-face already has transform-style:preserve-3d
+     and the stage has perspective, lifting each feature off the sphere's surface with translateZ makes
+     them genuinely separate 3D layers — when the head rotates they shift against each other like parts
+     of an actual modeled head instead of decals painted flat on a rotating circle. ---------------- */
   .avatar-face .eye{
     position:absolute; top:31px; width:9px;height:9px;border-radius:50%;
     background:radial-gradient(circle at 32% 28%, #fff 0%, #fff 35%, #eef 65%, #dde 100%);
-    box-shadow:0 1px 2px rgba(0,0,0,.25), inset 0 -1.5px 2px rgba(0,0,0,.1);
+    box-shadow:0 1px 2px rgba(0,0,0,.25), inset 0 -1.5px 2px rgba(0,0,0,.1), inset 0 1.5px 1.5px rgba(255,255,255,.4);
     transition:transform .11s cubic-bezier(.4,0,.2,1), margin .5s cubic-bezier(.4,0,.2,1);
+    transform:translateZ(8px);
   }
   .avatar-face .eye.l{left:23px;} .avatar-face .eye.r{right:23px;}
   .avatar-face .eye.blink{ animation:eyeBlink .32s cubic-bezier(.4,0,.2,1); }
   @keyframes eyeBlink{
-    0%{transform:scaleY(1);}
-    35%{transform:scaleY(.08);}
-    65%{transform:scaleY(.08);}
-    82%{transform:scaleY(1.12);}
-    100%{transform:scaleY(1);}
+    0%{transform:translateZ(8px) scaleY(1);}
+    35%{transform:translateZ(8px) scaleY(.08);}
+    65%{transform:translateZ(8px) scaleY(.08);}
+    82%{transform:translateZ(8px) scaleY(1.12);}
+    100%{transform:translateZ(8px) scaleY(1);}
   }
   .avatar-face .cheek{
     position:absolute; top:44px; width:15px; height:9px; border-radius:50%;
     background:radial-gradient(ellipse, rgba(255,255,255,.55), transparent 72%);
     opacity:0; pointer-events:none; transition:opacity .3s ease; filter:blur(.4px);
+    transform:translateZ(3px);
   }
   .avatar-face .cheek.l{left:9px;} .avatar-face .cheek.r{right:9px;}
   .avatar-face .mouth-shine{
@@ -403,11 +447,11 @@
     position:absolute; top:20px; width:11px; height:2.6px; border-radius:3px; background:rgba(255,255,255,.85);
     transition:transform .12s ease, opacity .12s ease; transform-origin:center; will-change:transform;
   }
-  .avatar-face .brow.l{left:20px; transform:rotate(-6deg);} .avatar-face .brow.r{right:20px; transform:rotate(6deg);}
+  .avatar-face .brow.l{left:20px; transform:translateZ(6px) rotate(-6deg);} .avatar-face .brow.r{right:20px; transform:translateZ(6px) rotate(6deg);}
   .avatar-face .mouth{
-    position:absolute; bottom:20px; left:50%; transform:translateX(-50%) scaleY(1) scaleX(1);
-    width:28px; height:9px; background:linear-gradient(180deg,#fff 55%,#ffd3de 100%); border-radius:0 0 14px 14px; transform-origin:top center;
-    transition:transform .04s linear; box-shadow:inset 0 -3px 5px rgba(0,0,0,.18), inset 0 2px 2px rgba(0,0,0,.08); overflow:hidden;
+    position:absolute; bottom:20px; left:50%; transform:translateX(-50%) translateZ(5px) scaleY(1) scaleX(1);
+    width:28px; height:9px; background:linear-gradient(180deg,#fff 45%,#ffd3de 80%,#e8899e 100%); border-radius:0 0 14px 14px; transform-origin:top center;
+    transition:transform .04s linear; box-shadow:inset 0 -4px 6px rgba(0,0,0,.24), inset 0 3px 3px rgba(0,0,0,.12), inset 2px 0 3px rgba(0,0,0,.06), inset -2px 0 3px rgba(0,0,0,.06); overflow:hidden;
   }
   .avatar-caption{font-size:11px; color:var(--text-dim); margin-top:9px; text-align:center; min-height:14px; transition:opacity .15s ease;}
   .avatar-eq{display:flex; align-items:flex-end; justify-content:center; gap:3px; height:20px; margin-top:6px;}
@@ -844,6 +888,7 @@
       <button class="fx-fav-toggle" id="fxFavToggle" title="فقط موردعلاقه‌ها">⭐</button>
       <button class="fx-fav-toggle" id="fxShuffle" title="افکت تصادفی">🎲</button>
     </div>
+    <div class="mood-chips" id="moodChips"></div>
     <div class="fx-groups" id="fxGrid"></div>
     <div class="fx-empty hidden" id="fxEmpty">چیزی با این جستجو پیدا نشد 🤔</div>
 
@@ -910,8 +955,11 @@
         <div class="avatar-glow2" id="avatarGlow2"></div>
         <div class="avatar-ring2" id="avatarRing2"></div>
         <div class="avatar-ring" id="avatarRing"></div>
+        <div class="avatar-dust" id="avatarDust">
+          <span></span><span></span><span></span>
+        </div>
         <div class="avatar-face avatar-classic" id="avatarFace">
-          <div class="shade-key"></div><div class="shade-spec"></div><div class="shade-ao"></div><div class="shade-rim"></div>
+          <div class="shade-key"></div><div class="shade-spec"></div><div class="shade-spec2"></div><div class="shade-ao"></div><div class="shade-rim"></div>
           <div class="shine"></div>
           <div class="cheek l" id="cheekL"></div><div class="cheek r" id="cheekR"></div>
           <div class="brow l" id="browL"></div><div class="brow r" id="browR"></div>
@@ -921,6 +969,7 @@
       </div>
       <div class="avatar-eq" id="avatarEq"></div>
       <div class="avatar-caption" id="avatarCaption">آماده صحبت 🎧</div>
+      <button class="fx-fav-toggle" id="tiltLightBtn" style="margin-top:8px; width:auto; font-size:10.5px; padding:6px 12px; opacity:.75; white-space:nowrap;" title="نور استودیویی رو با تکون دادن گوشی حرکت بده">🔦 نور سه‌بعدی با گوشی</button>
     </div>
 
     <div style="display:flex; align-items:center; gap:8px;">
@@ -1164,6 +1213,64 @@
     comp.connect(g);
     return g;
   }
+  /* ---------------- New DSP building blocks: a modulated-delay flanger (moving comb
+     filter -> jet/whoosh sweep), a swept band-pass auto-wah (talk-box vowel motion), a
+     hard square-wave gate (rhythmic chop, distinct from the smooth sine tremolo already
+     used elsewhere), a stacked-formant "throat" resonator, and a heavily-smoothed low
+     rumble noise bed. None of the older effects used these, so anything built from them
+     gets a genuinely different sonic fingerprint instead of another lowpass+distortion
+     combo. ---------------- */
+  function flangerFx(ctx, input, rateHz, depthMs, feedback, mixWet){
+    var delay = ctx.createDelay(0.02); delay.delayTime.value = (depthMs||6)/1000;
+    var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = rateHz||0.25;
+    var lfoGain = ctx.createGain(); lfoGain.gain.value = ((depthMs||6)/1000)*0.92;
+    lfo.connect(lfoGain); lfoGain.connect(delay.delayTime); lfo.start();
+    var fb = ctx.createGain(); fb.gain.value = feedback!==undefined?feedback:0.4;
+    var wet = ctx.createGain(); wet.gain.value = mixWet!==undefined?mixWet:0.6;
+    var dry = ctx.createGain(); dry.gain.value = 1;
+    var out = ctx.createGain();
+    input.connect(dry); dry.connect(out);
+    input.connect(delay); delay.connect(fb); fb.connect(delay);
+    delay.connect(wet); wet.connect(out);
+    return out;
+  }
+  function autoWahFx(ctx, input, rateHz, baseFreq, sweep, Q){
+    var f = ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value = baseFreq||700; f.Q.value = Q||7;
+    var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = rateHz||3.5;
+    var lfoGain = ctx.createGain(); lfoGain.gain.value = sweep||500;
+    lfo.connect(lfoGain); lfoGain.connect(f.frequency); lfo.start();
+    input.connect(f);
+    return f;
+  }
+  function gateChop(ctx, input, rateHz, depth){
+    var d = depth!==undefined?depth:0.9;
+    var g = ctx.createGain(); g.gain.value = 1-d;
+    var osc = ctx.createOscillator(); osc.type='square'; osc.frequency.value = rateHz||8;
+    var scale = ctx.createGain(); scale.gain.value = d;
+    osc.connect(scale); scale.connect(g.gain);
+    input.connect(g); osc.start();
+    return g;
+  }
+  function formantStack(ctx, input, freqs, gains, Qs){
+    var node = input;
+    for(var i=0;i<freqs.length;i++){
+      var f = biquad(ctx,'peaking', freqs[i], (Qs&&Qs[i])||3.2);
+      f.gain.value = (gains&&gains[i])!==undefined ? gains[i] : 7;
+      node.connect(f); node = f;
+    }
+    return node;
+  }
+  function makeRumbleBuffer(ctx, duration, intensity){
+    var buf = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate*duration)), ctx.sampleRate);
+    var data = buf.getChannelData(0);
+    var last = 0;
+    for (var i=0;i<data.length;i++){
+      var white = (Math.random()*2-1);
+      last = (last*0.985) + (white*0.015);
+      data[i] = last*3.2*(intensity||1);
+    }
+    return buf;
+  }
   /* ---------------- Output-loudness normalization: after an effect renders, several
      filter-heavy chains end up noticeably quieter than others (e.g. a tight bandpass or
      a highpass removes a lot of energy). This scans the rendered buffer's peak and scales
@@ -1229,6 +1336,83 @@
   var SVG_CLARITY = '<svg viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M15.2 15.2L21 21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M10.5 7.5v6M7.5 10.5h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
 
   /* ---------------- Effects Catalogue ---------------- */
+  /* ---------------- New DSP building blocks: earlier effects mostly recombine the same
+     waveshaper-distortion + biquad-filter chain, which is why many of them can end up feeling
+     like variations on a theme. These four techniques are mechanically different from anything
+     above, so the effects built from them (below) have a genuinely distinct character/behavior
+     rather than just a different EQ curve on the same trick. ---------------- */
+  function envelopeFollower(ctx, input, smoothHz){
+    /* Classic analog envelope-follower circuit: full-wave rectify the signal, then smooth it
+       with a lowpass. The output is a slow-moving "loudness" signal that can be wired straight
+       into another node's AudioParam (Web Audio allows connecting any node's output to a param),
+       so a filter/pitch/gain can react to the performer's own dynamics in real time. */
+    var curve = new Float32Array(256);
+    for(var i=0;i<256;i++){ var x=(i/255)*2-1; curve[i] = Math.abs(x); }
+    var rect = ctx.createWaveShaper(); rect.curve = curve; input.connect(rect);
+    var lp = ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = smoothHz||18;
+    rect.connect(lp);
+    return lp;
+  }
+  function combFilter(ctx, input, delayMs, feedback, mixWet){
+    /* A very short feedback delay line — physically the same mechanism behind a metal pipe's
+       ring or a robotic "comb" resonance, and tonally distinct from a biquad resonant filter. */
+    var d = ctx.createDelay(0.05); d.delayTime.value = (delayMs||3)/1000;
+    var fb = ctx.createGain(); fb.gain.value = feedback==null?0.6:feedback;
+    var wet = ctx.createGain(); wet.gain.value = mixWet==null?0.6:mixWet;
+    var dry = ctx.createGain(); dry.gain.value = 1-(mixWet==null?0.6:mixWet);
+    var out = ctx.createGain();
+    input.connect(d); d.connect(fb); fb.connect(d); d.connect(wet); wet.connect(out);
+    input.connect(dry); dry.connect(out);
+    return out;
+  }
+  function subOctaveGenerator(ctx, input, mix){
+    /* Full-wave rectification folds the waveform's frequency content up an octave in a way that,
+       once heavily lowpassed, reads to the ear as a sub-octave layer beneath the voice — a cheap
+       real-time trick for adding genuine low-end weight rather than just boosting existing bass. */
+    var curve = new Float32Array(256);
+    for(var i=0;i<256;i++){ var x=(i/255)*2-1; curve[i] = Math.abs(x)*2-1; }
+    var rect = ctx.createWaveShaper(); rect.curve = curve; input.connect(rect);
+    var lp = ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = 170; rect.connect(lp);
+    var sub = ctx.createGain(); sub.gain.value = mix==null?1.5:mix; lp.connect(sub);
+    var dry = ctx.createGain(); dry.gain.value = 0.85; input.connect(dry);
+    var out = ctx.createGain(); sub.connect(out); dry.connect(out);
+    return out;
+  }
+  function threeBandSplit(ctx, input){
+    /* Splits into low/mid/high bands so each can be shaped independently, instead of one
+       filter chain processing the whole signal uniformly. */
+    var low = ctx.createBiquadFilter(); low.type='lowpass'; low.frequency.value = 300; low.Q.value=0.7;
+    var mid = ctx.createBiquadFilter(); mid.type='bandpass'; mid.frequency.value = 1300; mid.Q.value=1.1;
+    var high = ctx.createBiquadFilter(); high.type='highpass'; high.frequency.value = 3200; high.Q.value=0.7;
+    input.connect(low); input.connect(mid); input.connect(high);
+    return {low:low, mid:mid, high:high};
+  }
+  /* ---------------- Realistic age/gender formant model: naive pitch-shifting (via rate/detune)
+     moves the whole spectrum including the formants, which is exactly why a simple "speed up"
+     effect sounds like a chipmunk instead of an actual different person — real human voices of
+     different age/gender differ mainly in vocal-tract resonance (formant) positions, not just
+     pitch. Each of the 5 age/gender effects below (1) notches down the source voice's own formant
+     peaks so the original vocal-tract "fingerprint" doesn't leak through, (2) builds up new formant
+     peaks at the target age/gender's real acoustic-phonetics positions, and (3) only nudges pitch a
+     modest, natural amount — so the result reads as "a different-sounding person" rather than
+     "the same voice sped up or slowed down". ---------------- */
+  function voiceMorph(ctx, input, srcFreqs, srcGains, tgtFreqs, tgtGains, srcQ, tgtQ){
+    var node = input;
+    for(var i=0;i<srcFreqs.length;i++){
+      var f = biquad(ctx,'peaking', srcFreqs[i], srcQ||2.4);
+      f.gain.value = srcGains[i];
+      node.connect(f); node = f;
+    }
+    return formantStack(ctx, node, tgtFreqs, tgtGains, tgtQ ? tgtFreqs.map(function(){return tgtQ;}) : undefined);
+  }
+  function breathLayer(ctx, bandType, bandFreq, bandQ, amount){
+    var breath = ctx.createBufferSource(); breath.buffer = makeNoiseBuffer(ctx,20); breath.loop = true;
+    var breathFilter = biquad(ctx,bandType,bandFreq,bandQ||1);
+    var breathGain = ctx.createGain(); breathGain.gain.value = amount;
+    breath.connect(breathFilter); breathFilter.connect(breathGain); breath.start();
+    return breathGain;
+  }
+
   var EFFECTS = [
     { id:'none', name:'بدون افکت', icon:'🎙️', rate:1, detune:0, tail:0.3,
       build:function(ctx,input,I){ return input; } },
@@ -1240,7 +1424,8 @@
     { id:'monster', name:'هیولا', icon:'👹', rate:0.62, detune:-180, tail:0.6,
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass', 900,1); input.connect(lp);
-        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(10*I); lp.connect(ws);
+        var throat = formantStack(ctx, lp, [280,620], [7*I,5*I], [4,3.5]);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(10*I); throat.connect(ws);
         return ws; } },
     { id:'chipmunk', name:'سنجاب', icon:'🐿️', rate:1.65, detune:220, tail:0.3,
       build:function(ctx,input,I){
@@ -1283,7 +1468,9 @@
         return reverbFx(ctx, d, 2.8, 2.5, Math.min(0.9,0.5*I)); } },
     { id:'demon', name:'صدای شیطان', icon:'😈', rate:0.55, detune:-320, tail:3.2,
       build:function(ctx,input,I){
-        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(35*I); input.connect(ws);
+        wobbleDetune(ctx, input, 2.1, 55*I);
+        var rm = ringMod(ctx, input, 3.2*I);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(35*I); rm.connect(ws);
         return reverbFx(ctx, ws, 2.2, 2.2, 0.4); } },
     { id:'glitch', name:'گلیچ رباتیک', icon:'⚡', rate:1, detune:0, tail:1.2,
       build:function(ctx,input,I){
@@ -1308,8 +1495,8 @@
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass',650,1); input.connect(lp);
         var sub = biquad(ctx,'lowshelf',110,0); sub.gain.value=6*I; lp.connect(sub);
-        var rv = reverbFx(ctx, sub, 1.4, 1.6, 0.3*I);
-        return polishChain(ctx, rv, 1.1); } },
+        var echo = delayFx(ctx, sub, 0.42, Math.min(0.5,0.3*I), 0.4);
+        return polishChain(ctx, echo, 1.15); } },
     { id:'eightbit', name:'۸ بیتی', icon:'🕹️', rate:1.05, detune:0, tail:0.3,
       build:function(ctx,input,I){
         var bp = biquad(ctx,'bandpass',1800,2); input.connect(bp);
@@ -1346,9 +1533,14 @@
         return polishChain(ctx, rv, 1.05); } },
     { id:'horror', name:'وحشت', icon:'🎃', rate:0.7, detune:-260, tail:3.6,
       build:function(ctx,input,I){
-        var r = ringMod(ctx, input, 6*I);
-        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(18*I); r.connect(ws);
-        return reverbFx(ctx, ws, 2.6, 2.4, 0.45); } },
+        var fl = flangerFx(ctx, input, 0.12, 9, 0.55, 0.7);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(9*I); fl.connect(ws);
+        var breath = ctx.createBufferSource(); breath.buffer = makeNoiseBuffer(ctx,20); breath.loop = true;
+        var breathFilter = biquad(ctx,'bandpass',700,1.3);
+        var breathGain = ctx.createGain(); breathGain.gain.value = 0.05*I;
+        breath.connect(breathFilter); breathFilter.connect(breathGain); breath.start();
+        var mixed = ctx.createGain(); ws.connect(mixed); breathGain.connect(mixed);
+        return reverbFx(ctx, mixed, 3.0, 2.6, 0.5); } },
     { id:'twin', name:'دوقلوی صدا', icon:SVG_TWIN, rate:1, detune:0, tail:0.5,
       build:function(ctx,input,I){
         var delay = ctx.createDelay(0.06); delay.delayTime.value = 0.018;
@@ -1516,7 +1708,8 @@
     { id:'possessed', name:'روح تسخیرشده', icon:'🕯️', rate:0.68, detune:-220, tail:3.4,
       build:function(ctx,input,I){
         wobbleDetune(ctx, input, 3.2, 60*I);
-        var out = ctx.createGain(); input.connect(out);
+        var wah = autoWahFx(ctx, input, 0.6, 650, 400*I, 5);
+        var out = ctx.createGain(); wah.connect(out);
         [0.014,0.021].forEach(function(t){
           var d = ctx.createDelay(0.05); d.delayTime.value = t;
           var g = ctx.createGain(); g.gain.value = 0.35*I;
@@ -1533,7 +1726,7 @@
           input.connect(d); d.connect(g); g.connect(out);
         });
         return reverbFx(ctx, out, 4.4, 3.4, Math.min(0.85,0.5*I)); } },
-    { id:'hypnotic', name:'هیپنوتیزم', icon:'🌀', rate:0.9, detune:-40, tail:3.0,
+    { id:'hypnotic', name:'هیپنوتیزم', icon:'🔮', rate:0.9, detune:-40, tail:3.0,
       build:function(ctx,input,I){
         wobbleDetune(ctx, input, 1.1, 70*I);
         var d = delayFx(ctx, input, 0.35, 0.55, 0.5);
@@ -1552,12 +1745,17 @@
     { id:'thunder', name:'رعد و برق', icon:'⛈️', rate:0.6, detune:-380, tail:2.6,
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass',500,1.2); input.connect(lp);
-        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(24*I); lp.connect(ws);
-        return reverbFx(ctx, ws, 2.4, 2.0, 0.42); } },
-    { id:'blackhole', name:'سیاه‌چاله', icon:'🕳️', rate:0.4, detune:-600, tail:5.0, speedRamp:true, rampFrom:1, rampTo:0.25,
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(14*I); lp.connect(ws);
+        var rumbleSrc = ctx.createBufferSource(); rumbleSrc.buffer = makeRumbleBuffer(ctx,30,I); rumbleSrc.loop = true;
+        var rumbleGain = ctx.createGain(); rumbleGain.gain.value = 0.5*I;
+        var out = ctx.createGain(); ws.connect(out);
+        rumbleSrc.connect(rumbleGain); rumbleGain.connect(out); rumbleSrc.start();
+        return reverbFx(ctx, out, 2.4, 2.0, 0.42); } },
+    { id:'blackhole', name:'سیاه‌چاله', icon:'🌑', rate:0.4, detune:-600, tail:5.0, speedRamp:true, rampFrom:1, rampTo:0.25,
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass',700,1); input.connect(lp);
-        return reverbFx(ctx, lp, 4.5, 3.8, Math.min(0.9,0.55*I)); } },
+        var gate = gateChop(ctx, lp, 5*I, 0.6);
+        return reverbFx(ctx, gate, 4.5, 3.8, Math.min(0.9,0.55*I)); } },
     { id:'crystal', name:'پژواک کریستالی', icon:'💎', rate:1.05, detune:60, tail:3.4,
       build:function(ctx,input,I){
         var hs = biquad(ctx,'highshelf',3500,0); hs.gain.value = 5*I; input.connect(hs);
@@ -1565,10 +1763,15 @@
         return reverbFx(ctx, d, 2.6, 1.8, Math.min(0.7,0.4*I)); } },
     { id:'earthquake', name:'لرزش زمین', icon:'🌍', rate:0.65, detune:-420, tail:1.6,
       build:function(ctx,input,I){
-        wobbleDetune(ctx, input, 3.2, 50*I);
-        var lp = biquad(ctx,'lowpass',260,1.3); input.connect(lp);
-        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(12*I); lp.connect(ws);
-        return ws; } },
+        var lp = biquad(ctx,'lowpass',280,1.4); input.connect(lp);
+        var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = 7*I;
+        var lfoGain = ctx.createGain(); lfoGain.gain.value = 140*I;
+        lfo.connect(lfoGain); lfoGain.connect(lp.frequency); lfo.start();
+        var rumbleSrc = ctx.createBufferSource(); rumbleSrc.buffer = makeRumbleBuffer(ctx,30,I*1.2); rumbleSrc.loop = true;
+        var rumbleGain = ctx.createGain(); rumbleGain.gain.value = 0.6*I;
+        var out = ctx.createGain(); lp.connect(out);
+        rumbleSrc.connect(rumbleGain); rumbleGain.connect(out); rumbleSrc.start();
+        return out; } },
     { id:'gatecut', name:'برش ریتمیک دی‌جی', icon:'🎚️', rate:1, detune:0, tail:0.3,
       build:function(ctx,input,I){
         var g = ctx.createGain(); g.gain.value = 0;
@@ -1594,72 +1797,94 @@
         input.connect(ls);
         var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(40*I); ls.connect(ws);
         return reverbFx(ctx, ws, 2.2, 1.8, 0.42); } },
-    { id:'boy', name:'صدای پسر بچه', icon:'👦', rate:1.3, detune:190, tail:0.3,
+
+    { id:'boy', name:'صدای پسر بچه', icon:'👦', rate:1.13, detune:95, tail:0.3,
       build:function(ctx,input,I){
-        var hp = biquad(ctx,'highpass',280,0.7); input.connect(hp);
-        wobbleDetune(ctx, hp, 5.2, 6*I);
-        var presence = biquad(ctx,'peaking',2500,1.1); presence.gain.value = 4.5*I; hp.connect(presence);
-        var hs = biquad(ctx,'highshelf',4200,0); hs.gain.value = 2.5*I; presence.connect(hs);
-        var breath = ctx.createBufferSource(); breath.buffer = makeNoiseBuffer(ctx,20); breath.loop = true;
-        var breathFilter = biquad(ctx,'highpass',5000,0.7);
-        var breathGain = ctx.createGain(); breathGain.gain.value = 0.012*I;
-        breath.connect(breathFilter); breathFilter.connect(breathGain);
-        var mixed = ctx.createGain(); hs.connect(mixed); breathGain.connect(mixed); breath.start();
+        /* target: pre-adolescent boy — shorter vocal tract than an adult male, so real formants
+           sit noticeably higher (~F1 980 / F2 1650 / F3 3050) than the average adult male source. */
+        var morph = voiceMorph(ctx, input,
+          [730,1090,2440], [-6.5*I,-6*I,-3.5*I],
+          [980,1650,3050], [6.5*I,7*I,4.5*I], 2.6, 3.4);
+        var hp = biquad(ctx,'highpass',210,0.7); morph.connect(hp);
+        wobbleDetune(ctx, hp, 4.6, 5*I);
+        var hs = biquad(ctx,'highshelf',4600,0); hs.gain.value = 2.5*I; hp.connect(hs);
+        var breathGain = breathLayer(ctx,'highpass',5200,0.7, 0.011*I);
+        var mixed = ctx.createGain(); hs.connect(mixed); breathGain.connect(mixed);
         var comp = ctx.createDynamicsCompressor();
         comp.threshold.value=-16; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.15;
         mixed.connect(comp);
-        return comp; } },
-    { id:'oldman', name:'صدای پیرمرد', icon:'👴', rate:0.84, detune:-160, tail:0.6,
+        return polishChain(ctx, comp, 1.08); } },
+    { id:'oldman', name:'صدای پیرمرد', icon:'👴', rate:0.92, detune:-70, tail:0.6,
       build:function(ctx,input,I){
-        wobbleDetune(ctx, input, 4.3, 9*I);
-        var ls = ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=280; ls.gain.value=3*I; input.connect(ls);
-        var lp = biquad(ctx,'lowpass',2300,0.8); ls.connect(lp);
-        var rasp = biquad(ctx,'peaking',900,1.4); rasp.gain.value = 3*I; lp.connect(rasp);
-        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(4*I); rasp.connect(ws);
-        var t = tremolo(ctx, ws, 5*I, 0.1);
-        var breath = ctx.createBufferSource(); breath.buffer = makeNoiseBuffer(ctx,20); breath.loop = true;
-        var breathFilter = biquad(ctx,'bandpass',1800,1.2);
-        var breathGain = ctx.createGain(); breathGain.gain.value = 0.02*I;
-        breath.connect(breathFilter); breathFilter.connect(breathGain);
-        var mixed = ctx.createGain(); t.connect(mixed); breathGain.connect(mixed); breath.start();
+        /* target: elderly male — vocal-tract length barely changes with age, so formants stay
+           close to adult-male but get darker/murkier; what really sells "old" is heavy jitter
+           (tremor), reduced high-frequency energy, rasp from incomplete vocal-fold closure, and
+           audible breath — layered on top of a gently lowered pitch. */
+        var morph = voiceMorph(ctx, input,
+          [1090,2440], [-3*I,-4*I],
+          [680,1000,2150], [3*I,3.5*I,2.5*I], 2.4, 2.8);
+        var trem1 = wobbleDetune(ctx, morph, 4.1, 11*I);
+        var ls = ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=260; ls.gain.value=3*I; morph.connect(ls);
+        var lp = biquad(ctx,'lowpass',2100,0.8); ls.connect(lp);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(3.5*I); lp.connect(ws);
+        var t = tremolo(ctx, ws, 5.4*I, 0.11);
+        var breathGain = breathLayer(ctx,'bandpass',1700,1.2, 0.024*I);
+        var mixed = ctx.createGain(); t.connect(mixed); breathGain.connect(mixed);
         var comp = ctx.createDynamicsCompressor();
         comp.threshold.value=-18; comp.ratio.value=3.5; comp.attack.value=0.006; comp.release.value=0.2;
         mixed.connect(comp);
-        return comp; } },
-    { id:'baby', name:'صدای نوزاد', icon:'👶', rate:1.8, detune:350, tail:0.3,
+        return polishChain(ctx, comp, 1.05); } },
+    { id:'baby', name:'صدای نوزاد', icon:'👶', rate:1.42, detune:130, tail:0.3,
       build:function(ctx,input,I){
-        wobbleDetune(ctx, input, 4.5, 18*I);
-        var peaking = biquad(ctx,'peaking',3400,1.3); peaking.gain.value = 5*I; input.connect(peaking);
-        var hs = biquad(ctx,'highshelf',5200,0); hs.gain.value = 3*I; peaking.connect(hs);
-        var t = tremolo(ctx, hs, 10*I, 0.2);
+        /* target: infant — the shortest vocal tract of all, so formants sit well above even a
+           young child's (~F1 1150 / F2 1900 / F3 3450), plus a fast, wide pitch wobble (infants'
+           pitch control is unstable) instead of a steady adult-like tone. */
+        var morph = voiceMorph(ctx, input,
+          [730,1090,2440], [-7*I,-7*I,-4*I],
+          [1150,1900,3450], [7*I,7.5*I,5*I], 2.8, 3.6);
+        wobbleDetune(ctx, morph, 5.8, 22*I);
+        var peaking = biquad(ctx,'peaking',3600,1.3); peaking.gain.value = 3.5*I; morph.connect(peaking);
+        var hs = biquad(ctx,'highshelf',5400,0); hs.gain.value = 3*I; peaking.connect(hs);
+        var t = tremolo(ctx, hs, 11*I, 0.18);
         var comp = ctx.createDynamicsCompressor();
         comp.threshold.value=-16; comp.ratio.value=3; comp.attack.value=0.003; comp.release.value=0.12;
         t.connect(comp);
-        return comp; } },
-    { id:'girl', name:'صدای دختر جوان', icon:'👧', rate:1.26, detune:210, tail:0.3,
+        return polishChain(ctx, comp, 1.1); } },
+    { id:'girl', name:'صدای دختر جوان', icon:'👧', rate:1.1, detune:75, tail:0.3,
       build:function(ctx,input,I){
-        var hp = biquad(ctx,'highpass',260,0.6); input.connect(hp);
-        var presence = biquad(ctx,'peaking',2900,1.2); presence.gain.value = 4*I; hp.connect(presence);
-        var hs = biquad(ctx,'highshelf',4400,0); hs.gain.value = 2.5*I; presence.connect(hs);
-        var breath = ctx.createBufferSource(); breath.buffer = makeNoiseBuffer(ctx,20); breath.loop = true;
-        var breathFilter = biquad(ctx,'highpass',5500,0.7);
-        var breathGain = ctx.createGain(); breathGain.gain.value = 0.01*I;
-        breath.connect(breathFilter); breathFilter.connect(breathGain);
-        var mixed = ctx.createGain(); hs.connect(mixed); breathGain.connect(mixed); breath.start();
+        /* target: adult female — a shorter vocal tract than adult male puts real female formants
+           roughly 15-20% higher across the board (~F1 850 / F2 1220 / F3 2810), which is the main
+           acoustic cue that reads as "female voice" — much more so than pitch alone. */
+        var morph = voiceMorph(ctx, input,
+          [730,1090,2440], [-6*I,-5.5*I,-3*I],
+          [850,1220,2810], [5.5*I,6*I,3.5*I], 2.6, 3.2);
+        var hp = biquad(ctx,'highpass',190,0.6); morph.connect(hp);
+        var hs = biquad(ctx,'highshelf',4400,0); hs.gain.value = 2.2*I; hp.connect(hs);
+        var breathGain = breathLayer(ctx,'highpass',5500,0.7, 0.009*I);
+        var mixed = ctx.createGain(); hs.connect(mixed); breathGain.connect(mixed);
         var comp = ctx.createDynamicsCompressor();
         comp.threshold.value=-16; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.15;
         mixed.connect(comp);
-        return comp; } },
-    { id:'oldwoman', name:'صدای پیرزن', icon:'👵', rate:1.02, detune:-50, tail:0.5,
+        return polishChain(ctx, comp, 1.06); } },
+    { id:'oldwoman', name:'صدای پیرزن', icon:'👵', rate:1.0, detune:-15, tail:0.5,
       build:function(ctx,input,I){
-        wobbleDetune(ctx, input, 5.6, 14*I);
-        var bp = biquad(ctx,'bandpass',1700,1.1); input.connect(bp);
-        var rasp = biquad(ctx,'peaking',2400,1.3); rasp.gain.value = 2.5*I; bp.connect(rasp);
-        var t = tremolo(ctx, rasp, 4.5*I, 0.14);
+        /* target: elderly female — starts from the same adult-female formant target as above
+           (vocal tract shape doesn't reverse with age), then adds the same tremor/breathiness/
+           reduced-brightness aging cues used for the elderly-male voice, scaled more gently. */
+        var morph = voiceMorph(ctx, input,
+          [730,1090,2440], [-5*I,-5*I,-3*I],
+          [820,1180,2650], [5*I,5.2*I,2.8*I], 2.6, 3.0);
+        wobbleDetune(ctx, morph, 5.1, 13*I);
+        var bp = biquad(ctx,'bandpass',1750,1.1); morph.connect(bp);
+        var rasp = biquad(ctx,'peaking',2500,1.3); rasp.gain.value = 2*I; bp.connect(rasp);
+        var hs = biquad(ctx,'highshelf',5000,0); hs.gain.value = -1.5*I; rasp.connect(hs);
+        var t = tremolo(ctx, hs, 4.7*I, 0.13);
+        var breathGain = breathLayer(ctx,'bandpass',2200,1.1, 0.017*I);
+        var mixed = ctx.createGain(); t.connect(mixed); breathGain.connect(mixed);
         var comp = ctx.createDynamicsCompressor();
         comp.threshold.value=-17; comp.ratio.value=3; comp.attack.value=0.005; comp.release.value=0.18;
-        t.connect(comp);
-        return comp; } },
+        mixed.connect(comp);
+        return polishChain(ctx, comp, 1.05); } },
     { id:'newsanchor', name:'مجری اخبار حرفه‌ای', icon:'📰', rate:1, detune:0, tail:0.3,
       build:function(ctx,input,I){
         var bp = biquad(ctx,'bandpass',1500,0.7); input.connect(bp);
@@ -1736,15 +1961,15 @@
         ping.connect(pingEnv); pingEnv.connect(out);
         ping.start(); lfo.start();
         return out; } },
-    { id:'teleporter', name:'تله‌پورت فضایی', icon:'🌀', rate:1, detune:0, tail:0.8, speedRamp:true, rampFrom:0.55, rampTo:2.3,
+    { id:'teleporter', name:'تله‌پورت فضایی', icon:'🛸', rate:1, detune:0, tail:0.8, speedRamp:true, rampFrom:0.55, rampTo:2.3,
       build:function(ctx,input,I){
         var r = ringMod(ctx, input, 30*I);
         var bp = biquad(ctx,'bandpass',1600,1.5); r.connect(bp);
         return bp; } },
-    { id:'wolfhowl', name:'زوزه گرگ', icon:'🐺', rate:1, detune:0, tail:2.2, speedRamp:true, rampFrom:1, rampTo:1.6,
+    { id:'wolfhowl', name:'زوزه گرگ', icon:'🌕', rate:1, detune:0, tail:2.2, speedRamp:true, rampFrom:1, rampTo:1.6,
       build:function(ctx,input,I){
-        var bp = biquad(ctx,'bandpass',900,1.6); input.connect(bp);
-        return reverbFx(ctx, bp, 2.4, 2.0, Math.min(0.6,0.35*I)); } },
+        var wah = autoWahFx(ctx, input, 0.35, 1000, 700*I, 4);
+        return reverbFx(ctx, wah, 2.4, 2.0, Math.min(0.6,0.35*I)); } },
     { id:'campfire', name:'قصه‌گوی کنار آتش', icon:'🔥', rate:0.95, detune:-20, tail:1.0,
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass',3200,0.7); input.connect(lp);
@@ -1797,7 +2022,7 @@
         comp.threshold.value=-20; comp.ratio.value=2.5; comp.attack.value=0.004; comp.release.value=0.15;
         air.connect(comp);
         return comp; } },
-    { id:'bassboost', name:'باس‌بوستر قدرتمند', icon:'🔊', rate:1, detune:0, tail:0.2,
+    { id:'bassboost', name:'باس‌بوستر قدرتمند', icon:'🔈', rate:1, detune:0, tail:0.2,
       build:function(ctx,input,I){
         var ls = ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=180; ls.gain.value=10*I; input.connect(ls);
         var comp = ctx.createDynamicsCompressor();
@@ -1839,7 +2064,8 @@
     { id:'growl', name:'غرش هیولایی خشن', icon:'🐺', rate:0.55, detune:-380, tail:0.6,
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass',700,1.1); input.connect(lp);
-        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(28*I); lp.connect(ws);
+        var throat = formantStack(ctx, lp, [180,900], [9*I,4*I], [5,2.5]);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(28*I); throat.connect(ws);
         return ringMod(ctx, ws, 14*I); } },
     { id:'chibi', name:'صدای چیبی کیوت', icon:'🐥', rate:1.55, detune:280, tail:0.3,
       build:function(ctx,input,I){
@@ -1847,7 +2073,7 @@
         var peaking = biquad(ctx,'peaking',3800,1.3); peaking.gain.value=5*I; hp.connect(peaking);
         var hs = biquad(ctx,'highshelf',6000,0); hs.gain.value=3*I; peaking.connect(hs);
         return hs; } },
-    { id:'walkietalkie', name:'بی‌سیم واکی‌تاکی', icon:'📻', rate:1, detune:0, tail:0.3,
+    { id:'walkietalkie', name:'بی‌سیم واکی‌تاکی', icon:'📟', rate:1, detune:0, tail:0.3,
       build:function(ctx,input,I){
         var bp = biquad(ctx,'bandpass',1600,3.5); input.connect(bp);
         var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(9*I); bp.connect(ws);
@@ -1862,12 +2088,12 @@
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass',5000,0.7); input.connect(lp);
         return reverbFx(ctx, lp, 4.2, 3.2, Math.min(0.75,0.5*I)); } },
-    { id:'glassbell', name:'صدای بلورین زنگوله‌ای', icon:'🔔', rate:1.15, detune:100, tail:2.0,
+    { id:'glassbell', name:'صدای بلورین زنگوله‌ای', icon:'🎐', rate:1.15, detune:100, tail:2.0,
       build:function(ctx,input,I){
         var r = ringMod(ctx, input, 220*I);
         var hp = biquad(ctx,'highpass',800,0.8); r.connect(hp);
         return reverbFx(ctx, hp, 1.8, 2.0, Math.min(0.6,0.35*I)); } },
-    { id:'timewarp', name:'اعوجاج زمان', icon:'🌀', rate:1, detune:0, tail:1.5,
+    { id:'timewarp', name:'اعوجاج زمان', icon:'⏳', rate:1, detune:0, tail:1.5,
       build:function(ctx,input,I){
         wobbleDetune(ctx, input, 1.1, 140*I);
         return delayFx(ctx, input, 0.09, 0.5, 0.4); } },
@@ -1892,8 +2118,15 @@
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass',900,1.2); input.connect(lp);
         var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(20*I); lp.connect(ws);
-        var rm = ringMod(ctx, ws, 9*I);
-        return reverbFx(ctx, rm, 1.6, 2.2, Math.min(0.6,0.4*I)); } },
+        var crackle = ctx.createBufferSource(); crackle.buffer = makeCrackleBuffer(ctx,20,1.4*I); crackle.loop = true;
+        var crackleGain = ctx.createGain(); crackleGain.gain.value = 0.5;
+        var hiss = ctx.createBufferSource(); hiss.buffer = makeNoiseBuffer(ctx,20); hiss.loop = true;
+        var hissFilter = biquad(ctx,'highpass',5000,0.7);
+        var hissGain = ctx.createGain(); hissGain.gain.value = 0.02*I;
+        var mixed = ctx.createGain(); ws.connect(mixed);
+        crackle.connect(crackleGain); crackleGain.connect(mixed); crackle.start();
+        hiss.connect(hissFilter); hissFilter.connect(hissGain); hissGain.connect(mixed); hiss.start();
+        return reverbFx(ctx, mixed, 1.6, 2.2, Math.min(0.6,0.4*I)); } },
     { id:'chorusfx', name:'کروس گروهی نرم', icon:'🎶', rate:1, detune:0, tail:0.5,
       build:function(ctx,input,I){
         var d1 = ctx.createDelay(0.05); d1.delayTime.value=0.018;
@@ -1907,7 +2140,7 @@
         input.connect(d1); var g1 = ctx.createGain(); g1.gain.value=0.55*I; d1.connect(g1); g1.connect(out);
         input.connect(d2); var g2 = ctx.createGain(); g2.gain.value=0.5*I; d2.connect(g2); g2.connect(out);
         return out; } },
-    { id:'telephoneAI', name:'دستیار هوشمند تلفنی', icon:'🤖', rate:1.02, detune:10, tail:0.3,
+    { id:'telephoneAI', name:'دستیار هوشمند تلفنی', icon:'📱', rate:1.02, detune:10, tail:0.3,
       build:function(ctx,input,I){
         var bp = biquad(ctx,'bandpass',1900,2.4); input.connect(bp);
         var hs = biquad(ctx,'highshelf',5000,0); hs.gain.value=3*I; bp.connect(hs);
@@ -1921,7 +2154,7 @@
         var rm = ringMod(ctx, hp, 60*I);
         var hs = biquad(ctx,'highshelf',6000,0); hs.gain.value=4*I; rm.connect(hs);
         return hs; } },
-    { id:'stadium', name:'اعلامیه استادیوم بزرگ', icon:'📯', rate:1, detune:0, tail:2.4,
+    { id:'stadium', name:'اعلامیه استادیوم بزرگ', icon:'🎪', rate:1, detune:0, tail:2.4,
       build:function(ctx,input,I){
         var bp = biquad(ctx,'bandpass',1400,1.4); input.connect(bp);
         var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(6*I); bp.connect(ws);
@@ -1936,8 +2169,8 @@
       build:function(ctx,input,I){
         var lp = biquad(ctx,'lowpass',500,1.3); input.connect(lp);
         var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(24*I); lp.connect(ws);
-        var rm = ringMod(ctx, ws, 5*I);
-        var rv = reverbFx(ctx, rm, 2.4, 2.6, Math.min(0.7,0.5*I));
+        var fl = flangerFx(ctx, ws, 0.18, 14, 0.5, 0.65);
+        var rv = reverbFx(ctx, fl, 2.4, 2.6, Math.min(0.7,0.5*I));
         return polishChain(ctx, rv, 1.15); } },
     { id:'jazzclub', name:'صدای گرم کلوپ جاز', icon:'🎷', rate:0.97, detune:-15, tail:1.6,
       build:function(ctx,input,I){
@@ -1972,12 +2205,141 @@
         var bp = biquad(ctx,'bandpass',2000,1.4); r.connect(bp);
         var ws = ctx.createWaveShaper(); ws.curve = makeBitcrushCurve(Math.max(5,11/I)); bp.connect(ws);
         return polishChain(ctx, ws, 1.2); } },
-    { id:'timeportal', name:'گذرگاه زمانی پیچیده', icon:'🌀', rate:1, detune:0, tail:2.0, speedRamp:true, rampFrom:0.5, rampTo:1.8,
+    { id:'timeportal', name:'گذرگاه زمانی پیچیده', icon:'🕰️', rate:1, detune:0, tail:2.0, speedRamp:true, rampFrom:0.5, rampTo:1.8,
       build:function(ctx,input,I){
         wobbleDetune(ctx, input, 2.2, 90*I);
         var d = delayFx(ctx, input, 0.1, 0.55, 0.42);
         var rv = reverbFx(ctx, d, 1.8, 2.2, Math.min(0.6,0.4*I));
-        return polishChain(ctx, rv, 1.1); } }
+        return polishChain(ctx, rv, 1.1); } },
+    /* ---------------- New: fifth wave — built on flanger / auto-wah / hard-gate / formant-stack
+       techniques not used anywhere above, so each is a genuinely distinct sonic signature
+       rather than another lowpass+distortion or ringMod+bandpass combo. ---------------- */
+    { id:'flangerjet', name:'پرواز جت فلانجری', icon:'🌪️', rate:1, detune:0, tail:1.0, speedRamp:true, rampFrom:0.85, rampTo:1.25,
+      build:function(ctx,input,I){
+        var fl = flangerFx(ctx, input, 0.6*I, 12, 0.65, 0.75);
+        var hs = biquad(ctx,'highshelf',3500,0); hs.gain.value = 2*I; fl.connect(hs);
+        return polishChain(ctx, hs, 1.1); } },
+    { id:'autowahtalk', name:'توک‌باکس فانکی', icon:'🗣️', rate:1, detune:0, tail:0.4,
+      build:function(ctx,input,I){
+        var wah = autoWahFx(ctx, input, 4.5*I, 900, 850*I, 6);
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value=-18; comp.ratio.value=3.5; comp.attack.value=0.004; comp.release.value=0.12;
+        wah.connect(comp);
+        return polishChain(ctx, comp, 1.1); } },
+    { id:'stutterglitch', name:'استاتر گلیچی ریتمیک', icon:'🔂', rate:1, detune:0, tail:0.4,
+      build:function(ctx,input,I){
+        var gate = gateChop(ctx, input, 10*I, 0.85);
+        var ws = ctx.createWaveShaper(); ws.curve = makeBitcrushCurve(Math.max(4,8/I)); gate.connect(ws);
+        return delayFx(ctx, ws, 0.06, Math.min(0.5,0.3*I), 0.3); } },
+    { id:'bubbleocean', name:'حباب اقیانوس رویایی', icon:'🫧', rate:0.94, detune:-30, tail:1.4,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',1100,0.9); input.connect(lp);
+        var fl = flangerFx(ctx, lp, 0.9*I, 8, 0.5, 0.55);
+        return delayFx(ctx, fl, 0.14, Math.min(0.5,0.3*I), 0.35); } },
+    { id:'sirenalarm', name:'آژیر هشدار فضایی', icon:'🚨', rate:1, detune:0, tail:0.5,
+      build:function(ctx,input,I){
+        var bp = biquad(ctx,'bandpass',1400,4); input.connect(bp);
+        var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = 0.7*I;
+        var lfoGain = ctx.createGain(); lfoGain.gain.value = 900*I;
+        lfo.connect(lfoGain); lfoGain.connect(bp.frequency); lfo.start();
+        return polishChain(ctx, bp, 1.15); } },
+    { id:'bullfrog', name:'قورباغه غول‌پیکر', icon:'🐸', rate:0.7, detune:-260, tail:0.4,
+      build:function(ctx,input,I){
+        var lp = biquad(ctx,'lowpass',700,1); input.connect(lp);
+        var throat = formantStack(ctx, lp, [150,500], [10*I,5*I], [6,3]);
+        var gate = gateChop(ctx, throat, 3.2, 0.35*I);
+        return polishChain(ctx, gate, 1.2); } },
+
+    /* ---------------- New: a fourth wave built on genuinely different DSP mechanisms
+       (envelope-follower dynamics, comb resonance, sub-octave synthesis, multiband splitting)
+       instead of recombining the distortion/bandpass chains used above — so these feel
+       structurally distinct, not just re-skinned. ---------------- */
+    { id:'voicetrack', name:'فیلتر زنده (دنبال‌کننده صدا)', icon:'📈', rate:1, detune:0, tail:0.4,
+      build:function(ctx,input,I){
+        var env = envelopeFollower(ctx, input, 14);
+        var envScale = ctx.createGain(); envScale.gain.value = 1600*I; env.connect(envScale);
+        var filt = ctx.createBiquadFilter(); filt.type='bandpass'; filt.frequency.value = 420; filt.Q.value = 5.5;
+        input.connect(filt); envScale.connect(filt.frequency);
+        var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(3*I); filt.connect(ws);
+        return polishChain(ctx, ws, 1.1); } },
+    { id:'suboctave', name:'باس زیرصدا (اکتاو پایین)', icon:'🔊', rate:0.94, detune:-40, tail:0.5,
+      build:function(ctx,input,I){
+        var sub = subOctaveGenerator(ctx, input, 1.3*I);
+        var ls = ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=170; ls.gain.value=6*I; sub.connect(ls);
+        return polishChain(ctx, ls, 1.1); } },
+    { id:'combmetal', name:'شانه فلزی رزوناتور', icon:'🔩', rate:1, detune:0, tail:0.6,
+      build:function(ctx,input,I){
+        var c1 = combFilter(ctx, input, 2.1, Math.min(0.85,0.4*I), 0.6);
+        var c2 = combFilter(ctx, c1, 4.6, Math.min(0.7,0.3*I), 0.5);
+        var hp = biquad(ctx,'highpass',180,0.7); c2.connect(hp);
+        return polishChain(ctx, hp, 1.05); } },
+    { id:'tribandcrush', name:'خردکن سه‌باندی', icon:'🎛️', rate:1, detune:0, tail:0.4,
+      build:function(ctx,input,I){
+        var bands = threeBandSplit(ctx, input);
+        var wsLow = ctx.createWaveShaper(); wsLow.curve = makeDistortionCurve(9*I); bands.low.connect(wsLow);
+        var wsMid = ctx.createWaveShaper(); wsMid.curve = makeBitcrushCurve(Math.max(3,8/I)); bands.mid.connect(wsMid);
+        var wsHigh = ctx.createWaveShaper(); wsHigh.curve = makeDistortionCurve(2*I); bands.high.connect(wsHigh);
+        var gLow = ctx.createGain(); gLow.gain.value=0.9; var gMid = ctx.createGain(); gMid.gain.value=0.8; var gHigh = ctx.createGain(); gHigh.gain.value=0.55;
+        wsLow.connect(gLow); wsMid.connect(gMid); wsHigh.connect(gHigh);
+        var sum = ctx.createGain(); gLow.connect(sum); gMid.connect(sum); gHigh.connect(sum);
+        return polishChain(ctx, sum, 1.15); } },
+
+    /* ---------------- New: a fifth wave — phaser (allpass cascade), sidechain pumping,
+       and a live vowel-morphing formant sweep. None of these mechanisms exist above. ---------------- */
+    { id:'phaserdream', name:'فیزر رویایی گردان', icon:'🌀', rate:1, detune:0, tail:0.8,
+      build:function(ctx,input,I){
+        /* A true phaser: cascade of all-pass filters whose center frequency is swept together by
+           one LFO, then blended with the dry signal — the phase cancellation sweeping through the
+           spectrum is a different mechanism from the short-delay flanger used elsewhere. */
+        var stages = 4, node = input, aps = [];
+        for(var i=0;i<stages;i++){
+          var ap = ctx.createBiquadFilter(); ap.type='allpass'; ap.frequency.value = 500+i*220; ap.Q.value = 0.7;
+          node.connect(ap); aps.push(ap); node = ap;
+        }
+        var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = 0.35;
+        var lfoGain = ctx.createGain(); lfoGain.gain.value = 900*I;
+        lfo.connect(lfoGain);
+        aps.forEach(function(ap){ lfoGain.connect(ap.frequency); }); lfo.start();
+        var wet = ctx.createGain(); wet.gain.value = 0.6; node.connect(wet);
+        var dry = ctx.createGain(); dry.gain.value = 0.55; input.connect(dry);
+        var out = ctx.createGain(); wet.connect(out); dry.connect(out);
+        return polishChain(ctx, out, 1.1); } },
+    { id:'sidechainpump', name:'پمپ ریتمیک زنده', icon:'🫀', rate:1, detune:0, tail:0.3,
+      build:function(ctx,input,I){
+        /* EDM-style sidechain "pump": gain ducked on a fast repeating cycle with a steep-attack /
+           slow-release exponential shape, giving a rhythmic breathing pulse to the voice rather
+           than the smooth sine wobble tremolo() produces. */
+        var g = ctx.createGain(); input.connect(g);
+        var rate = 2.6, ctxNow = ctx.currentTime, dur = 60;
+        var cycles = Math.ceil(dur*rate);
+        g.gain.setValueAtTime(1, ctxNow);
+        for(var c=0;c<cycles;c++){
+          var t0 = ctxNow + c/rate;
+          g.gain.setValueAtTime(1, t0);
+          g.gain.linearRampToValueAtTime(Math.max(0.08,1-0.75*I), t0+0.02);
+          g.gain.exponentialRampToValueAtTime(0.98, t0 + (1/rate)*0.85);
+        }
+        var hs = biquad(ctx,'highshelf',3500,0); hs.gain.value = 1.5*I; g.connect(hs);
+        return polishChain(ctx, hs, 1.08); } },
+    { id:'vowelmorph', name:'موجود واکه‌گردان', icon:'👄', rate:1, detune:0, tail:0.4,
+      build:function(ctx,input,I){
+        /* Instead of static formant peaks, three peaking filters are each swept by their own slow
+           LFO between different frequencies — like the vocal tract continuously reshaping between
+           vowels on its own, giving an alien "talking creature" quality distinct from any fixed
+           formant/pitch effect above. */
+        var f1 = biquad(ctx,'peaking',700,3); f1.gain.value = 7*I;
+        var f2 = biquad(ctx,'peaking',1400,3); f2.gain.value = 6*I;
+        var f3 = biquad(ctx,'peaking',2600,2.6); f3.gain.value = 4*I;
+        input.connect(f1); f1.connect(f2); f2.connect(f3);
+        function sweep(param, base, range, hz){
+          var lfo = ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value = hz;
+          var g = ctx.createGain(); g.gain.value = range; lfo.connect(g); g.connect(param);
+          param.value = base; lfo.start();
+        }
+        sweep(f1.frequency, 700, 260, 0.6);
+        sweep(f2.frequency, 1400, 420, 0.44);
+        sweep(f3.frequency, 2600, 500, 0.33);
+        return polishChain(ctx, f3, 1.1); } }
   ];
 
   var EFFECTS_MAP = {};
@@ -2051,6 +2413,19 @@
   CATEGORY_MAP.spaceradio = 'دیجیتال و ربات';
   CATEGORY_MAP.toyrobot = 'بامزه و شاد';
   CATEGORY_MAP.timeportal = 'دیجیتال و ربات';
+  CATEGORY_MAP.flangerjet = 'محیط و فضا';
+  CATEGORY_MAP.autowahtalk = 'دیجیتال و ربات';
+  CATEGORY_MAP.stutterglitch = 'دیجیتال و ربات';
+  CATEGORY_MAP.bubbleocean = 'محیط و فضا';
+  CATEGORY_MAP.sirenalarm = 'دیجیتال و ربات';
+  CATEGORY_MAP.bullfrog = 'فانتزی و کاراکتر';
+  CATEGORY_MAP.voicetrack = 'دیجیتال و ربات';
+  CATEGORY_MAP.suboctave = 'ترسناک';
+  CATEGORY_MAP.combmetal = 'دیجیتال و ربات';
+  CATEGORY_MAP.tribandcrush = 'دیجیتال و ربات';
+  CATEGORY_MAP.phaserdream = 'محیط و فضا';
+  CATEGORY_MAP.sidechainpump = 'دیجیتال و ربات';
+  CATEGORY_MAP.vowelmorph = 'فانتزی و کاراکتر';
   function categoryOf(id){ return CATEGORY_MAP[id] || 'بامزه و شاد'; }
 
   /* ---------------- State ---------------- */
@@ -2190,7 +2565,7 @@
     var btn = document.createElement('button');
     btn.className = 'avatar-opt' + (a.id===selectedAvatar ? ' active' : '');
     btn.dataset.avatar = a.id;
-    btn.innerHTML = '<div class="mini-wrap"><div class="avatar-face mini avatar-'+a.id+'"><div class="shade-key"></div><div class="shade-spec"></div><div class="shade-ao"></div><div class="shade-rim"></div><div class="shine"></div></div></div><span>'+a.label+'</span>';
+    btn.innerHTML = '<div class="mini-wrap"><div class="avatar-face mini avatar-'+a.id+'"><div class="shade-key"></div><div class="shade-spec"></div><div class="shade-spec2"></div><div class="shade-ao"></div><div class="shade-rim"></div><div class="shine"></div></div></div><span>'+a.label+'</span>';
     btn.addEventListener('click', function(){
       vibrate(8);
       selectedAvatar = a.id;
@@ -2630,6 +3005,29 @@
     fxCatSections.push(section);
   });
   renderTriedCount();
+
+  /* ---------------- New feature: quick category-jump chips ---------------- */
+  var moodChipsEl = document.getElementById('moodChips');
+  fxCatSections.forEach(function(section, idx){
+    var titleEl = section.querySelector('.fx-cat-title');
+    var catName = titleEl ? titleEl.textContent : '';
+    var chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'mood-chip';
+    chip.textContent = catName;
+    chip.addEventListener('click', function(){
+      vibrate(8);
+      fxSearch.value = '';
+      showFavOnly = false;
+      fxFavToggle.classList.remove('on');
+      applyFxFilter();
+      section.scrollIntoView({behavior:'smooth', block:'start'});
+      section.classList.remove('flash'); void section.offsetWidth; section.classList.add('flash');
+      Array.prototype.forEach.call(moodChipsEl.querySelectorAll('.mood-chip'), function(c){ c.classList.remove('flash'); });
+      chip.classList.add('flash');
+    });
+    moodChipsEl.appendChild(chip);
+  });
 
   /* ---------------- Quick-access strip for the requested family/age voices ---------------- */
   var QUICK_VOICE_IDS = ['boy','girl','baby','oldman','oldwoman'];
@@ -3159,6 +3557,7 @@
   var openTarget = 0.18, wideTarget = 1.0;
 
   player.addEventListener('play', function(){
+    isTalkingNow = true;
     setupPlaybackAnalyser();
     avatarFace.classList.add('talking');
     avatarFace.classList.add('reacting');
@@ -3222,7 +3621,7 @@
       browCur += (targetBrow - browCur) * 0.15;
       ring2Rot += 0.6 + rms*1.4;
 
-      avatarMouth.style.transform = 'translateX(-50%) scaleY('+Math.max(0.05,mouthScaleCur).toFixed(2)+') scaleX('+mouthWideCur.toFixed(2)+')';
+      avatarMouth.style.transform = 'translateX(-50%) translateZ(5px) scaleY('+Math.max(0.05,mouthScaleCur).toFixed(2)+') scaleX('+mouthWideCur.toFixed(2)+')';
       var rotX = (-bobCur*1.3).toFixed(1), rotY = (sway*2.4).toFixed(1);
       avatarFace.style.transform = 'translateY('+bobCur.toFixed(1)+'px) translateX('+sway.toFixed(1)+'px) rotateX('+rotX+'deg) rotateY('+rotY+'deg) rotate('+tiltCur.toFixed(1)+'deg) scale('+(1+rms*0.06).toFixed(3)+')';
       /* Slide the specular highlight opposite the head's rotation, like a fixed studio
@@ -3237,8 +3636,8 @@
       avatarRing.style.borderColor = 'rgba(236,72,153,'+Math.min(0.7,0.25+rms).toFixed(2)+')';
       avatarRing2.style.transform = 'scale('+(1+rms*0.2).toFixed(2)+') rotate('+ring2Rot.toFixed(0)+'deg)';
       avatarShadow.style.transform = 'translateX(-50%) scaleX('+(1-Math.min(0.3,rms*0.7)).toFixed(2)+')';
-      browL.style.transform = 'translateY(-'+(browCur*3.4).toFixed(1)+'px) rotate(-'+(6+browCur*4).toFixed(1)+'deg)';
-      browR.style.transform = 'translateY(-'+(browCur*3.4).toFixed(1)+'px) rotate('+(6+browCur*4).toFixed(1)+'deg)';
+      browL.style.transform = 'translateZ(6px) translateY(-'+(browCur*3.4).toFixed(1)+'px) rotate(-'+(6+browCur*4).toFixed(1)+'deg)';
+      browR.style.transform = 'translateZ(6px) translateY(-'+(browCur*3.4).toFixed(1)+'px) rotate('+(6+browCur*4).toFixed(1)+'deg)';
       var cheekOp = Math.min(0.6, Math.max(0, (rms-0.05)*2.2)).toFixed(2);
       cheekL.style.opacity = cheekOp; cheekR.style.opacity = cheekOp;
 
@@ -3261,12 +3660,13 @@
     loop();
   });
   function stopAvatarAnim(){
+    isTalkingNow = false;
     if(playbackAnimId) cancelAnimationFrame(playbackAnimId);
     avatarFace.classList.remove('talking');
     avatarFace.style.transform = '';
     avatarFace.style.removeProperty('--hl-x');
     avatarFace.style.removeProperty('--hl-y');
-    avatarMouth.style.transform = 'translateX(-50%) scaleY(1) scaleX(1)';
+    avatarMouth.style.transform = 'translateX(-50%) translateZ(5px) scaleY(1) scaleX(1)';
     avatarGlow.style.opacity = '';
     avatarGlow.style.transform = '';
     avatarGlow2.style.opacity = '';
@@ -3287,12 +3687,71 @@
   player.addEventListener('pause', stopAvatarAnim);
   player.addEventListener('ended', stopAvatarAnim);
 
+  /* ---------------- New feature: 3D studio light that tracks the phone's tilt (gyroscope), so the
+     specular hotspot and rim light glide across the avatar's surface exactly like a real render viewport
+     where you orbit the light by tilting the object — a strong "this is an actual 3D-lit model, not a
+     flat sticker" cue that works even before the avatar starts talking. Off by default (opt-in via the
+     button) since iOS requires an explicit permission prompt and always-on motion tracking can feel invasive. ---------------- */
+  var isTalkingNow = false;
+  var tiltLightBtn = document.getElementById('tiltLightBtn');
+  var tiltLightActive = false;
+  var tiltHlX = 29, tiltHlY = 21;
+  function handleTiltOrientation(e){
+    if(isTalkingNow) return; /* the talking loop owns --hl-x/--hl-y while playing */
+    var beta = e.beta || 0;   /* front-back tilt, -180..180 */
+    var gamma = e.gamma || 0; /* left-right tilt, -90..90 */
+    var gx = Math.max(-24, Math.min(24, gamma));
+    var by = Math.max(-24, Math.min(24, beta - 35)); /* offset ~35° for the natural angle people hold a phone at */
+    tiltHlX += ((29 + gx * 0.85) - tiltHlX) * 0.18;
+    tiltHlY += ((21 + by * 0.55) - tiltHlY) * 0.18;
+    avatarFace.style.setProperty('--hl-x', tiltHlX.toFixed(1) + '%');
+    avatarFace.style.setProperty('--hl-y', tiltHlY.toFixed(1) + '%');
+    if(avatarGlow2) avatarGlow2.style.transform = 'rotate(' + (gx * 1.4).toFixed(1) + 'deg)';
+  }
+  function enableTiltLight(){
+    tiltLightActive = true;
+    tiltLightBtn.classList.add('on');
+    tiltLightBtn.style.opacity = 1;
+    tiltLightBtn.textContent = '🔦 نور سه‌بعدی روشنه';
+    window.addEventListener('deviceorientation', handleTiltOrientation);
+  }
+  function disableTiltLight(){
+    tiltLightActive = false;
+    tiltLightBtn.classList.remove('on');
+    tiltLightBtn.style.opacity = .75;
+    tiltLightBtn.textContent = '🔦 نور سه‌بعدی با گوشی';
+    window.removeEventListener('deviceorientation', handleTiltOrientation);
+    if(!isTalkingNow){ avatarFace.style.removeProperty('--hl-x'); avatarFace.style.removeProperty('--hl-y'); if(avatarGlow2) avatarGlow2.style.transform=''; }
+  }
+  tiltLightBtn.addEventListener('click', function(){
+    vibrate(10);
+    if(tiltLightActive){ disableTiltLight(); return; }
+    if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
+      DeviceOrientationEvent.requestPermission().then(function(state){
+        if(state === 'granted') enableTiltLight();
+        else statusMsg.textContent = 'برای این قابلیت باید دسترسی به سنسور حرکت رو اجازه بدی 🙏';
+      }).catch(function(){ statusMsg.textContent = 'این قابلیت روی این دستگاه در دسترس نیست.'; });
+    } else if('DeviceOrientationEvent' in window){
+      enableTiltLight();
+    } else {
+      statusMsg.textContent = 'دستگاهت سنسور تشخیص شیب نداره 😔';
+    }
+  });
+
   /* ---------------- Idle blinking + occasional glance, always running for a lifelike feel ---------------- */
   function scheduleBlink(){
     var delay = 1800 + Math.random()*3200;
     setTimeout(function(){
       eyeL.classList.add('blink'); eyeR.classList.add('blink');
       setTimeout(function(){ eyeL.classList.remove('blink'); eyeR.classList.remove('blink'); }, 320);
+      /* Real people occasionally double-blink in quick succession — a single steady
+         blink rate reads as robotic, so ~22% of the time we fire a quick second blink. */
+      if (Math.random() < 0.22){
+        setTimeout(function(){
+          eyeL.classList.add('blink'); eyeR.classList.add('blink');
+          setTimeout(function(){ eyeL.classList.remove('blink'); eyeR.classList.remove('blink'); }, 260);
+        }, 420);
+      }
       scheduleBlink();
     }, delay);
   }
