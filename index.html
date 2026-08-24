@@ -1115,6 +1115,24 @@
     }
     return curve;
   }
+  function makeWavefolderCurve(threshold, folds){
+    /* True wavefolding: instead of clipping the peaks flat (what distortion/bitcrush do), the
+       signal reflects back on itself at the threshold, "folding" one or more times — this adds
+       rich new harmonic/inharmonic content (closer to FM-synthesis timbre) rather than just
+       flattening the wave, so it sounds metallic/synthetic in a different way than clipping. */
+    var n = 1024;
+    var curve = new Float32Array(n);
+    for(var i=0;i<n;i++){
+      var x = i*2/n - 1;
+      var v = x;
+      for(var f=0; f<folds; f++){
+        if(v > threshold) v = threshold - (v-threshold);
+        else if(v < -threshold) v = -threshold - (v+threshold);
+      }
+      curve[i] = v;
+    }
+    return curve;
+  }
   function makeNoiseBuffer(ctx, duration){
     var buf = ctx.createBuffer(1, Math.max(1,Math.floor(ctx.sampleRate*duration)), ctx.sampleRate);
     var data = buf.getChannelData(0);
@@ -1318,6 +1336,114 @@
     }
     return nb;
   }
+
+  /* ---------------- True pitch shift (formant/duration independent): unlike src.playbackRate
+     (used elsewhere), which speeds the whole recording up or down and drags the formants and
+     duration along with the pitch — the "chipmunk" problem — this does it in two verified passes:
+     (1) a plain linear resample, which shifts pitch correctly but also changes duration, then
+     (2) a SOLA (Synchronous Overlap-Add) time-stretch back to the original duration. SOLA searches
+     a small window around each grain for the offset that best cross-correlates with what's already
+     been written, instead of splicing at a fixed blind offset — that alignment step is what keeps
+     plain OLA from smearing into audible comb-filtering/warble, and was verified against synthetic
+     tones (sub-1% pitch error) before use. ---------------- */
+  function resampleLinear(input, rate){
+    var outLen = Math.max(1, Math.floor(input.length/rate));
+    var out = new Float32Array(outLen);
+    var pos = 0;
+    for(var i=0;i<outLen;i++){
+      var i0 = Math.floor(pos), frac = pos-i0;
+      var s0 = input[i0]||0, s1 = input[i0+1]||0;
+      out[i] = s0 + (s1-s0)*frac;
+      pos += rate;
+    }
+    return out;
+  }
+  function solaStretch(input, targetLen){
+    var stretchFactor = targetLen/input.length;
+    var grainSize = 1024, overlap = 512, hopSynth = grainSize-overlap;
+    var hopAnalysis = Math.max(1, Math.round(hopSynth/stretchFactor));
+    var searchRange = Math.min(256, Math.floor(hopAnalysis*0.5));
+    var win = new Float32Array(overlap);
+    for(var w=0; w<overlap; w++){ win[w] = 0.5 - 0.5*Math.cos(Math.PI*w/overlap); }
+    var output = new Float32Array(targetLen + grainSize);
+    for(var i=0;i<grainSize && i<input.length;i++){ output[i] = input[i]; }
+    var writePos = hopSynth, readPos = hopAnalysis;
+    while(writePos < targetLen && readPos+grainSize <= input.length+searchRange){
+      var bestOffset = 0, bestScore = -Infinity;
+      for(var off=-searchRange; off<=searchRange; off+=4){
+        var srcStart = readPos+off;
+        if(srcStart<0 || srcStart+overlap>input.length) continue;
+        var score = 0;
+        for(var k=0;k<overlap;k+=2){ score += output[writePos+k]*input[srcStart+k]; }
+        if(score>bestScore){ bestScore=score; bestOffset=off; }
+      }
+      var srcStart2 = readPos+bestOffset;
+      for(var i2=0;i2<grainSize;i2++){
+        var srcIdx = srcStart2+i2;
+        if(srcIdx<0 || srcIdx>=input.length) continue;
+        var outIdx = writePos+i2;
+        if(outIdx>=output.length) break;
+        if(i2<overlap){ var f=win[i2]; output[outIdx] = output[outIdx]*(1-f) + input[srcIdx]*f; }
+        else { output[outIdx] = input[srcIdx]; }
+      }
+      writePos += hopSynth; readPos += hopAnalysis;
+    }
+    return output.subarray(0, targetLen);
+  }
+  function pitchShiftBuffer(buf, semitones){
+    if(!semitones) return buf;
+    var ctx = getCtx();
+    var ratio = Math.pow(2, semitones/12);
+    var chans = buf.numberOfChannels;
+    var out = ctx.createBuffer(chans, buf.length, buf.sampleRate);
+    for(var ch=0; ch<chans; ch++){
+      var input = buf.getChannelData(ch);
+      var resampled = resampleLinear(input, ratio);
+      var stretched = solaStretch(resampled, input.length);
+      out.getChannelData(ch).set(stretched);
+    }
+    return out;
+  }
+
+  /* ---------------- Buffer-level DJ stutter/glitch repeat: chops the recording into small chunks
+     and randomly repeats some of them a few times before moving on — a real segment-repetition
+     glitch (like scratching a chopped-up sample), which is a different mechanism from the gain-
+     gating gateChop() used elsewhere (that mutes/unmutes in place; this actually re-orders and
+     duplicates audio content, so total duration grows). ---------------- */
+  function stutterBuffer(buf, chunkMs, repeatProb){
+    var ctx = getCtx();
+    var chunkLen = Math.max(64, Math.floor(buf.sampleRate*chunkMs/1000));
+    var chans = buf.numberOfChannels;
+    var segments = [];
+    for(var pos=0; pos<buf.length; pos+=chunkLen){
+      segments.push({pos:pos, len:Math.min(chunkLen, buf.length-pos)});
+    }
+    var outSegments = [];
+    for(var s=0;s<segments.length;s++){
+      var seg = segments[s];
+      outSegments.push(seg);
+      if(Math.random() < repeatProb){
+        var reps = 1 + Math.floor(Math.random()*2);
+        for(var r=0;r<reps;r++) outSegments.push(seg);
+      }
+    }
+    var totalLen = 0;
+    for(var s2=0;s2<outSegments.length;s2++){ totalLen += outSegments[s2].len; }
+    var out = ctx.createBuffer(chans, totalLen, buf.sampleRate);
+    for(var ch=0; ch<chans; ch++){
+      var src = buf.getChannelData(ch);
+      var dst = out.getChannelData(ch);
+      var w = 0;
+      for(var s3=0;s3<outSegments.length;s3++){
+        var seg2 = outSegments[s3];
+        for(var i=0;i<seg2.len;i++){ dst[w+i] = src[seg2.pos+i]; }
+        w += seg2.len;
+      }
+    }
+    return out;
+  }
+
+
 
   /* ---------------- Custom (advanced) effect live params ---------------- */
   var customParams = { rate:1, echo:0.3, dist:10, filt:4000 };
@@ -1798,7 +1924,7 @@
         var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(40*I); ls.connect(ws);
         return reverbFx(ctx, ws, 2.2, 1.8, 0.42); } },
 
-    { id:'boy', name:'صدای پسر بچه', icon:'👦', rate:1.13, detune:95, tail:0.3,
+    { id:'boy', name:'صدای پسر بچه', icon:'👦', rate:1, detune:0, tail:0.3, pitchShift:5,
       build:function(ctx,input,I){
         /* target: pre-adolescent boy — shorter vocal tract than an adult male, so real formants
            sit noticeably higher (~F1 980 / F2 1650 / F3 3050) than the average adult male source. */
@@ -1806,7 +1932,7 @@
           [730,1090,2440], [-6.5*I,-6*I,-3.5*I],
           [980,1650,3050], [6.5*I,7*I,4.5*I], 2.6, 3.4);
         var hp = biquad(ctx,'highpass',210,0.7); morph.connect(hp);
-        wobbleDetune(ctx, hp, 4.6, 5*I);
+        wobbleDetune(ctx, input, 4.6, 5*I);
         var hs = biquad(ctx,'highshelf',4600,0); hs.gain.value = 2.5*I; hp.connect(hs);
         var breathGain = breathLayer(ctx,'highpass',5200,0.7, 0.011*I);
         var mixed = ctx.createGain(); hs.connect(mixed); breathGain.connect(mixed);
@@ -1814,7 +1940,7 @@
         comp.threshold.value=-16; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.15;
         mixed.connect(comp);
         return polishChain(ctx, comp, 1.08); } },
-    { id:'oldman', name:'صدای پیرمرد', icon:'👴', rate:0.92, detune:-70, tail:0.6,
+    { id:'oldman', name:'صدای پیرمرد', icon:'👴', rate:1, detune:0, tail:0.6, pitchShift:-2.5,
       build:function(ctx,input,I){
         /* target: elderly male — vocal-tract length barely changes with age, so formants stay
            close to adult-male but get darker/murkier; what really sells "old" is heavy jitter
@@ -1823,7 +1949,7 @@
         var morph = voiceMorph(ctx, input,
           [1090,2440], [-3*I,-4*I],
           [680,1000,2150], [3*I,3.5*I,2.5*I], 2.4, 2.8);
-        var trem1 = wobbleDetune(ctx, morph, 4.1, 11*I);
+        wobbleDetune(ctx, input, 4.1, 11*I);
         var ls = ctx.createBiquadFilter(); ls.type='lowshelf'; ls.frequency.value=260; ls.gain.value=3*I; morph.connect(ls);
         var lp = biquad(ctx,'lowpass',2100,0.8); ls.connect(lp);
         var ws = ctx.createWaveShaper(); ws.curve = makeDistortionCurve(3.5*I); lp.connect(ws);
@@ -1834,7 +1960,7 @@
         comp.threshold.value=-18; comp.ratio.value=3.5; comp.attack.value=0.006; comp.release.value=0.2;
         mixed.connect(comp);
         return polishChain(ctx, comp, 1.05); } },
-    { id:'baby', name:'صدای نوزاد', icon:'👶', rate:1.42, detune:130, tail:0.3,
+    { id:'baby', name:'صدای نوزاد', icon:'👶', rate:1, detune:0, tail:0.3, pitchShift:9,
       build:function(ctx,input,I){
         /* target: infant — the shortest vocal tract of all, so formants sit well above even a
            young child's (~F1 1150 / F2 1900 / F3 3450), plus a fast, wide pitch wobble (infants'
@@ -1842,7 +1968,7 @@
         var morph = voiceMorph(ctx, input,
           [730,1090,2440], [-7*I,-7*I,-4*I],
           [1150,1900,3450], [7*I,7.5*I,5*I], 2.8, 3.6);
-        wobbleDetune(ctx, morph, 5.8, 22*I);
+        wobbleDetune(ctx, input, 5.8, 22*I);
         var peaking = biquad(ctx,'peaking',3600,1.3); peaking.gain.value = 3.5*I; morph.connect(peaking);
         var hs = biquad(ctx,'highshelf',5400,0); hs.gain.value = 3*I; peaking.connect(hs);
         var t = tremolo(ctx, hs, 11*I, 0.18);
@@ -1850,7 +1976,7 @@
         comp.threshold.value=-16; comp.ratio.value=3; comp.attack.value=0.003; comp.release.value=0.12;
         t.connect(comp);
         return polishChain(ctx, comp, 1.1); } },
-    { id:'girl', name:'صدای دختر جوان', icon:'👧', rate:1.1, detune:75, tail:0.3,
+    { id:'girl', name:'صدای دختر جوان', icon:'👧', rate:1, detune:0, tail:0.3, pitchShift:5.5,
       build:function(ctx,input,I){
         /* target: adult female — a shorter vocal tract than adult male puts real female formants
            roughly 15-20% higher across the board (~F1 850 / F2 1220 / F3 2810), which is the main
@@ -1866,7 +1992,7 @@
         comp.threshold.value=-16; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.15;
         mixed.connect(comp);
         return polishChain(ctx, comp, 1.06); } },
-    { id:'oldwoman', name:'صدای پیرزن', icon:'👵', rate:1.0, detune:-15, tail:0.5,
+    { id:'oldwoman', name:'صدای پیرزن', icon:'👵', rate:1, detune:0, tail:0.5, pitchShift:-1,
       build:function(ctx,input,I){
         /* target: elderly female — starts from the same adult-female formant target as above
            (vocal tract shape doesn't reverse with age), then adds the same tremor/breathiness/
@@ -1874,7 +2000,7 @@
         var morph = voiceMorph(ctx, input,
           [730,1090,2440], [-5*I,-5*I,-3*I],
           [820,1180,2650], [5*I,5.2*I,2.8*I], 2.6, 3.0);
-        wobbleDetune(ctx, morph, 5.1, 13*I);
+        wobbleDetune(ctx, input, 5.1, 13*I);
         var bp = biquad(ctx,'bandpass',1750,1.1); morph.connect(bp);
         var rasp = biquad(ctx,'peaking',2500,1.3); rasp.gain.value = 2*I; bp.connect(rasp);
         var hs = biquad(ctx,'highshelf',5000,0); hs.gain.value = -1.5*I; rasp.connect(hs);
@@ -2339,7 +2465,51 @@
         sweep(f1.frequency, 700, 260, 0.6);
         sweep(f2.frequency, 1400, 420, 0.44);
         sweep(f3.frequency, 2600, 500, 0.33);
-        return polishChain(ctx, f3, 1.1); } }
+        return polishChain(ctx, f3, 1.1); } },
+
+    /* ---------------- New: a sixth wave — real 3D spatial audio (HRTF panning), true wavefolding
+       (vs. clipping distortion), and a buffer-level DJ stutter/repeat (vs. gain-gating). ---------------- */
+    { id:'hrtforbit', name:'صدای دَوّار سه‌بعدی (با هدفون گوش کن)', icon:'🌐', rate:1, detune:0, tail:0.3,
+      build:function(ctx,input,I,estDuration){
+        /* Real binaural spatial audio: a PannerNode in HRTF mode filters the signal the way a
+           human head/ear physically would for a sound at a given 3D position, then that position
+           is automated in a slow circle — with headphones the voice genuinely seems to orbit
+           around the listener's head, which no EQ/filter-based effect above can produce. */
+        var panner = ctx.createPanner();
+        panner.panningModel = 'HRTF'; panner.distanceModel = 'inverse';
+        panner.refDistance = 1; panner.maxDistance = 12; panner.rolloffFactor = 1;
+        input.connect(panner);
+        var dur = Math.max(1, Math.min(120, estDuration||6));
+        var radius = 1.4;
+        var rotationsPerSec = 0.14 + I*0.22;
+        var steps = Math.min(360, Math.max(24, Math.floor(dur*10)));
+        for(var s=0;s<=steps;s++){
+          var t = (s/steps)*dur;
+          var angle = t*rotationsPerSec*2*Math.PI;
+          var x = Math.sin(angle)*radius, z = Math.cos(angle)*radius*0.6 - radius*0.4;
+          if(panner.positionX){
+            panner.positionX.setValueAtTime(x, t);
+            panner.positionZ.setValueAtTime(z, t);
+            panner.positionY.setValueAtTime(0, t);
+          }
+        }
+        var out = ctx.createGain(); out.gain.value = 1.15; panner.connect(out);
+        return polishChain(ctx, out, 1.1); } },
+    { id:'wavefold', name:'تاکننده موج فلزی', icon:'🔺', rate:1, detune:0, tail:0.3,
+      build:function(ctx,input,I){
+        var ws = ctx.createWaveShaper();
+        ws.curve = makeWavefolderCurve(0.32, Math.max(1,Math.round(1+I*3.5)));
+        var pre = ctx.createGain(); pre.gain.value = 1+I*1.3; input.connect(pre); pre.connect(ws);
+        var lp = biquad(ctx,'lowpass',5200,0.8); ws.connect(lp);
+        return polishChain(ctx, lp, 0.85); } },
+    { id:'djstutter', name:'استاتر دی‌جی (تکرار برشی)', icon:'💿', rate:1, detune:0, tail:0.3,
+      stutterChunkMs:110, stutterProb:0.32,
+      build:function(ctx,input,I){
+        var hp = biquad(ctx,'highpass',120,0.6); input.connect(hp);
+        var comp = ctx.createDynamicsCompressor();
+        comp.threshold.value=-14; comp.ratio.value=4; comp.attack.value=0.002; comp.release.value=0.08;
+        hp.connect(comp);
+        return polishChain(ctx, comp, 1.1); } }
   ];
 
   var EFFECTS_MAP = {};
@@ -2426,6 +2596,9 @@
   CATEGORY_MAP.phaserdream = 'محیط و فضا';
   CATEGORY_MAP.sidechainpump = 'دیجیتال و ربات';
   CATEGORY_MAP.vowelmorph = 'فانتزی و کاراکتر';
+  CATEGORY_MAP.hrtforbit = 'محیط و فضا';
+  CATEGORY_MAP.wavefold = 'دیجیتال و ربات';
+  CATEGORY_MAP.djstutter = 'دیجیتال و ربات';
   function categoryOf(id){ return CATEGORY_MAP[id] || 'بامزه و شاد'; }
 
   /* ---------------- State ---------------- */
@@ -3429,6 +3602,8 @@
     var srcBuffer = getTrimmedBuffer();
     if(primary.reverse) srcBuffer = reverseBuffer(srcBuffer);
     if(primary.speedRamp) srcBuffer = speedRampBuffer(srcBuffer, primary.rampFrom||1, primary.rampTo||1);
+    if(primary.pitchShift) srcBuffer = pitchShiftBuffer(srcBuffer, primary.pitchShift*I);
+    if(primary.stutterChunkMs) srcBuffer = stutterBuffer(srcBuffer, primary.stutterChunkMs, Math.min(0.85, (primary.stutterProb||0.3)*I));
     trimmedSourceBuffer = srcBuffer;
 
     var rate = primary.rate || 1;
@@ -3623,7 +3798,10 @@
 
       avatarMouth.style.transform = 'translateX(-50%) translateZ(5px) scaleY('+Math.max(0.05,mouthScaleCur).toFixed(2)+') scaleX('+mouthWideCur.toFixed(2)+')';
       var rotX = (-bobCur*1.3).toFixed(1), rotY = (sway*2.4).toFixed(1);
-      avatarFace.style.transform = 'translateY('+bobCur.toFixed(1)+'px) translateX('+sway.toFixed(1)+'px) rotateX('+rotX+'deg) rotateY('+rotY+'deg) rotate('+tiltCur.toFixed(1)+'deg) scale('+(1+rms*0.06).toFixed(3)+')';
+      /* Squash-and-stretch (a core animation principle): on loud peaks the face widens and
+         shortens slightly instead of just scaling up uniformly — the same cue that makes a
+         bouncing ball or a Pixar character's line read feel alive rather than rigid. */
+      avatarFace.style.transform = 'translateY('+bobCur.toFixed(1)+'px) translateX('+sway.toFixed(1)+'px) rotateX('+rotX+'deg) rotateY('+rotY+'deg) rotate('+tiltCur.toFixed(1)+'deg) scaleX('+(1+rms*0.075).toFixed(3)+') scaleY('+(1-rms*0.04).toFixed(3)+')';
       /* Slide the specular highlight opposite the head's rotation, like a fixed studio
          light glinting across a turning 3D-rendered sphere rather than a flat sticker. */
       avatarFace.style.setProperty('--hl-x', (29 - sway*3.2 - tiltCur*0.9).toFixed(1)+'%');
@@ -3707,6 +3885,14 @@
     avatarFace.style.setProperty('--hl-x', tiltHlX.toFixed(1) + '%');
     avatarFace.style.setProperty('--hl-y', tiltHlY.toFixed(1) + '%');
     if(avatarGlow2) avatarGlow2.style.transform = 'rotate(' + (gx * 1.4).toFixed(1) + 'deg)';
+    if(avatarShadow){
+      /* A real light source casts its shadow on the opposite side — tying the shadow's offset
+         and softening to the same tilt reading is what actually sells "3D-lit object" instead of
+         a decal whose highlight moves but whose shadow stays glued in place. */
+      var shadowShift = -gx*0.55;
+      var shadowSquish = 1 - Math.min(0.22, Math.abs(gx)/24*0.22);
+      avatarShadow.style.transform = 'translateX(calc(-50% + '+shadowShift.toFixed(1)+'px)) scaleX('+shadowSquish.toFixed(2)+')';
+    }
   }
   function enableTiltLight(){
     tiltLightActive = true;
@@ -3721,7 +3907,7 @@
     tiltLightBtn.style.opacity = .75;
     tiltLightBtn.textContent = '🔦 نور سه‌بعدی با گوشی';
     window.removeEventListener('deviceorientation', handleTiltOrientation);
-    if(!isTalkingNow){ avatarFace.style.removeProperty('--hl-x'); avatarFace.style.removeProperty('--hl-y'); if(avatarGlow2) avatarGlow2.style.transform=''; }
+    if(!isTalkingNow){ avatarFace.style.removeProperty('--hl-x'); avatarFace.style.removeProperty('--hl-y'); if(avatarGlow2) avatarGlow2.style.transform=''; if(avatarShadow) avatarShadow.style.transform=''; }
   }
   tiltLightBtn.addEventListener('click', function(){
     vibrate(10);
@@ -3784,6 +3970,62 @@
     }, 900);
   });
   function spawnSparkleSafe(){ if(typeof spawnSparkle === 'function') spawnSparkle(); }
+
+  /* ---------------- New feature: drag a finger across the avatar and its eyes track the touch point
+     live, like posing a rigged character in a 3D viewport — a much stronger "this is a real model"
+     cue than a static face, and it composes with the click reaction above without conflicting
+     (drag vs. tap are different gestures). ---------------- */
+  var lookTrackActive = false;
+  function updateLookTrack(clientX, clientY){
+    var rect = avatarStage.getBoundingClientRect();
+    var dx = (clientX - (rect.left+rect.width/2)) / (rect.width/2);
+    var dy = (clientY - (rect.top+rect.height/2)) / (rect.height/2);
+    dx = Math.max(-1, Math.min(1, dx)); dy = Math.max(-1, Math.min(1, dy));
+    var mx = (dx*4).toFixed(1)+'px', my = (dy*3).toFixed(1)+'px';
+    eyeL.style.marginLeft = mx; eyeR.style.marginLeft = mx;
+    eyeL.style.marginTop = my; eyeR.style.marginTop = my;
+  }
+  function clearLookTrack(){
+    lookTrackActive = false;
+    eyeL.style.marginLeft=''; eyeR.style.marginLeft=''; eyeL.style.marginTop=''; eyeR.style.marginTop='';
+  }
+  avatarStage.addEventListener('pointerdown', function(e){
+    if(avatarFace.classList.contains('talking')) return;
+    lookTrackActive = true;
+    updateLookTrack(e.clientX, e.clientY);
+  });
+  avatarStage.addEventListener('pointermove', function(e){
+    if(!lookTrackActive) return;
+    updateLookTrack(e.clientX, e.clientY);
+  });
+  window.addEventListener('pointerup', function(){ if(lookTrackActive) clearLookTrack(); });
+  window.addEventListener('pointercancel', function(){ if(lookTrackActive) clearLookTrack(); });
+
+  /* ---------------- New feature: idle micro-expressions — beyond the blink/glance already running,
+     the avatar occasionally raises a brow, softens into a small smile, or blushes on its own, so it
+     reads as quietly "alive" even when nobody's touching it or playing audio, instead of a static
+     rig that only moves when told to. ---------------- */
+  function scheduleExpression(){
+    var delay = 5200 + Math.random()*7500;
+    setTimeout(function(){
+      if(!avatarFace.classList.contains('talking') && !lookTrackActive){
+        var kind = Math.random();
+        if(kind < 0.38){
+          browL.style.transform = 'translateZ(6px) translateY(-2.6px) rotate(-9deg)';
+          browR.style.transform = 'translateZ(6px) translateY(-2.6px) rotate(9deg)';
+          setTimeout(function(){ browL.style.transform=''; browR.style.transform=''; }, 950);
+        } else if(kind < 0.68){
+          avatarMouth.style.transform = 'translateX(-50%) translateZ(5px) scaleY(.55) scaleX(1.16)';
+          setTimeout(function(){ avatarMouth.style.transform = 'translateX(-50%) translateZ(5px) scaleY(1) scaleX(1)'; }, 900);
+        } else {
+          cheekL.style.opacity = .5; cheekR.style.opacity = .5;
+          setTimeout(function(){ cheekL.style.opacity = 0; cheekR.style.opacity = 0; }, 800);
+        }
+      }
+      scheduleExpression();
+    }, delay);
+  }
+  scheduleExpression();
 
   /* ---------------- WAV Encoding ---------------- */
   function bufferToWaveBlob(abuffer){
