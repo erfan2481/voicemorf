@@ -31,21 +31,25 @@ jobs:
           rm -rf android
           npx cap add android
 
-      - name: Apply Tapsell ad SDK patches
-        run: python3 android-patches/apply_patches.py
-
       - name: Copy web assets into the Android project
         run: npx cap copy android
 
       - name: Accept Android SDK licenses
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      - name: Build debug APK
+      - name: Debug list Tapsell SDK classes
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew :app:dependencies --configuration debugRuntimeClasspath | grep -i tapsell
+          find ~/.gradle/caches -iname "*tapsell-plus-sdk-android*.aar" -exec sh -c 'mkdir -p /tmp/tp && cd /tmp/tp && unzip -o "$1" -d aar >/dev/null && find aar -iname "*.jar" -exec unzip -l {} \; | grep -i banner' _ {} \;
 
+      - name: Build debug APK
+        working-directory: android
+        run: |
+
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
