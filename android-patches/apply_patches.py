@@ -50,30 +50,4 @@ with open(gradle_path, "a", encoding="utf-8") as f:
     )
 print("appended Tapsell dependency to app/build.gradle")
 
-# --- Signing config for release builds ---
-gradle_path = os.path.join(ANDROID_DIR, "app", "build.gradle")
-with open(gradle_path, "r", encoding="utf-8") as f:
-    gradle_content = f.read()
-
-signing_block = (
-    "\nandroid {\n"
-    "    signingConfigs {\n"
-    "        release {\n"
-    '            storeFile file(System.getenv("RELEASE_KEYSTORE_PATH") ?: "release.keystore")\n'
-    '            storePassword System.getenv("RELEASE_STORE_PASSWORD")\n'
-    '            keyAlias "voicemorfkey"\n'
-    '            keyPassword System.getenv("RELEASE_KEY_PASSWORD")\n'
-    "        }\n"
-    "    }\n"
-    "    buildTypes {\n"
-    "        release {\n"
-    "            signingConfig signingConfigs.release\n"
-    "        }\n"
-    "    }\n"
-    "}\n"
-)
-with open(gradle_path, "a", encoding="utf-8") as f:
-    f.write(signing_block)
-print("appended release signingConfig to app/build.gradle")
-
 print("Patches applied successfully.")
