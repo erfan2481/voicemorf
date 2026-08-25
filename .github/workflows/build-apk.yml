@@ -31,6 +31,12 @@ jobs:
           rm -rf android
           npx cap add android
 
+      - name: Generate app icons
+        run: npx @capacitor/assets generate --android
+
+      - name: Apply Tapsell ad SDK patches
+        run: python3 android-patches/apply_patches.py
+
       - name: Copy web assets into the Android project
         run: npx cap copy android
 
