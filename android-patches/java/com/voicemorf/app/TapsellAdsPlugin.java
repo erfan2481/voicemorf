@@ -15,26 +15,27 @@ import ir.tapsell.plus.TapsellPlusInitListener;
 import ir.tapsell.plus.model.AdNetworkError;
 import ir.tapsell.plus.model.AdNetworks;
 import ir.tapsell.plus.model.TapsellPlusAdModel;
-import ir.tapsell.plus.model.TapsellPlusBannerType;
 import ir.tapsell.plus.model.TapsellPlusErrorModel;
 
 /*
  * Tapsell keys — from the Tapsell dashboard for "وویس‌مورف".
- * App key, standard-banner zone id and interstitial-video zone id.
+ * App key and interstitial-video zone id.
+ * NOTE: the standard-banner feature is temporarily disabled because
+ * ir.tapsell.plus.model.TapsellPlusBannerType could not be resolved
+ * against the SDK version pulled in CI. Interstitial ads still work.
  */
 @CapacitorPlugin(name = "TapsellAds")
 public class TapsellAdsPlugin extends Plugin {
 
     private static final String TAG = "TapsellAds";
     private static final String APP_KEY = "mhdnftegiglnsbkjfspljeadaiiegncqhbibdlrdhejkofdigscnoorljemrfodihbcgdf";
-    private static final String ZONE_BANNER = "6a8ccb85f34d73758477ecd3";
     private static final String ZONE_INTERSTITIAL = "6a8ccbaff34d73758477ecd4";
 
-    private String bannerResponseId = null;
     private String interstitialResponseId = null;
     private FrameLayout bannerContainer = null;
 
     public void setBannerContainer(FrameLayout container) {
+        // Kept so MainActivity still compiles/works; banner ad is disabled for now.
         this.bannerContainer = container;
     }
 
@@ -43,7 +44,6 @@ public class TapsellAdsPlugin extends Plugin {
             @Override
             public void onInitializeSuccess(AdNetworks adNetworks) {
                 Log.d(TAG, "Tapsell init success");
-                requestBanner();
                 requestInterstitial();
             }
 
@@ -52,24 +52,6 @@ public class TapsellAdsPlugin extends Plugin {
                 Log.d(TAG, "Tapsell init failed: " + adNetworkError);
             }
         });
-    }
-
-    private void requestBanner() {
-        TapsellPlus.requestStandardBannerAd(getActivity(), ZONE_BANNER,
-                TapsellPlusBannerType.BANNER_320x50,
-                new AdRequestCallback() {
-                    @Override
-                    public void response(TapsellPlusAdModel model) {
-                        super.response(model);
-                        bannerResponseId = model.getResponseId();
-                        showBannerInternal();
-                    }
-
-                    @Override
-                    public void error(String message) {
-                        Log.d(TAG, "banner request error: " + message);
-                    }
-                });
     }
 
     private void requestInterstitial() {
@@ -88,31 +70,14 @@ public class TapsellAdsPlugin extends Plugin {
                 });
     }
 
-    private void showBannerInternal() {
-        if (bannerContainer == null || bannerResponseId == null || getActivity() == null) return;
-        getActivity().runOnUiThread(() -> TapsellPlus.showStandardBannerAd(
-                getActivity(), bannerResponseId, bannerContainer,
-                new AdShowListener() {
-                    @Override
-                    public void onError(TapsellPlusErrorModel error) {
-                        super.onError(error);
-                        Log.d(TAG, "banner show error: " + error);
-                    }
-                }));
-    }
-
     @PluginMethod
     public void showBanner(PluginCall call) {
-        showBannerInternal();
+        // Standard banner temporarily disabled — no-op so JS calls don't break.
         call.resolve();
     }
 
     @PluginMethod
     public void hideBanner(PluginCall call) {
-        if (bannerContainer != null && bannerResponseId != null && getActivity() != null) {
-            getActivity().runOnUiThread(() ->
-                    TapsellPlus.destroyStandardBanner(getActivity(), bannerResponseId, bannerContainer));
-        }
         call.resolve();
     }
 
