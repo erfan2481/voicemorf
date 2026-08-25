@@ -68,12 +68,16 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
+      - name: Encode keystore from repo file
+        id: encode_keystore
+        run: echo "value=$(base64 -w 0 signing/release.keystore)" >> "$GITHUB_OUTPUT"
+
       - name: Sign release APK
         uses: r0adkll/sign-android-release@v1
         id: sign_apk
         with:
           releaseDirectory: android/app/build/outputs/apk/release
-          signingKey: signing/release.keystore
+          signingKeyBase64: ${{ steps.encode_keystore.outputs.value }}
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
