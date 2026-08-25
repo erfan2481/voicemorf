@@ -41,9 +41,21 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew :app:dependencies --configuration debugRuntimeClasspath | grep -i tapsell
-          find ~/.gradle/caches -iname "*tapsell-plus-sdk-android*.aar" -exec sh -c 'mkdir -p /tmp/tp && cd /tmp/tp && unzip -o "$1" -d aar >/dev/null && find aar -iname "*.jar" -exec unzip -l {} \; | grep -i banner' _ {} \;
-
+          ./gradlew :app:dependencies --configuration debugRuntimeClasspath > /tmp/deps.txt 2>&1 || true
+          echo "----- Tapsell lines in dependency tree -----"
+          grep -i tapsell /tmp/deps.txt || echo "(nothing found, dumping full output below)"
+          echo "----- Full dependency output (last 150 lines) -----"
+          tail -n 150 /tmp/deps.txt
+          echo "----- Searching for Banner class inside the AAR -----"
+          find ~/.gradle/caches -iname "*tapsell-plus-sdk-android*.aar" | while read -r f; do
+            echo "Found AAR: $f"
+            mkdir -p /tmp/tp && rm -rf /tmp/tp/* && cd /tmp/tp
+            unzip -o "$f" -d aar > /dev/null
+            find aar -iname "*.jar" | while read -r j; do
+              unzip -l "$j" | grep -i banner || echo "(no Banner class in $j)"
+            done
+          done
+          
       - name: Build debug APK
         working-directory: android
         run: |
