@@ -31,7 +31,7 @@ ad_id_perm = '    <uses-permission android:name="com.google.android.gms.permissi
 if "com.google.android.gms.permission.AD_ID" not in manifest:
     marker = "<application"
     idx = manifest.index(marker)
-    manifest = manifest[:idx] + ad_id_perm + manifest[idx:]
+    manifest = manifest[:idx] + mic_perm + ad_id_perm + manifest[idx:]
     with open(manifest_path, "w", encoding="utf-8") as f:
         f.write(manifest)
     print("patched AndroidManifest.xml")
