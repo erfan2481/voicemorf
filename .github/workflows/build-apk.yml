@@ -61,22 +61,27 @@ jobs:
               unzip -l "$j" | grep -i banner || echo "(no Banner class in $j)"
             done
           done
-          
-      - name: Decode release keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
 
-      - name: Build signed release APK
+      - name: Build unsigned release APK
         working-directory: android
-        env:
-          RELEASE_KEYSTORE_PATH: release.keystore
-          RELEASE_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
+
+      - name: Sign release APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_apk
+        with:
+          releaseDirectory: android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
           
-      - name: Upload APK artifact
+      - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
           name: voicemorph-release-apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+          path: ${{ steps.sign_apk.outputs.signedReleaseFile }}
