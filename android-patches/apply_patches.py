@@ -24,6 +24,8 @@ for fname in os.listdir(java_src):
 manifest_path = os.path.join(ANDROID_DIR, "app", "src", "main", "AndroidManifest.xml")
 with open(manifest_path, "r", encoding="utf-8") as f:
     manifest = f.read()
+    
+mic_perm = '    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n'
 
 ad_id_perm = '    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />\n'
 if "com.google.android.gms.permission.AD_ID" not in manifest:
