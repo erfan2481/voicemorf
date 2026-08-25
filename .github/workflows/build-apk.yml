@@ -79,6 +79,7 @@ jobs:
           echo "Checking that KEYSTORE_PASSWORD / KEY_PASSWORD / KEY_ALIAS actually open this file..."
           if keytool -list -v \
               -keystore signing/release.keystore \
+              -storetype JKS \
               -alias "${{ secrets.KEY_ALIAS }}" \
               -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
               -keypass "${{ secrets.KEY_PASSWORD }}" > /tmp/keytool_check.txt 2>&1; then
