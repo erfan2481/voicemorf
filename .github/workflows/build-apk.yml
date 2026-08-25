@@ -56,12 +56,19 @@ jobs:
             done
           done
           
-      - name: Build debug APK
-        working-directory: android
-        run: |
+      - name: Decode release keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
 
+      - name: Build signed release APK
+        working-directory: android
+        env:
+          RELEASE_KEYSTORE_PATH: release.keystore
+          RELEASE_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleRelease --no-daemon
+          
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
