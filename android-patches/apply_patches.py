@@ -43,7 +43,7 @@ with open(gradle_path, "a", encoding="utf-8") as f:
         "\n\n"
         "// --- Tapsell ad SDK (added automatically by android-patches/apply_patches.py) ---\n"
         "dependencies {\n"
-        '    implementation("ir.tapsell.plus:tapsell-plus-sdk-android:2.2.9")\n'
+        '    implementation("ir.tapsell.plus:tapsell-plus-sdk-android:2.3.3")\n'
         "}\n"
     )
 print("appended Tapsell dependency to app/build.gradle")
