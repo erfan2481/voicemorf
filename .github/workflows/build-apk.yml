@@ -68,6 +68,33 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
+      - name: Verify keystore matches current secrets (fail fast, clear error)
+        run: |
+          set -e
+          if [ ! -f "signing/release.keystore" ]; then
+            echo "::error::signing/release.keystore does not exist in the repo. Commit the keystore file first."
+            exit 1
+          fi
+          echo "Keystore file size: $(stat -c%s signing/release.keystore) bytes"
+          echo "Checking that KEYSTORE_PASSWORD / KEY_PASSWORD / KEY_ALIAS actually open this file..."
+          if keytool -list -v \
+              -keystore signing/release.keystore \
+              -alias "${{ secrets.KEY_ALIAS }}" \
+              -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+              -keypass "${{ secrets.KEY_PASSWORD }}" > /tmp/keytool_check.txt 2>&1; then
+            echo "✅ Keystore opened successfully with current secrets. Alias and passwords match."
+          else
+            echo "::error::Failed to open signing/release.keystore with the current KEYSTORE_PASSWORD / KEY_PASSWORD / KEY_ALIAS secrets."
+            echo "This almost always means one of the following:"
+            echo "  1) The committed signing/release.keystore file was generated with a DIFFERENT password than what is currently in GitHub Secrets."
+            echo "  2) KEY_ALIAS secret does not exactly match the alias used when the keystore was created (e.g. 'voicemorfkey')."
+            echo "  3) The binary keystore file got corrupted on commit (missing .gitattributes binary rule)."
+            echo ""
+            echo "----- keytool error output -----"
+            cat /tmp/keytool_check.txt
+            exit 1
+          fi
+
       - name: Encode keystore from repo file
         id: encode_keystore
         run: echo "value=$(base64 -w 0 signing/release.keystore)" >> "$GITHUB_OUTPUT"
@@ -83,7 +110,7 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
         env:
           BUILD_TOOLS_VERSION: "34.0.0"
-          
+
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
