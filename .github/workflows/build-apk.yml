@@ -37,6 +37,9 @@ jobs:
       - name: Apply Tapsell ad SDK patches
         run: python3 android-patches/apply_patches.py
 
+      - name: Apply native FileSaver plugin patch
+        run: python3 android-patches/apply_file_saver_patch.py
+
       - name: Copy web assets into the Android project
         run: npx cap copy android
 
