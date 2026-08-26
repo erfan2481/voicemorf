@@ -923,6 +923,10 @@
 
   .hidden{display:none !important;}
 </style>
+<!-- MP3 encoder, used to save audio as .mp3 instead of .wav. Loaded from a
+     local file (not a CDN) so it still works with no internet connection.
+     See android-patches setup notes for where to get lame.min.js. -->
+<script src="lame.min.js"></script>
 </head>
 <body data-theme="light">
 <div class="bg-orb o1"></div>
@@ -4419,7 +4423,9 @@
         offset += b.length + gapLen;
       });
       var blob = bufferToWaveBlob(merged);
-      window.__saveBlob(blob, 'voicemorph-dialogue.wav');
+      window.__wavBlobToMp3(blob).then(function(mp3Blob){
+        window.__saveBlob(mp3Blob, 'voicemorph-dialogue.mp3');
+      });
       mergeExportBtn.textContent = '✅ دانلود شد';
       setTimeout(function(){ mergeExportBtn.textContent = origTxt; }, 1800);
     }).catch(function(){
@@ -4433,7 +4439,10 @@
     if(!window.__lastBlob) return;
     vibrate(12);
     if(window.__showTapsellInterstitial) window.__showTapsellInterstitial();
-    window.__saveBlob(window.__lastBlob, window.__lastName || 'voicemorph.wav');
+    var fname = (window.__lastName || 'voicemorph.wav').replace(/\.wav$/i, '.mp3');
+    window.__wavBlobToMp3(window.__lastBlob).then(function(mp3Blob){
+      window.__saveBlob(mp3Blob, fname);
+    });
     var origTxt = downloadBtn.textContent;
     downloadBtn.textContent = '✅ ذخیره شد';
     setTimeout(function(){ downloadBtn.textContent = origTxt; }, 1600);
@@ -4546,18 +4555,16 @@
     }catch(e){}
   };
 
-  /* Saving files: inside the packaged Android app, a plain <a download>
-     click on a blob: URL silently does nothing (WebView has no built-in
-     Save-As, unlike a real mobile browser) — so route through the native
-     FileSaver plugin instead when it's available, and fall back to the
-     old technique when just testing the page in a browser. */
+  /* Saving files: opens Android's real "Save As" picker so the user
+     chooses exactly where in their personal files to save — falls back to
+     the old technique when just testing the page in a browser. */
   window.__saveBlob = function(blob, fileName){
     var fs = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FileSaver;
     if(fs){
       var reader = new FileReader();
       reader.onloadend = function(){
         var base64 = String(reader.result).split(',')[1] || '';
-        fs.saveFile({ data: base64, fileName: fileName, mimeType: blob.type || 'application/octet-stream' })
+        fs.saveFileAs({ data: base64, fileName: fileName, mimeType: blob.type || 'application/octet-stream' })
           .catch(function(err){ console.error('save failed', err); });
       };
       reader.readAsDataURL(blob);
@@ -4567,6 +4574,55 @@
       a.download = fileName;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
+  };
+
+  /* Converts a WAV Blob (from bufferToWaveBlob) to an MP3 Blob using the
+     lamejs library (loaded locally as lame.min.js — see index.html head).
+     If the library isn't loaded for any reason, quietly keeps the WAV
+     instead of breaking the download. */
+  window.__wavBlobToMp3 = function(wavBlob){
+    return new Promise(function(resolve){
+      if(typeof lamejs === 'undefined'){ resolve(wavBlob); return; }
+      var reader = new FileReader();
+      reader.onloadend = function(){
+        try{
+          var buf = reader.result;
+          var view = new DataView(buf);
+          var numChan = view.getUint16(22, true);
+          var sampleRate = view.getUint32(24, true);
+          var dataSize = view.getUint32(40, true);
+          var samples = new Int16Array(buf, 44, dataSize/2);
+
+          var encoder = new lamejs.Mp3Encoder(numChan, sampleRate, 128);
+          var mp3Chunks = [];
+          var blockSize = 1152;
+
+          if(numChan === 1){
+            for(var i=0; i<samples.length; i+=blockSize){
+              var chunk = samples.subarray(i, i+blockSize);
+              var enc = encoder.encodeBuffer(chunk);
+              if(enc.length) mp3Chunks.push(enc);
+            }
+          } else {
+            var left = new Int16Array(samples.length/2);
+            var right = new Int16Array(samples.length/2);
+            for(var j=0, k=0; j<samples.length; j+=2, k++){ left[k]=samples[j]; right[k]=samples[j+1]; }
+            for(var i2=0; i2<left.length; i2+=blockSize){
+              var lc = left.subarray(i2, i2+blockSize), rc = right.subarray(i2, i2+blockSize);
+              var enc2 = encoder.encodeBuffer(lc, rc);
+              if(enc2.length) mp3Chunks.push(enc2);
+            }
+          }
+          var end = encoder.flush();
+          if(end.length) mp3Chunks.push(end);
+          resolve(new Blob(mp3Chunks, {type:'audio/mpeg'}));
+        }catch(e){
+          console.error('mp3 encode failed, falling back to wav', e);
+          resolve(wavBlob);
+        }
+      };
+      reader.readAsArrayBuffer(wavBlob);
+    });
   };
 })();
 </script>
