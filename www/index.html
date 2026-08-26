@@ -37,6 +37,14 @@
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
+  /* Form controls don't inherit color/font from the page by default in
+     browsers — without this, any <button>/<input>/<select> that doesn't
+     set its own explicit color falls back to the browser's default text
+     color, which is unreadable in dark mode against our dark buttons.
+     Elements below with their own explicit `color:` in a class still win
+     (class selectors beat this plain-tag rule), so this only fixes the
+     ones that were silently relying on inheritance and getting none. */
+  button, input, select, textarea{ font-family:inherit; color:inherit; }
   body{
     font-family:'Vazirmatn','Segoe UI',Tahoma,sans-serif;
     background:
@@ -1069,7 +1077,7 @@
     </div>
 
     <div style="display:flex; align-items:center; gap:8px;">
-      <audio id="player" controls style="flex:1;"></audio>
+      <audio id="player" controls controlsList="nodownload noplaybackrate" oncontextmenu="return false;" style="flex:1; -webkit-touch-callout:none;"></audio>
       <button class="loop-btn" id="loopBtn" title="پخش تکراری">🔁</button>
     </div>
 
@@ -1128,7 +1136,7 @@
       <div class="badge">🎬</div>
       <div><b>ویدیوی آواتار</b><span>آماده پخش، دانلود و اشتراک‌گذاری</span></div>
     </div>
-    <video id="videoPlayer" controls playsinline style="width:100%;border-radius:14px;background:#000;display:block;"></video>
+    <video id="videoPlayer" controls controlsList="nodownload noplaybackrate" oncontextmenu="return false;" playsinline style="width:100%;border-radius:14px;background:#000;display:block;-webkit-touch-callout:none;"></video>
     <div class="action-row">
       <button class="action-btn primary" id="videoDownloadBtn">⬇️ دانلود ویدیو</button>
       <button class="action-btn" id="videoShareBtn">📤 اشتراک‌گذاری</button>
@@ -4564,7 +4572,19 @@
       var reader = new FileReader();
       reader.onloadend = function(){
         var base64 = String(reader.result).split(',')[1] || '';
-        fs.saveFileAs({ data: base64, fileName: fileName, mimeType: blob.type || 'application/octet-stream' })
+        var mimeType = blob.type || 'application/octet-stream';
+        /* Step 1: write the (possibly large) data to the app's own cache
+           folder first, while the app is still fully in the foreground.
+           This is fast and never touches the Android "Save As" system UI,
+           so there's no risk of the OS backgrounding/killing the app mid-write. */
+        fs.writeCache({ data: base64, fileName: fileName })
+          .then(function(cacheResult){
+            /* Step 2: only now open the native "Save As" picker. If Android
+               pauses or even kills our process while that system screen is
+               open, all we need to survive is this small cachePath string —
+               not the whole multi-megabyte payload. */
+            return fs.saveFileAs({ cachePath: cacheResult.path, fileName: fileName, mimeType: mimeType });
+          })
           .catch(function(err){ console.error('save failed', err); });
       };
       reader.readAsDataURL(blob);
