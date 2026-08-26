@@ -15,16 +15,18 @@ import ir.tapsell.plus.TapsellPlusInitListener;
 import ir.tapsell.plus.model.AdNetworkError;
 import ir.tapsell.plus.model.AdNetworks;
 import ir.tapsell.plus.model.TapsellPlusAdModel;
-import ir.tapsell.plus.model.TapsellPlusBannerType;
 import ir.tapsell.plus.model.TapsellPlusErrorModel;
 
 /*
  * Tapsell keys — from the Tapsell dashboard for "وویس‌مورف".
  * App key, interstitial-video zone id, and standard-banner zone id.
  *
- * ZONE_BANNER: create a "Standard Banner" zone in the Tapsell panel
- * (separate from the interstitial zone) and paste its id below —
- * this is account-specific, so it has to be filled in manually.
+ * NOTE: standard-banner is temporarily paused again. TapsellPlusBannerType
+ * is NOT in ir.tapsell.plus.model for this SDK version (confirmed by CI
+ * compile error) — re-enable once the improved "Debug list Tapsell SDK
+ * classes" CI step (which now runs after a real build attempt, so the SDK
+ * is guaranteed to actually be unpacked on disk) reports the real
+ * package/class name.
  */
 @CapacitorPlugin(name = "TapsellAds")
 public class TapsellAdsPlugin extends Plugin {
@@ -35,7 +37,6 @@ public class TapsellAdsPlugin extends Plugin {
     private static final String ZONE_BANNER = "6a8ccb85f34d73758477ecd3";
 
     private String interstitialResponseId = null;
-    private String bannerResponseId = null;
     private FrameLayout bannerContainer = null;
 
     public void setBannerContainer(FrameLayout container) {
@@ -48,7 +49,6 @@ public class TapsellAdsPlugin extends Plugin {
             public void onInitializeSuccess(AdNetworks adNetworks) {
                 Log.d(TAG, "Tapsell init success");
                 requestInterstitial();
-                requestBanner();
             }
 
             @Override
@@ -74,52 +74,14 @@ public class TapsellAdsPlugin extends Plugin {
                 });
     }
 
-    private void requestBanner() {
-        if (getActivity() == null) return;
-        TapsellPlus.requestStandardBannerAd(getActivity(), ZONE_BANNER,
-                TapsellPlusBannerType.BANNER_320x50,
-                new AdRequestCallback() {
-                    @Override
-                    public void response(TapsellPlusAdModel model) {
-                        super.response(model);
-                        bannerResponseId = model.getResponseId();
-                    }
-
-                    @Override
-                    public void error(String message) {
-                        Log.d(TAG, "banner request error: " + message);
-                    }
-                });
-    }
-
     @PluginMethod
     public void showBanner(PluginCall call) {
-        if (bannerResponseId == null || bannerContainer == null || getActivity() == null) {
-            // Not loaded yet (or zone id not configured) — quietly skip,
-            // JS doesn't check readiness before calling this.
-            call.resolve();
-            return;
-        }
-        final String responseId = bannerResponseId;
-        getActivity().runOnUiThread(() -> TapsellPlus.showStandardBannerAd(getActivity(), responseId,
-                bannerContainer,
-                new AdShowListener() {
-                    @Override
-                    public void onError(TapsellPlusErrorModel error) {
-                        super.onError(error);
-                        Log.d(TAG, "banner show error: " + error);
-                    }
-                }));
+        // Paused — see note above the class. No-op so JS calls don't break.
         call.resolve();
     }
 
     @PluginMethod
     public void hideBanner(PluginCall call) {
-        if (bannerResponseId != null && bannerContainer != null && getActivity() != null) {
-            final String responseId = bannerResponseId;
-            getActivity().runOnUiThread(() ->
-                    TapsellPlus.destroyStandardBanner(getActivity(), responseId, bannerContainer));
-        }
         call.resolve();
     }
 
