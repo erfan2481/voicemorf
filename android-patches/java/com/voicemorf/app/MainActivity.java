@@ -19,10 +19,12 @@ import com.getcapacitor.PluginHandle;
 public class MainActivity extends BridgeActivity {
 
     private static final int MIC_PERMISSION_REQUEST_CODE = 1001;
+    private static final int STORAGE_PERMISSION_REQUEST_CODE = 1002;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(TapsellAdsPlugin.class);
+        registerPlugin(FileSaverPlugin.class);
         super.onCreate(savedInstanceState);
 
         // Ask Android itself for the microphone permission. Declaring it in
@@ -31,6 +33,7 @@ public class MainActivity extends BridgeActivity {
         // will keep failing even if the user later flips it on manually in
         // system Settings.
         requestMicPermissionIfNeeded();
+        requestLegacyStoragePermissionIfNeeded();
 
         // Make the whole app fullscreen/immersive: hide the top status bar
         // and bottom nav bar so the WebView content uses the entire screen.
@@ -75,6 +78,20 @@ public class MainActivity extends BridgeActivity {
                             Manifest.permission.MODIFY_AUDIO_SETTINGS
                     },
                     MIC_PERMISSION_REQUEST_CODE
+            );
+        }
+    }
+
+    private void requestLegacyStoragePermissionIfNeeded() {
+        // Only needed on Android 9 (API 28) and below — Android 10+ saves
+        // files via MediaStore, which doesn't require this permission.
+        if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.P
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    STORAGE_PERMISSION_REQUEST_CODE
             );
         }
     }
