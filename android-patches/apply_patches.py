@@ -26,12 +26,13 @@ with open(manifest_path, "r", encoding="utf-8") as f:
     manifest = f.read()
     
 mic_perm = '    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n'
+mic_settings_perm = '    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n'
 
 ad_id_perm = '    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />\n'
 if "com.google.android.gms.permission.AD_ID" not in manifest:
     marker = "<application"
     idx = manifest.index(marker)
-    manifest = manifest[:idx] + mic_perm + ad_id_perm + manifest[idx:]
+    manifest = manifest[:idx] + mic_perm + mic_settings_perm + ad_id_perm + manifest[idx:]
     with open(manifest_path, "w", encoding="utf-8") as f:
         f.write(manifest)
     print("patched AndroidManifest.xml")
