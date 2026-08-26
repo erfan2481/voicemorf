@@ -946,7 +946,7 @@
     </div>
   </header>
 
-  <div class="hero-strip">⚡ بیش از ۹۰ افکت صدا · رایگان</div>
+  <div class="hero-strip">⚡ بیش از ۹۰ افکت صدا · ساخته‌شده با هوش مصنوعی · رایگان</div>
 
   <div class="card recorder">
     <canvas id="waveCanvas"></canvas>
@@ -3263,10 +3263,7 @@
   videoDownloadBtn.addEventListener('click', function(){
     if(!window.__lastVideoBlob) return;
     vibrate(12);
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(window.__lastVideoBlob);
-    a.download = window.__lastVideoName || 'voicemorph-avatar.webm';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    window.__saveBlob(window.__lastVideoBlob, window.__lastVideoName || 'voicemorph-avatar.webm');
   });
   videoShareBtn.addEventListener('click', function(){
     vibrate(12);
@@ -4422,10 +4419,7 @@
         offset += b.length + gapLen;
       });
       var blob = bufferToWaveBlob(merged);
-      var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'voicemorph-dialogue.wav';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      window.__saveBlob(blob, 'voicemorph-dialogue.wav');
       mergeExportBtn.textContent = '✅ دانلود شد';
       setTimeout(function(){ mergeExportBtn.textContent = origTxt; }, 1800);
     }).catch(function(){
@@ -4439,10 +4433,7 @@
     if(!window.__lastBlob) return;
     vibrate(12);
     if(window.__showTapsellInterstitial) window.__showTapsellInterstitial();
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(window.__lastBlob);
-    a.download = window.__lastName || 'voicemorph.wav';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    window.__saveBlob(window.__lastBlob, window.__lastName || 'voicemorph.wav');
     var origTxt = downloadBtn.textContent;
     downloadBtn.textContent = '✅ ذخیره شد';
     setTimeout(function(){ downloadBtn.textContent = origTxt; }, 1600);
@@ -4553,6 +4544,29 @@
       localStorage.setItem('vm_ad_throttle', String(n));
       if(n === 0) window.__showTapsellInterstitial();
     }catch(e){}
+  };
+
+  /* Saving files: inside the packaged Android app, a plain <a download>
+     click on a blob: URL silently does nothing (WebView has no built-in
+     Save-As, unlike a real mobile browser) — so route through the native
+     FileSaver plugin instead when it's available, and fall back to the
+     old technique when just testing the page in a browser. */
+  window.__saveBlob = function(blob, fileName){
+    var fs = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FileSaver;
+    if(fs){
+      var reader = new FileReader();
+      reader.onloadend = function(){
+        var base64 = String(reader.result).split(',')[1] || '';
+        fs.saveFile({ data: base64, fileName: fileName, mimeType: blob.type || 'application/octet-stream' })
+          .catch(function(err){ console.error('save failed', err); });
+      };
+      reader.readAsDataURL(blob);
+    } else {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
   };
 })();
 </script>
