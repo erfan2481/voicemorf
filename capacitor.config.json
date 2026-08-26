@@ -1,6 +1,6 @@
 {
   "appId": "com.voicemorf.app",
-  "appName": "وویس‌مورف",
+  "appName": "voice morf",
   "webDir": "www",
   "bundledWebRuntime": false,
   "android": {
