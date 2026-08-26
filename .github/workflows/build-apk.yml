@@ -43,30 +43,44 @@ jobs:
       - name: Accept Android SDK licenses
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      - name: Debug list Tapsell SDK classes
-        working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew :app:dependencies --configuration debugRuntimeClasspath > /tmp/deps.txt 2>&1 || true
-          echo "----- Tapsell lines in dependency tree -----"
-          grep -i tapsell /tmp/deps.txt || echo "(nothing found, dumping full output below)"
-          echo "----- Full dependency output (last 150 lines) -----"
-          tail -n 150 /tmp/deps.txt
-          echo "----- Searching for Banner class inside the AAR -----"
-          find ~/.gradle/caches -iname "*tapsell-plus-sdk-android*.aar" | while read -r f; do
-            echo "Found AAR: $f"
-            mkdir -p /tmp/tp && rm -rf /tmp/tp/* && cd /tmp/tp
-            unzip -o "$f" -d aar > /dev/null
-            find aar -iname "*.jar" | while read -r j; do
-              unzip -l "$j" | grep -i banner || echo "(no Banner class in $j)"
-            done
-          done
-
       - name: Build unsigned release APK
         working-directory: android
+        continue-on-error: true
+        id: build_apk
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
+
+      - name: Debug list Tapsell SDK classes (runs after the real build so the SDK is actually unpacked on disk)
+        working-directory: android
+        run: |
+          echo "----- Looking for the raw AAR/JAR anywhere on disk -----"
+          find / -xdev -iname "*tapsell*sdk*android*" \( -iname "*.aar" -o -iname "*.jar" \) 2>/dev/null | while read -r f; do
+            echo "Found: $f"
+            mkdir -p /tmp/tp && rm -rf /tmp/tp/* && cd /tmp/tp
+            if [[ "$f" == *.aar ]]; then
+              unzip -o "$f" -d aar > /dev/null
+              find aar -iname "*.jar" -exec unzip -l {} \; > /tmp/classlist.txt
+            else
+              unzip -l "$f" > /tmp/classlist.txt
+            fi
+            echo "----- All classes containing 'Banner' -----"
+            grep -i banner /tmp/classlist.txt || echo "(none)"
+            echo "----- All top-level classes in ir/tapsell/plus/model/ -----"
+            grep -i "ir/tapsell/plus/model/" /tmp/classlist.txt || echo "(none)"
+            echo "----- All top-level classes directly in ir/tapsell/plus/ -----"
+            grep -iE "ir/tapsell/plus/[A-Za-z]+\.class" /tmp/classlist.txt || echo "(none)"
+            cd -
+          done
+          echo "----- Also checking Gradle's exploded-aar / transforms cache -----"
+          find ~/.gradle/caches -ipath "*tapsell*" -iname "*.class" 2>/dev/null | grep -i banner || echo "(none found in transforms cache)"
+          echo "----- Build outcome -----"
+          if [ -f app/build/outputs/apk/release/app-release-unsigned.apk ]; then
+            echo "APK was produced despite earlier errors (unexpected) — treating as success."
+          else
+            echo "::error::Release APK was not produced. See the 'Build unsigned release APK' step output above for the real compile error, and the class list above for what's actually in the Tapsell SDK."
+            exit 1
+          fi
 
       - name: Verify keystore matches current secrets (fail fast, clear error)
         run: |
