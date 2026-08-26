@@ -946,7 +946,7 @@
     </div>
   </header>
 
-  <div class="hero-strip">⚡ بیش از ۹۰ افکت صدا · رایگان</div>
+  <div class="hero-strip">⚡ بیش از ۹۰ افکت صدا · ساخته‌شده با هوش مصنوعی · رایگان</div>
 
   <div class="card recorder">
     <canvas id="waveCanvas"></canvas>
@@ -3897,6 +3897,7 @@
       processingOverlay.classList.remove('show');
       window.__lastBlob = blob;
       window.__lastName = 'voicemorph-'+primary.id+(secondary?('-'+secondary.id):'')+'.wav';
+      if(window.__showTapsellInterstitialThrottled) window.__showTapsellInterstitialThrottled();
       addHistory(nm, primary.icon, currentBlobUrl, window.__lastName);
       playerCard.scrollIntoView({behavior:'smooth', block:'nearest'});
     }).catch(function(err){
@@ -4542,6 +4543,16 @@
   window.__showTapsellInterstitial = function(){
     var t = tapsellPlugin();
     if(t){ t.showInterstitial(); }
+  };
+  // Same interstitial, but only fires every 3rd time it's called — used at
+  // points that happen often (like applying an effect) so ads don't show
+  // up so frequently that people get annoyed and uninstall.
+  window.__showTapsellInterstitialThrottled = function(){
+    try{
+      var n = (parseInt(localStorage.getItem('vm_ad_throttle')||'0',10) + 1) % 3;
+      localStorage.setItem('vm_ad_throttle', String(n));
+      if(n === 0) window.__showTapsellInterstitial();
+    }catch(e){}
   };
 })();
 </script>
