@@ -22,6 +22,10 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Always-on remote debugging (safe for a personal/sideloaded app):
+        // connect this phone to chrome://inspect on a PC to read real
+        // console errors instead of guessing blind.
+        WebView.setWebContentsDebuggingEnabled(true);
         registerPlugin(TapsellAdsPlugin.class);
         registerPlugin(FileSaverPlugin.class);
         super.onCreate(savedInstanceState);

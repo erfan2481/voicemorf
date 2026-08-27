@@ -1,0 +1,133 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install JS dependencies
+        run: npm install
+
+      - name: Generate fresh Android project via Capacitor
+        run: |
+          rm -rf android
+          npx cap add android
+
+      - name: Generate app icons
+        run: npx @capacitor/assets generate --android
+
+      - name: Apply Tapsell + FileSaver native patches
+        run: python3 android-patches/apply_patches.py
+
+      - name: Copy web assets into the Android project
+        run: npx cap copy android
+
+      - name: Accept Android SDK licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: Build unsigned release APK
+        working-directory: android
+        continue-on-error: true
+        id: build_apk
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Debug list Tapsell SDK classes (runs after the real build so the SDK is actually unpacked on disk)
+        working-directory: android
+        run: |
+          echo "----- Looking for the raw AAR/JAR anywhere on disk -----"
+          find / -xdev -iname "*tapsell*sdk*android*" \( -iname "*.aar" -o -iname "*.jar" \) 2>/dev/null | while read -r f; do
+            echo "Found: $f"
+            mkdir -p /tmp/tp && rm -rf /tmp/tp/* && cd /tmp/tp
+            if [[ "$f" == *.aar ]]; then
+              unzip -o "$f" -d aar > /dev/null
+              find aar -iname "*.jar" -exec unzip -l {} \; > /tmp/classlist.txt
+            else
+              unzip -l "$f" > /tmp/classlist.txt
+            fi
+            echo "----- All classes containing 'Banner' -----"
+            grep -i banner /tmp/classlist.txt || echo "(none)"
+            echo "----- All top-level classes in ir/tapsell/plus/model/ -----"
+            grep -i "ir/tapsell/plus/model/" /tmp/classlist.txt || echo "(none)"
+            echo "----- All top-level classes directly in ir/tapsell/plus/ -----"
+            grep -iE "ir/tapsell/plus/[A-Za-z]+\.class" /tmp/classlist.txt || echo "(none)"
+            cd -
+          done
+          echo "----- Also checking Gradle's exploded-aar / transforms cache -----"
+          find ~/.gradle/caches -ipath "*tapsell*" -iname "*.class" 2>/dev/null | grep -i banner || echo "(none found in transforms cache)"
+          echo "----- Build outcome -----"
+          if [ -f app/build/outputs/apk/release/app-release-unsigned.apk ]; then
+            echo "APK was produced despite earlier errors (unexpected) — treating as success."
+          else
+            echo "::error::Release APK was not produced. See the 'Build unsigned release APK' step output above for the real compile error, and the class list above for what's actually in the Tapsell SDK."
+            exit 1
+          fi
+
+      - name: Verify keystore matches current secrets (fail fast, clear error)
+        run: |
+          set -e
+          if [ ! -f "signing/release.keystore" ]; then
+            echo "::error::signing/release.keystore does not exist in the repo. Commit the keystore file first."
+            exit 1
+          fi
+          echo "Keystore file size: $(stat -c%s signing/release.keystore) bytes"
+          echo "Checking that KEYSTORE_PASSWORD / KEY_PASSWORD / KEY_ALIAS actually open this file..."
+          if keytool -list -v \
+              -keystore signing/release.keystore \
+              -storetype JKS \
+              -alias "${{ secrets.KEY_ALIAS }}" \
+              -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+              -keypass "${{ secrets.KEY_PASSWORD }}" > /tmp/keytool_check.txt 2>&1; then
+            echo "✅ Keystore opened successfully with current secrets. Alias and passwords match."
+          else
+            echo "::error::Failed to open signing/release.keystore with the current KEYSTORE_PASSWORD / KEY_PASSWORD / KEY_ALIAS secrets."
+            echo "This almost always means one of the following:"
+            echo "  1) The committed signing/release.keystore file was generated with a DIFFERENT password than what is currently in GitHub Secrets."
+            echo "  2) KEY_ALIAS secret does not exactly match the alias used when the keystore was created (e.g. 'voicemorfkey')."
+            echo "  3) The binary keystore file got corrupted on commit (missing .gitattributes binary rule)."
+            echo ""
+            echo "----- keytool error output -----"
+            cat /tmp/keytool_check.txt
+            exit 1
+          fi
+
+      - name: Encode keystore from repo file
+        id: encode_keystore
+        run: echo "value=$(base64 -w 0 signing/release.keystore)" >> "$GITHUB_OUTPUT"
+
+      - name: Sign release APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_apk
+        with:
+          releaseDirectory: android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ steps.encode_keystore.outputs.value }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: voicemorph-release-apk
+          path: ${{ steps.sign_apk.outputs.signedReleaseFile }}
