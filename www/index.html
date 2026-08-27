@@ -940,6 +940,48 @@
 <script src="lame.min.js"></script>
 </head>
 <body data-theme="light">
+<div id="onDeviceErrorPanel" style="display:none; position:fixed; left:8px; right:8px; bottom:8px; z-index:99999; max-height:45vh; overflow:auto; background:#1a0000; color:#ffdcdc; border:2px solid #ff4444; border-radius:10px; padding:10px; font-family:monospace; font-size:11px; direction:ltr; text-align:left; white-space:pre-wrap; word-break:break-word;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+    <b style="color:#ff8080;">⚠️ Error Log (برای من اسکرین‌شات بگیر)</b>
+    <button onclick="document.getElementById('onDeviceErrorPanel').style.display='none';" style="background:#ff4444; color:#fff; border:none; border-radius:6px; padding:4px 10px; font-family:inherit;">بستن</button>
+  </div>
+  <div id="onDeviceErrorPanelBody"></div>
+</div>
+<script>
+(function(){
+  var panel, body;
+  function ensure(){
+    if(!panel){ panel = document.getElementById('onDeviceErrorPanel'); body = document.getElementById('onDeviceErrorPanelBody'); }
+  }
+  function logToPanel(tag, msg){
+    ensure();
+    if(!panel) return;
+    panel.style.display = 'block';
+    var line = document.createElement('div');
+    line.style.borderTop = '1px solid #552222';
+    line.style.padding = '5px 0';
+    var t = new Date().toLocaleTimeString();
+    line.textContent = '['+t+'] '+tag+': '+msg;
+    body.appendChild(line);
+    panel.scrollTop = panel.scrollHeight;
+  }
+  window.__logError = logToPanel;
+  window.onerror = function(message, source, lineno, colno, error){
+    logToPanel('JS Error', message + ' @ ' + (source||'').split('/').pop() + ':' + lineno + ':' + colno + (error && error.stack ? '\n' + error.stack : ''));
+  };
+  window.addEventListener('unhandledrejection', function(e){
+    var r = e.reason;
+    var msg = (r && r.message) ? r.message : String(r);
+    var stack = (r && r.stack) ? '\n' + r.stack : '';
+    logToPanel('Unhandled Promise', msg + stack);
+  });
+  var origConsoleError = console.error;
+  console.error = function(){
+    try{ logToPanel('console.error', Array.prototype.slice.call(arguments).map(String).join(' ')); }catch(e){}
+    origConsoleError.apply(console, arguments);
+  };
+})();
+</script>
 <div class="bg-orb o1"></div>
 <div class="bg-orb o2"></div>
 <div class="bg-orb o3"></div>
@@ -3195,12 +3237,15 @@
   }
 
   function makeAvatarVideo(){
+   try{
+    if(window.__logError) window.__logError('checkpoint', 'makeAvatarVideo() started');
     if(!window.__lastBlob) return;
     videoOverlay.classList.add('show');
     videoBtn.disabled = true;
 
     setupPlaybackAnalyser();
     var ctx = getCtx();
+    if(window.__logError) window.__logError('checkpoint', 'AudioContext state = ' + ctx.state);
     if(ctx.state === 'suspended'){ ctx.resume().catch(function(){}); }
     var recDest = ctx.createMediaStreamDestination();
     playbackSrcNode.connect(recDest);
@@ -3214,6 +3259,7 @@
     var combined = new MediaStream();
     canvasStream.getVideoTracks().forEach(function(t){ combined.addTrack(t); });
     recDest.stream.getAudioTracks().forEach(function(t){ combined.addTrack(t); });
+    if(window.__logError) window.__logError('checkpoint', 'combined stream tracks: video=' + combined.getVideoTracks().length + ' audio=' + combined.getAudioTracks().length);
 
     var mime = pickVideoMime();
     var recorder = new MediaRecorder(combined, mime ? {mimeType:mime} : undefined);
@@ -3237,14 +3283,18 @@
 
     function finish(){
       if(!capturing) return;
-      if(Date.now() - startedAt < minRecordMs) return; /* too early, ignore */
+      if(Date.now() - startedAt < minRecordMs){
+        if(window.__logError) window.__logError('checkpoint', 'finish() ignored, too early: ' + (Date.now() - startedAt) + 'ms');
+        return; /* too early, ignore */
+      }
+      if(window.__logError) window.__logError('checkpoint', 'finish() proceeding, elapsed=' + (Date.now() - startedAt) + 'ms');
       capturing = false;
       clearFallback();
       player.removeEventListener('ended', onEnded);
       try{ playbackSrcNode.disconnect(recDest); }catch(e){}
       setTimeout(function(){ if(recorder.state !== 'inactive') recorder.stop(); }, 250);
     }
-    function onEnded(){ finish(); }
+    function onEnded(){ if(window.__logError) window.__logError('checkpoint', "'ended' event fired"); finish(); }
 
     /* A hard failure (e.g. play() rejected and a resume() retry also
        failed) bypasses the minRecordMs guard so we don't hang forever. */
@@ -3258,6 +3308,7 @@
       videoOverlay.classList.remove('show');
       videoBtn.disabled = false;
       statusMsg.textContent = 'ساخت ویدیو با مشکل مواجه شد ['+(reasonTag||'play')+'، صدا:'+(recDest.stream.getAudioTracks().length)+'] دوباره امتحان کن.';
+      if(window.__logError) window.__logError('abortRecording', 'reason=' + reasonTag + ' audioTracks=' + recDest.stream.getAudioTracks().length + ' chunks=' + chunks.length);
       try{ URL.revokeObjectURL(exportUrl); }catch(e){}
       player.src = prevSrc;
       player.playbackRate = prevRate;
@@ -3265,6 +3316,7 @@
 
     recorder.onstop = function(){
       var blob = new Blob(chunks, {type: mime || 'video/webm'});
+      if(window.__logError) window.__logError('recorder.onstop', 'blobSize=' + blob.size + ' frames=' + framesDrawn + ' frameErrors=' + frameErrors + ' chunkEvents=' + chunkEvents + ' chunksKept=' + chunks.length + ' audioTracks=' + recDest.stream.getAudioTracks().length + ' mime=' + (mime||'default') + ' recorderState=' + recorder.state);
       if(blob.size < 2048){
         /* Recording produced essentially nothing — treat as a failure
            instead of showing a broken 0-byte "success" card. Surface the
@@ -3306,6 +3358,7 @@
     }
 
     recorder.start();
+    if(window.__logError) window.__logError('checkpoint', 'recorder.start() called, state=' + recorder.state);
     captureLoop();
     player.addEventListener('ended', onEnded);
     player.playbackRate = 1;
@@ -3331,8 +3384,15 @@
 
     function attemptPlay(alreadyRetried){
       var playPromise = player.play();
+      if(window.__logError) window.__logError('checkpoint', 'player.play() called (retried=' + alreadyRetried + ')');
+      if(playPromise && playPromise.then){
+        playPromise.then(function(){
+          if(window.__logError) window.__logError('checkpoint', 'player.play() resolved OK');
+        });
+      }
       if(playPromise && playPromise.catch){
-        playPromise.catch(function(){
+        playPromise.catch(function(err){
+          if(window.__logError) window.__logError('play() rejected', (err && err.message) ? err.message : String(err));
           if(!alreadyRetried && ctx.state === 'suspended'){
             ctx.resume().then(function(){ attemptPlay(true); }).catch(function(){ abortRecording('resume-failed'); });
           } else {
@@ -3342,6 +3402,12 @@
       }
     }
     attemptPlay(false);
+   }catch(outerErr){
+     if(window.__logError) window.__logError('makeAvatarVideo CRASH', (outerErr && outerErr.message ? outerErr.message : String(outerErr)) + (outerErr && outerErr.stack ? '\n' + outerErr.stack : ''));
+     try{ videoOverlay.classList.remove('show'); }catch(e){}
+     try{ videoBtn.disabled = false; }catch(e){}
+     try{ statusMsg.textContent = 'ساخت ویدیو با خطای غیرمنتظره مواجه شد.'; }catch(e){}
+   }
   }
 
   videoDownloadBtn.addEventListener('click', function(){
