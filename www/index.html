@@ -4421,11 +4421,25 @@
   }
   document.addEventListener('DOMContentLoaded', function(){
     var t = tapsellPlugin();
-    if(t){ setTimeout(function(){ t.showBanner(); }, 1500); }
+    if(t){
+      setTimeout(function(){ t.showBanner(); }, 1500);
+      /* Forward every native Tapsell log line (init success/failure, ad
+         request/fill/error, show result) into the same on-device error
+         panel used elsewhere, so ad issues can be diagnosed on the phone
+         itself with no computer/adb needed. */
+      if(t.addListener){
+        t.addListener('tapsellLog', function(data){
+          if(window.__logError) window.__logError('Tapsell', (data && data.message) ? data.message : JSON.stringify(data));
+        });
+      }
+    } else {
+      if(window.__logError) window.__logError('Tapsell', 'TapsellAds plugin not found on window.Capacitor.Plugins — native plugin not registered/linked in this build.');
+    }
   });
   window.__showTapsellInterstitial = function(){
     var t = tapsellPlugin();
-    if(t){ t.showInterstitial(); }
+    if(window.__logError) window.__logError('Tapsell', 'JS requested showInterstitial(), plugin found=' + !!t);
+    if(t){ t.showInterstitial().catch(function(err){ if(window.__logError) window.__logError('Tapsell', 'showInterstitial() JS-side rejected: ' + ((err&&err.message)||err)); }); }
   };
   // Same interstitial, but only fires every 3rd time it's called — used at
   // points that happen often (like applying an effect) so ads don't show
@@ -4434,6 +4448,7 @@
     try{
       var n = (parseInt(localStorage.getItem('vm_ad_throttle')||'0',10) + 1) % 3;
       localStorage.setItem('vm_ad_throttle', String(n));
+      if(window.__logError) window.__logError('Tapsell', 'throttled trigger, counter=' + n + (n===0 ? ' -> showing' : ' -> skipped, shows on next multiple of 3'));
       if(n === 0) window.__showTapsellInterstitial();
     }catch(e){}
   };
