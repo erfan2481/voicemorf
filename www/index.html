@@ -4,8 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#7C3AED">
+<meta name="color-scheme" content="light dark">
 <title>وویس‌مورف | تغییر صدای حرفه‌ای</title>
 <style>
+  html{ color-scheme: light; }
+  [data-theme="dark"]{ color-scheme: dark; }
   :root{
     --bg:#f4f1ff;
     --bg2:#ffffff;
@@ -3198,6 +3201,7 @@
 
     setupPlaybackAnalyser();
     var ctx = getCtx();
+    if(ctx.state === 'suspended'){ ctx.resume().catch(function(){}); }
     var recDest = ctx.createMediaStreamDestination();
     playbackSrcNode.connect(recDest);
 
@@ -3217,20 +3221,59 @@
     recorder.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
 
     var capturing = true;
+    var startedAt = Date.now();
+    var minRecordMs = 400; /* ignore any stop signal earlier than this — guards
+                               against a spurious/early 'ended' event */
+    var fallbackTimer = null;
     var exportUrl = URL.createObjectURL(window.__lastBlob);
     var prevSrc = player.src;
     var prevRate = player.playbackRate;
 
+    function clearFallback(){
+      if(fallbackTimer){ clearTimeout(fallbackTimer); fallbackTimer = null; }
+    }
+
     function finish(){
+      if(!capturing) return;
+      if(Date.now() - startedAt < minRecordMs) return; /* too early, ignore */
       capturing = false;
+      clearFallback();
       player.removeEventListener('ended', onEnded);
       try{ playbackSrcNode.disconnect(recDest); }catch(e){}
       setTimeout(function(){ if(recorder.state !== 'inactive') recorder.stop(); }, 250);
     }
     function onEnded(){ finish(); }
 
+    /* A hard failure (e.g. play() rejected and a resume() retry also
+       failed) bypasses the minRecordMs guard so we don't hang forever. */
+    function abortRecording(){
+      if(!capturing) return;
+      capturing = false;
+      clearFallback();
+      player.removeEventListener('ended', onEnded);
+      try{ playbackSrcNode.disconnect(recDest); }catch(e){}
+      if(recorder.state !== 'inactive') recorder.stop();
+      videoOverlay.classList.remove('show');
+      videoBtn.disabled = false;
+      statusMsg.textContent = 'ساخت ویدیو با مشکل مواجه شد، دوباره امتحان کن.';
+      try{ URL.revokeObjectURL(exportUrl); }catch(e){}
+      player.src = prevSrc;
+      player.playbackRate = prevRate;
+    }
+
     recorder.onstop = function(){
       var blob = new Blob(chunks, {type: mime || 'video/webm'});
+      if(blob.size < 2048){
+        /* Recording produced essentially nothing — treat as a failure
+           instead of showing a broken 0-byte "success" card. */
+        videoOverlay.classList.remove('show');
+        videoBtn.disabled = false;
+        statusMsg.textContent = 'ساخت ویدیو با مشکل مواجه شد، دوباره امتحان کن.';
+        try{ URL.revokeObjectURL(exportUrl); }catch(e){}
+        player.src = prevSrc;
+        player.playbackRate = prevRate;
+        return;
+      }
       var url = URL.createObjectURL(blob);
       videoPlayer.src = url;
       videoResultCard.classList.remove('hidden');
@@ -3263,13 +3306,37 @@
     player.playbackRate = 1;
     player.src = exportUrl;
     player.currentTime = 0;
-    var playPromise = player.play();
-    if(playPromise && playPromise.catch){
-      playPromise.catch(function(){
-        finish();
-        statusMsg.textContent = 'ساخت ویدیو با مشکل مواجه شد.';
-      });
+
+    /* Fallback safety net: if we know the clip's duration, force a finish
+       shortly after that duration even if 'ended' never fires — seen on
+       some WebView builds once the element's audio output has been
+       rerouted through the Web Audio graph for recording. */
+    function armFallback(){
+      var dur = player.duration;
+      if(isFinite(dur) && dur > 0){
+        clearFallback();
+        fallbackTimer = setTimeout(finish, (dur * 1000) + 400);
+      }
     }
+    if(isFinite(player.duration) && player.duration > 0){
+      armFallback();
+    } else {
+      player.addEventListener('loadedmetadata', armFallback, {once:true});
+    }
+
+    function attemptPlay(alreadyRetried){
+      var playPromise = player.play();
+      if(playPromise && playPromise.catch){
+        playPromise.catch(function(){
+          if(!alreadyRetried && ctx.state === 'suspended'){
+            ctx.resume().then(function(){ attemptPlay(true); }).catch(abortRecording);
+          } else {
+            abortRecording();
+          }
+        });
+      }
+    }
+    attemptPlay(false);
   }
 
   videoDownloadBtn.addEventListener('click', function(){
