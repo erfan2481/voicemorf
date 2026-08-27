@@ -3218,10 +3218,12 @@
     var mime = pickVideoMime();
     var recorder = new MediaRecorder(combined, mime ? {mimeType:mime} : undefined);
     var chunks = [];
-    recorder.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+    var chunkEvents = 0;
+    recorder.ondataavailable = function(e){ chunkEvents++; if(e.data && e.data.size) chunks.push(e.data); };
 
     var capturing = true;
     var startedAt = Date.now();
+    var framesDrawn = 0, frameErrors = 0;
     var minRecordMs = 400; /* ignore any stop signal earlier than this — guards
                                against a spurious/early 'ended' event */
     var fallbackTimer = null;
@@ -3246,7 +3248,7 @@
 
     /* A hard failure (e.g. play() rejected and a resume() retry also
        failed) bypasses the minRecordMs guard so we don't hang forever. */
-    function abortRecording(){
+    function abortRecording(reasonTag){
       if(!capturing) return;
       capturing = false;
       clearFallback();
@@ -3255,7 +3257,7 @@
       if(recorder.state !== 'inactive') recorder.stop();
       videoOverlay.classList.remove('show');
       videoBtn.disabled = false;
-      statusMsg.textContent = 'ساخت ویدیو با مشکل مواجه شد، دوباره امتحان کن.';
+      statusMsg.textContent = 'ساخت ویدیو با مشکل مواجه شد ['+(reasonTag||'play')+'، صدا:'+(recDest.stream.getAudioTracks().length)+'] دوباره امتحان کن.';
       try{ URL.revokeObjectURL(exportUrl); }catch(e){}
       player.src = prevSrc;
       player.playbackRate = prevRate;
@@ -3265,10 +3267,12 @@
       var blob = new Blob(chunks, {type: mime || 'video/webm'});
       if(blob.size < 2048){
         /* Recording produced essentially nothing — treat as a failure
-           instead of showing a broken 0-byte "success" card. */
+           instead of showing a broken 0-byte "success" card. Surface the
+           diagnostic counters right in the status message so we can see
+           exactly which stage broke without needing device logs. */
         videoOverlay.classList.remove('show');
         videoBtn.disabled = false;
-        statusMsg.textContent = 'ساخت ویدیو با مشکل مواجه شد، دوباره امتحان کن.';
+        statusMsg.textContent = 'ساخت ویدیو مشکل داشت — حجم:'+blob.size+'b، فریم‌های ترسیم‌شده:'+framesDrawn+'، خطای فریم:'+frameErrors+'، تکه‌های ضبط:'+chunkEvents+'/'+chunks.length+'، ترک صدا:'+recDest.stream.getAudioTracks().length+'، mime:'+(mime||'default');
         try{ URL.revokeObjectURL(exportUrl); }catch(e){}
         player.src = prevSrc;
         player.playbackRate = prevRate;
@@ -3292,11 +3296,12 @@
       if(!capturing) return;
       var img = new Image();
       img.onload = function(){
+        framesDrawn++;
         g2.clearRect(0,0,size,size);
         g2.drawImage(img,0,0,size,size);
         if(capturing) requestAnimationFrame(captureLoop);
       };
-      img.onerror = function(){ if(capturing) requestAnimationFrame(captureLoop); };
+      img.onerror = function(){ frameErrors++; if(capturing) requestAnimationFrame(captureLoop); };
       img.src = avatarSnapshotDataURL(size);
     }
 
@@ -3329,9 +3334,9 @@
       if(playPromise && playPromise.catch){
         playPromise.catch(function(){
           if(!alreadyRetried && ctx.state === 'suspended'){
-            ctx.resume().then(function(){ attemptPlay(true); }).catch(abortRecording);
+            ctx.resume().then(function(){ attemptPlay(true); }).catch(function(){ abortRecording('resume-failed'); });
           } else {
-            abortRecording();
+            abortRecording('play-rejected');
           }
         });
       }
