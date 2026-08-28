@@ -4419,22 +4419,32 @@
   function tapsellPlugin(){
     return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TapsellAds;
   }
-  document.addEventListener('DOMContentLoaded', function(){
-    var t = tapsellPlugin();
-    if(t){
-      setTimeout(function(){ t.showBanner(); }, 1500);
-      /* Forward every native Tapsell log line (init success/failure, ad
-         request/fill/error, show result) into the same on-device error
-         panel used elsewhere, so ad issues can be diagnosed on the phone
-         itself with no computer/adb needed. */
-      if(t.addListener){
-        t.addListener('tapsellLog', function(data){
-          if(window.__logError) window.__logError('Tapsell', (data && data.message) ? data.message : JSON.stringify(data));
-        });
-      }
-    } else {
-      if(window.__logError) window.__logError('Tapsell', 'TapsellAds plugin not found on window.Capacitor.Plugins — native plugin not registered/linked in this build.');
+  function attachTapsellLogListener(t){
+    if(t.addListener){
+      t.addListener('tapsellLog', function(data){
+        if(window.__logError) window.__logError('Tapsell', (data && data.message) ? data.message : JSON.stringify(data));
+      });
     }
+  }
+  var tapsellHooked = false;
+  function checkTapsell(tag){
+    if(tapsellHooked) return;
+    var hasCapacitor = !!window.Capacitor;
+    var pluginNames = (hasCapacitor && window.Capacitor.Plugins) ? Object.keys(window.Capacitor.Plugins).join(', ') : '(none)';
+    var t = tapsellPlugin();
+    if(window.__logError) window.__logError('Tapsell', '['+tag+'] Capacitor exists=' + hasCapacitor + ', registered plugins=[' + pluginNames + '], TapsellAds found=' + !!t);
+    if(t){
+      tapsellHooked = true;
+      setTimeout(function(){ t.showBanner(); }, 1500);
+      attachTapsellLogListener(t);
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function(){ checkTapsell('DOMContentLoaded'); });
+  /* Capacitor's native plugin bridge can finish populating slightly after
+     DOMContentLoaded fires, so also retry a few times over the next
+     several seconds instead of only checking once, early, and giving up. */
+  [500, 1500, 3000, 6000, 10000].forEach(function(ms){
+    setTimeout(function(){ checkTapsell('retry@'+ms+'ms'); }, ms);
   });
   window.__showTapsellInterstitial = function(){
     var t = tapsellPlugin();
