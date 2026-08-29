@@ -940,48 +940,6 @@
 <script src="lame.min.js"></script>
 </head>
 <body data-theme="light">
-<div id="onDeviceErrorPanel" style="display:none; position:fixed; left:8px; right:8px; bottom:8px; z-index:99999; max-height:45vh; overflow:auto; background:#1a0000; color:#ffdcdc; border:2px solid #ff4444; border-radius:10px; padding:10px; font-family:monospace; font-size:11px; direction:ltr; text-align:left; white-space:pre-wrap; word-break:break-word;">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-    <b style="color:#ff8080;">⚠️ Error Log (برای من اسکرین‌شات بگیر)</b>
-    <button onclick="document.getElementById('onDeviceErrorPanel').style.display='none';" style="background:#ff4444; color:#fff; border:none; border-radius:6px; padding:4px 10px; font-family:inherit;">بستن</button>
-  </div>
-  <div id="onDeviceErrorPanelBody"></div>
-</div>
-<script>
-(function(){
-  var panel, body;
-  function ensure(){
-    if(!panel){ panel = document.getElementById('onDeviceErrorPanel'); body = document.getElementById('onDeviceErrorPanelBody'); }
-  }
-  function logToPanel(tag, msg){
-    ensure();
-    if(!panel) return;
-    panel.style.display = 'block';
-    var line = document.createElement('div');
-    line.style.borderTop = '1px solid #552222';
-    line.style.padding = '5px 0';
-    var t = new Date().toLocaleTimeString();
-    line.textContent = '['+t+'] '+tag+': '+msg;
-    body.appendChild(line);
-    panel.scrollTop = panel.scrollHeight;
-  }
-  window.__logError = logToPanel;
-  window.onerror = function(message, source, lineno, colno, error){
-    logToPanel('JS Error', message + ' @ ' + (source||'').split('/').pop() + ':' + lineno + ':' + colno + (error && error.stack ? '\n' + error.stack : ''));
-  };
-  window.addEventListener('unhandledrejection', function(e){
-    var r = e.reason;
-    var msg = (r && r.message) ? r.message : String(r);
-    var stack = (r && r.stack) ? '\n' + r.stack : '';
-    logToPanel('Unhandled Promise', msg + stack);
-  });
-  var origConsoleError = console.error;
-  console.error = function(){
-    try{ logToPanel('console.error', Array.prototype.slice.call(arguments).map(String).join(' ')); }catch(e){}
-    origConsoleError.apply(console, arguments);
-  };
-})();
-</script>
 <div class="bg-orb o1"></div>
 <div class="bg-orb o2"></div>
 <div class="bg-orb o3"></div>
@@ -4419,37 +4377,25 @@
   function tapsellPlugin(){
     return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TapsellAds;
   }
-  function attachTapsellLogListener(t){
-    if(t.addListener){
-      t.addListener('tapsellLog', function(data){
-        if(window.__logError) window.__logError('Tapsell', (data && data.message) ? data.message : JSON.stringify(data));
-      });
-    }
-  }
   var tapsellHooked = false;
-  function checkTapsell(tag){
+  function hookTapsell(){
     if(tapsellHooked) return;
-    var hasCapacitor = !!window.Capacitor;
-    var pluginNames = (hasCapacitor && window.Capacitor.Plugins) ? Object.keys(window.Capacitor.Plugins).join(', ') : '(none)';
     var t = tapsellPlugin();
-    if(window.__logError) window.__logError('Tapsell', '['+tag+'] Capacitor exists=' + hasCapacitor + ', registered plugins=[' + pluginNames + '], TapsellAds found=' + !!t);
     if(t){
       tapsellHooked = true;
       setTimeout(function(){ t.showBanner(); }, 1500);
-      attachTapsellLogListener(t);
     }
   }
-  document.addEventListener('DOMContentLoaded', function(){ checkTapsell('DOMContentLoaded'); });
+  document.addEventListener('DOMContentLoaded', hookTapsell);
   /* Capacitor's native plugin bridge can finish populating slightly after
-     DOMContentLoaded fires, so also retry a few times over the next
-     several seconds instead of only checking once, early, and giving up. */
+     DOMContentLoaded fires, so also retry a few times instead of only
+     checking once, early, and giving up. */
   [500, 1500, 3000, 6000, 10000].forEach(function(ms){
-    setTimeout(function(){ checkTapsell('retry@'+ms+'ms'); }, ms);
+    setTimeout(hookTapsell, ms);
   });
   window.__showTapsellInterstitial = function(){
     var t = tapsellPlugin();
-    if(window.__logError) window.__logError('Tapsell', 'JS requested showInterstitial(), plugin found=' + !!t);
-    if(t){ t.showInterstitial().catch(function(err){ if(window.__logError) window.__logError('Tapsell', 'showInterstitial() JS-side rejected: ' + ((err&&err.message)||err)); }); }
+    if(t){ t.showInterstitial().catch(function(){}); }
   };
   // Same interstitial, but only fires every 3rd time it's called — used at
   // points that happen often (like applying an effect) so ads don't show
@@ -4458,7 +4404,6 @@
     try{
       var n = (parseInt(localStorage.getItem('vm_ad_throttle')||'0',10) + 1) % 3;
       localStorage.setItem('vm_ad_throttle', String(n));
-      if(window.__logError) window.__logError('Tapsell', 'throttled trigger, counter=' + n + (n===0 ? ' -> showing' : ' -> skipped, shows on next multiple of 3'));
       if(n === 0) window.__showTapsellInterstitial();
     }catch(e){}
   };
