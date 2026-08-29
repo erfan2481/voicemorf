@@ -22,11 +22,17 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        // Bulletproof "is the new build actually running" check — if you
-        // don't see this popup the instant the app opens, the new
-        // MainActivity.java never actually made it into the installed
+        // Bulletproof "is the new build actually running" check — a modal
+        // dialog you must tap to dismiss, so it can't be missed like a
+        // Toast can. If you don't see this the instant the app opens, the
+        // new MainActivity.java never actually made it into the installed
         // APK (a build/deploy issue, not a logic bug).
-        android.widget.Toast.makeText(this, "MainActivity v2 (tapsell-diag) running", android.widget.Toast.LENGTH_LONG).show();
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Build check")
+                .setMessage("MainActivity v3 (tapsell-diag) is running")
+                .setPositiveButton("OK", null)
+                .setCancelable(false)
+                .show();
 
         // Always-on remote debugging (safe for a personal/sideloaded app):
         // connect this phone to chrome://inspect on a PC to read real
