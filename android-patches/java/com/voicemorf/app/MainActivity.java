@@ -26,9 +26,42 @@ public class MainActivity extends BridgeActivity {
         // connect this phone to chrome://inspect on a PC to read real
         // console errors instead of guessing blind.
         WebView.setWebContentsDebuggingEnabled(true);
-        registerPlugin(TapsellAdsPlugin.class);
+
+        // Proactively try to load every ir.tapsell.plus.* class the plugin
+        // needs, BEFORE calling registerPlugin(). If registerPlugin()
+        // internally swallows a registration failure (many plugin bridges
+        // do this on purpose so one bad plugin can't crash the whole app),
+        // that failure would otherwise be invisible to us. Doing our own
+        // Class.forName() first means WE catch the real
+        // ClassNotFoundException / NoClassDefFoundError directly.
+        String tapsellDiag = null;
+        try {
+            Class.forName("ir.tapsell.plus.TapsellPlus");
+            Class.forName("ir.tapsell.plus.TapsellPlusInitListener");
+            Class.forName("ir.tapsell.plus.AdRequestCallback");
+            Class.forName("ir.tapsell.plus.AdShowListener");
+            Class.forName("ir.tapsell.plus.model.AdNetworks");
+            Class.forName("ir.tapsell.plus.model.AdNetworkError");
+            Class.forName("ir.tapsell.plus.model.TapsellPlusAdModel");
+            Class.forName("ir.tapsell.plus.model.TapsellPlusErrorModel");
+            tapsellDiag = "all ir.tapsell.plus.* classes loaded OK";
+        } catch (Throwable t) {
+            tapsellDiag = "Class.forName FAILED: " + t.getClass().getName() + ": " + t.getMessage();
+        }
+
+        String tapsellRegisterDiag;
+        try {
+            registerPlugin(TapsellAdsPlugin.class);
+            tapsellRegisterDiag = "registerPlugin(TapsellAdsPlugin) did not throw";
+        } catch (Throwable t) {
+            tapsellRegisterDiag = "registerPlugin(TapsellAdsPlugin) THREW: " + t.getClass().getName() + ": " + t.getMessage();
+        }
+
         registerPlugin(FileSaverPlugin.class);
         super.onCreate(savedInstanceState);
+
+        sendNativeDiagToJs("Tapsell class check: " + tapsellDiag);
+        sendNativeDiagToJs("Tapsell registerPlugin: " + tapsellRegisterDiag);
 
         // Ask Android itself for the microphone permission. Declaring it in
         // AndroidManifest.xml is not enough — without this call the system
@@ -63,11 +96,32 @@ public class MainActivity extends BridgeActivity {
         setContentView(root);
 
         PluginHandle handle = getBridge().getPlugin("TapsellAds");
+        sendNativeDiagToJs("getBridge().getPlugin(\"TapsellAds\") = " + (handle == null ? "null" : "found"));
         if (handle != null) {
-            TapsellAdsPlugin plugin = (TapsellAdsPlugin) handle.getInstance();
-            plugin.setBannerContainer(bannerContainer);
-            plugin.initTapsell();
+            try {
+                TapsellAdsPlugin plugin = (TapsellAdsPlugin) handle.getInstance();
+                plugin.setBannerContainer(bannerContainer);
+                plugin.initTapsell();
+            } catch (Throwable t) {
+                sendNativeDiagToJs("initTapsell() setup THREW: " + t.getClass().getName() + ": " + t.getMessage());
+            }
         }
+    }
+
+    /** Pushes a diagnostic line straight into the web app's on-device error
+     *  panel (window.__logError), once the WebView is ready. This lets us
+     *  see real native-side failures on the phone itself, no adb/logcat or
+     *  computer needed. */
+    private void sendNativeDiagToJs(String message){
+        final WebView wv = getBridge().getWebView();
+        final String safe = message
+                .replace("\\", "\\\\")
+                .replace("'", "\\'")
+                .replace("\n", " | ");
+        wv.postDelayed(() -> {
+            String js = "if(window.__logError){ window.__logError('MainActivity native', '" + safe + "'); }";
+            wv.evaluateJavascript(js, null);
+        }, 2500);
     }
 
     private void requestMicPermissionIfNeeded() {
