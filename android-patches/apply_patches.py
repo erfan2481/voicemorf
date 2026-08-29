@@ -125,3 +125,51 @@ else:
     print("gradle.properties already had android.enableDexingArtifactTransform")
 
 print("Patches applied successfully.")
+
+# --- Version bump for Bazaar/Play releases -----------------------------
+# android/ gets wiped and regenerated from scratch on every CI run
+# (`rm -rf android && npx cap add android`), which always resets
+# versionCode/versionName back to the Capacitor template defaults
+# (1 / "1.0"). Editing android/app/build.gradle directly in the repo
+# would just get thrown away on the next run.
+#
+# Instead, the version to ship lives in this one small file:
+#     android-patches/version.txt
+# Format (two lines):
+#     versionCode=<integer, must go up by at least 1 each Bazaar release>
+#     versionName=<string shown to users, e.g. 1.1>
+#
+# Bump versionCode (and usually versionName too) in that file before
+# each new Bazaar upload, commit + push, and this script applies it to
+# the freshly-generated build.gradle automatically every time.
+version_file = os.path.join(ROOT, "version.txt")
+default_version_code = 1
+default_version_name = "1.0"
+
+if not os.path.isfile(version_file):
+    with open(version_file, "w", encoding="utf-8") as f:
+        f.write(f"versionCode={default_version_code}\nversionName={default_version_name}\n")
+    print(f"Created {version_file} with defaults — edit this file to bump the version next time.")
+    version_code = default_version_code
+    version_name = default_version_name
+else:
+    version_code = default_version_code
+    version_name = default_version_name
+    with open(version_file, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("versionCode="):
+                version_code = int(line.split("=", 1)[1].strip())
+            elif line.startswith("versionName="):
+                version_name = line.split("=", 1)[1].strip()
+    print(f"Read version.txt: versionCode={version_code}, versionName={version_name}")
+
+with open(gradle_path, "r", encoding="utf-8") as f:
+    gradle_content = f.read()
+
+gradle_content = re.sub(r"versionCode\s+\d+", f"versionCode {version_code}", gradle_content, count=1)
+gradle_content = re.sub(r'versionName\s+"[^"]*"', f'versionName "{version_name}"', gradle_content, count=1)
+
+with open(gradle_path, "w", encoding="utf-8") as f:
+    f.write(gradle_content)
+print(f"Set versionCode={version_code}, versionName={version_name} in app/build.gradle")
