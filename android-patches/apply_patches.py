@@ -5,6 +5,7 @@ fresh android/ project. Copies our custom Java sources in and patches
 the manifest + gradle file to wire up the Tapsell SDK.
 """
 import os
+import re
 import shutil
 import sys
 
@@ -41,14 +42,86 @@ else:
 
 # --- app/build.gradle: append the Tapsell dependency in its own block ---
 gradle_path = os.path.join(ANDROID_DIR, "app", "build.gradle")
-with open(gradle_path, "a", encoding="utf-8") as f:
-    f.write(
-        "\n\n"
-        "// --- Tapsell ad SDK (added automatically by android-patches/apply_patches.py) ---\n"
-        "dependencies {\n"
-        '    implementation("ir.tapsell.plus:tapsell-plus-sdk-android:2.3.3")\n'
-        "}\n"
+with open(gradle_path, "r", encoding="utf-8") as f:
+    gradle_content = f.read()
+
+if "tapsell-plus-sdk-android" not in gradle_content:
+    with open(gradle_path, "a", encoding="utf-8") as f:
+        f.write(
+            "\n\n"
+            "// --- Tapsell ad SDK (added automatically by android-patches/apply_patches.py) ---\n"
+            "dependencies {\n"
+            '    implementation("ir.tapsell.plus:tapsell-plus-sdk-android:2.3.3")\n'
+            '    implementation("androidx.multidex:multidex:2.0.1")\n'
+            "}\n"
+        )
+    print("appended Tapsell + multidex dependency to app/build.gradle")
+    gradle_content = gradle_content  # re-read below anyway
+else:
+    print("app/build.gradle already had the Tapsell dependency")
+
+# Re-read after the possible append above so the edits below see the
+# dependencies block too (not strictly required, but keeps this robust
+# if this script's steps are ever reordered).
+with open(gradle_path, "r", encoding="utf-8") as f:
+    gradle_content = f.read()
+
+# --- Enable multidex on the app module. Tapsell's own changelog notes
+# dexing-pipeline-related runtime issues with their SDK on some setups
+# (e.g. "Fixed PreRoll Media3 Crash on Android 6.0 by adding
+# android.enableDexingArtifactTransform=false"). A silently-missing
+# plugin registration (compiles fine, not present at runtime) is the
+# classic signature of a dex/class-verification issue, so we enable
+# multidex defensively — it's always safe to turn on, never a downside. ---
+if "multiDexEnabled" not in gradle_content:
+    gradle_content = re.sub(
+        r"(defaultConfig\s*\{)",
+        r"\1\n        multiDexEnabled true",
+        gradle_content,
+        count=1,
     )
-print("appended Tapsell dependency to app/build.gradle")
+    with open(gradle_path, "w", encoding="utf-8") as f:
+        f.write(gradle_content)
+    print("enabled multiDexEnabled true in app/build.gradle")
+else:
+    print("app/build.gradle already had multiDexEnabled")
+
+# --- Ensure Java 8 compileOptions, as Tapsell's own setup docs call out
+# explicitly (https://docs.tapsell.ir/en/plus-sdk/android/initialize/).
+# Modern Capacitor templates already default higher than this, but we
+# make sure explicitly rather than assume. ---
+with open(gradle_path, "r", encoding="utf-8") as f:
+    gradle_content = f.read()
+
+if "compileOptions" not in gradle_content:
+    gradle_content = re.sub(
+        r"(android\s*\{)",
+        r"\1\n    compileOptions {\n        sourceCompatibility JavaVersion.VERSION_1_8\n        targetCompatibility JavaVersion.VERSION_1_8\n    }",
+        gradle_content,
+        count=1,
+    )
+    with open(gradle_path, "w", encoding="utf-8") as f:
+        f.write(gradle_content)
+    print("added explicit Java 8 compileOptions to app/build.gradle")
+else:
+    print("app/build.gradle already had a compileOptions block, leaving it alone")
+
+# --- gradle.properties: disable the dexing artifact transform. This is
+# the exact flag Tapsell's own changelog says fixes a class of crashes
+# caused by their SDK interacting badly with Android's per-module dexing
+# pipeline. Safe to set even if unrelated to our exact symptom. ---
+gradle_props_path = os.path.join(ANDROID_DIR, "gradle.properties")
+props_line = "android.enableDexingArtifactTransform=false\n"
+existing_props = ""
+if os.path.isfile(gradle_props_path):
+    with open(gradle_props_path, "r", encoding="utf-8") as f:
+        existing_props = f.read()
+
+if "android.enableDexingArtifactTransform" not in existing_props:
+    with open(gradle_props_path, "a", encoding="utf-8") as f:
+        f.write("\n" + props_line)
+    print("added android.enableDexingArtifactTransform=false to gradle.properties")
+else:
+    print("gradle.properties already had android.enableDexingArtifactTransform")
 
 print("Patches applied successfully.")
