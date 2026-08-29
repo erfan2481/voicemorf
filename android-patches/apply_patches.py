@@ -143,7 +143,7 @@ print("Patches applied successfully.")
 # each new Bazaar upload, commit + push, and this script applies it to
 # the freshly-generated build.gradle automatically every time.
 version_file = os.path.join(ROOT, "version.txt")
-default_version_code = 1
+default_version_code = 2
 default_version_name = "1.0"
 
 if not os.path.isfile(version_file):
