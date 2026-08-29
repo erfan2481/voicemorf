@@ -22,6 +22,12 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Bulletproof "is the new build actually running" check — if you
+        // don't see this popup the instant the app opens, the new
+        // MainActivity.java never actually made it into the installed
+        // APK (a build/deploy issue, not a logic bug).
+        android.widget.Toast.makeText(this, "MainActivity v2 (tapsell-diag) running", android.widget.Toast.LENGTH_LONG).show();
+
         // Always-on remote debugging (safe for a personal/sideloaded app):
         // connect this phone to chrome://inspect on a PC to read real
         // console errors instead of guessing blind.
